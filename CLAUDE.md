@@ -36,7 +36,14 @@
 - ドキュメント索引: [docs/README.md](docs/README.md)
 - `old/` は旧資料。参考にはしてよいが更新しない・前提にしない。
 
+## 決定済みの前提
+
+- 直近は自分専用、将来はストア公開。Claude API はバックエンド経由で呼ぶ（[ADR-0003](docs/adr/0003-phased-release-design.md)）
+- 撮影画像は保存しない。ログにも残さない（[ADR-0004](docs/adr/0004-no-image-retention.md)）
+- MVP の入力方式はバーコード・OCR・写真推定。分量は人が入力せず読み取りで決める。1日の境界は 4:00（[scope.md](docs/01_requirements/scope.md)）
+- 運用コストは月1000円まで。対象は iOS・Android（実機は iOS のみ）。開発 PC は Windows と WSL+Ubuntu（[non-functional.md](docs/01_requirements/non-functional.md)）
+
 ## 現時点で未決（決まったら更新）
 
-- 技術スタック（モバイル・バックエンド・DB）、利用者範囲、認証方式、インフラ → roadmap の ★ 項目参照
+- 技術スタック（モバイル・バックエンド・DB）、認証方式、インフラ → roadmap の ★ 項目と open-questions を参照
 - そのためビルド・テスト実行コマンドはまだない

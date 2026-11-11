@@ -5,6 +5,33 @@
 
 ---
 
+## 2026-11-11 セッション1（続き）: 未決事項 Q-01〜Q-10 の回答を反映
+
+**やったこと**
+- Q-01〜Q-10 の回答を open-questions に記録し、そこから出てきた論点を Q-11〜Q-19 として追加
+- 要件ドキュメントの初版: [scope.md](../01_requirements/scope.md)・[non-functional.md](../01_requirements/non-functional.md)（Draft）
+- roadmap を更新（M1 へ移行。TEC-12〜14、REQ-23・REQ-24 を追加）
+- `.gitattributes` を追加（Windows と WSL を併用するため改行コードを LF に統一）
+
+**決まったこと**
+- 直近は自分専用、将来はストア公開 → 最初から公開仕様で作る部分を整理 → [ADR-0003](../adr/0003-phased-release-design.md)（Claude はバックエンド経由で呼ぶ、user_id 前提）
+- 撮影画像は保存しない（ログにも残さない） → [ADR-0004](../adr/0004-no-image-retention.md)
+- MVP の入力方式: バーコード・OCR・写真推定。分量は人が入力せず読み取りで決める。1日の境界は 4:00
+- 運用コストは月1000円まで（NFR-001）。自分専用なら Sonnet 5.5 でも月約400円の見込み
+
+**次にやること**
+1. Q-11（モバイル: React Native + Expo を推奨）・Q-12（バックエンド: Supabase を推奨）を決める → ADR 化（TEC-01, ARC-03）
+2. Q-14〜Q-17 を決めて scope.md を確定（REQ-04, REQ-23, REQ-24）
+3. DAT-01 ドメインモデルの骨格
+4. POC-01 PoC 計画、LLM-03 スキーマ初版（PoC の Python 環境は WSL 想定）
+
+**注意点・気づき**
+- リポジトリはユーザーが既に独立化し、GitHub（`t-teieki/onaka-log`）へ push 済みだった
+- 手元に Mac がないため、iOS のビルドはクラウドビルドが前提（TEC-12）。iPhone 実機に独自ビルドを入れるには Apple Developer Program（年 $99）が必要になる場面がある（Q-13）
+- 分量を自動で決めるには「内容量」が取れることが重要 → PoC の計測項目に追加（POC-12, POC-23）
+
+---
+
 ## 2026-11-11 セッション1: ゼロベースで計画の土台を作成
 
 **やったこと**
