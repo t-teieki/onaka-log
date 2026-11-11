@@ -5,6 +5,32 @@
 
 ---
 
+## 2026-11-12 セッション1（続き5）: PoC 計画・Claude API 契約 v0.1・契約テスト
+
+**やったこと**
+- PoC 計画を作成 → [poc/README.md](../../poc/README.md)（合格基準、サンプル件数、正解データの CSV 形式、費用の見積り約1,100円・上限2,000円）
+- Claude API 契約 v0.1 を作成 → [contracts/llm/](../../contracts/llm/README.md)（OCR・写真推定・テキスト推定の入出力スキーマとプロンプト）
+- 例のデータ（50件）と契約テスト（pytest、88件すべて合格）を Sonnet 5.5 のサブエージェントに任せて作成し、自分で実行して確認 → [tests/contract/](../../tests/contract/README.md)
+- WSL に uv をインストール（pip でユーザー領域へ）。`pyproject.toml`・`.python-version`（3.12）・`uv.lock` を追加
+
+**決まったこと**
+- 出力の強制は Structured Outputs（`output_config.format`）。スキーマは制約込みの完全版で書き、API 未対応の制約は SDK が除去する（LLM-04）
+- 合計値は Claude に出させず、コードで計算する
+- Python のツールは uv で管理（dev-environment.md）
+
+**次にやること**
+1. サンプルと正解データの作成（ユーザー、POC-03）
+2. PoC スクリプト（PoC-1 バーコードから。Claude を使わないので費用ゼロ）
+3. REQ-05 機能一覧・DAT-00 アクセスパターン（並行）
+4. INF-10 の残り
+
+**注意点・気づき**
+- Claude API の実行（PoC-2〜4）は、実行前に件数と概算費用を示してユーザーの了承を得る
+- PowerShell で書いたファイルは BOM が付き、TOML などの解析が壊れることがある（サブエージェントで発生、修正済み）
+- 写真・テキストの品目の栄養値は null を許さない設計にした。PoC で妥当性を確認する
+
+---
+
 ## 2026-11-11 セッション1（続き4）: DB を DynamoDB に決定
 
 **決まったこと**

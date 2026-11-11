@@ -1,0 +1,71 @@
+{
+  "status": "ok",
+  "meal_name": "から揚げ定食",
+  "items": [
+    {
+      "name": "から揚げ",
+      "amount": {
+        "value": 5,
+        "unit": "piece"
+      },
+      "estimated_weight_g": 150,
+      "nutrients": {
+        "energy_kcal": 420,
+        "protein_g": 28.5,
+        "fat_g": 27.0,
+        "carbohydrate_g": 14.0
+      },
+      "confidence": "medium"
+    },
+    {
+      "name": "ご飯",
+      "amount": {
+        "value": 1,
+        "unit": "bowl"
+      },
+      "estimated_weight_g": 150,
+      "nutrients": {
+        "energy_kcal": 252,
+        "protein_g": 3.8,
+        "fat_g": 0.5,
+        "carbohydrate_g": 55.7
+      },
+      "confidence": "high"
+    },
+    {
+      "name": "味噌汁",
+      "amount": {
+        "value": 1,
+        "unit": "cup"
+      },
+      "estimated_weight_g": 160,
+      "nutrients": {
+        "energy_kcal": 40,
+        "protein_g": 3.0,
+        "fat_g": 1.5,
+        "carbohydrate_g": 4.0
+      },
+      "confidence": "medium"
+    },
+    {
+      "name": "キャベツの千切り",
+      "amount": {
+        "value": 1,
+        "unit": "serving"
+      },
+      "estimated_weight_g": 40,
+      "nutrients": {
+        "energy_kcal": 9,
+        "protein_g": 0.5,
+        "fat_g": 0.1,
+        "carbohydrate_g": 2.1
+      },
+      "confidence": "high"
+    }
+  ],
+  "assumptions": [
+    "量の記載がないため一般的な1人前と仮定",
+    "ご飯は茶碗1杯150gと仮定"
+  ],
+  "notes": "から揚げの個数は一般的な定食の量と仮定"
+}

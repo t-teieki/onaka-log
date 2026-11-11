@@ -1,0 +1,29 @@
+{
+  "status": "ok",
+  "product_name": "全粒粉ビスケット",
+  "basis": {
+    "type": "per_100g",
+    "amount": 100,
+    "unit": "g",
+    "label_text": "100g当たり"
+  },
+  "net_content": {
+    "amount": 90,
+    "unit": "g",
+    "pieces": 6,
+    "label_text": "内容量 90g（6個入り）"
+  },
+  "nutrients": {
+    "energy_kcal": 452,
+    "protein_g": 7.1,
+    "fat_g": 17.8,
+    "carbohydrate_g": 65.3,
+    "salt_equivalent_g": 0.9
+  },
+  "confidence": "medium",
+  "issues": [
+    "glare",
+    "small_text"
+  ],
+  "notes": "炭水化物は糖質58.1gと食物繊維7.2gの合計"
+}

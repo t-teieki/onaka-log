@@ -22,7 +22,19 @@
 | Docker（DynamoDB Local・SAM local）が遅い | C ドライブ上のファイルをコンテナにマウントすると遅い | 支障が出たら WSL 側へ移す |
 | ファイルの実行権限・改行の差異 | Windows と Linux の違い | `.gitattributes` で LF 固定。Windows 側の Git では `core.autocrlf=false` を推奨 |
 
+## Python
+
+- **uv** で管理する（WSL の `~/.local/bin/uv`、2026-11-12 に pip でユーザー領域へインストール）。Python のバージョンは `.python-version`（3.12、Lambda に合わせる）
+- 仮想環境はリポジトリ直下の `.venv`（Git 管理外）。C ドライブ上ではハードリンクが使えないため `UV_LINK_MODE=copy` を設定する
+- 契約テストの実行:
+
+```bash
+wsl -e bash -lc "cd /mnt/c/project/onaka-log && UV_LINK_MODE=copy ~/.local/bin/uv run --group dev pytest tests/contract -q"
+```
+
+- WSL の素の Python 3.10 には venv（ensurepip）がなく、jsonschema も古い（3.2）。プロジェクトでは使わない
+
 ## 未決
 
-- Node.js・Python のバージョン管理ツール（例: Node は mise / nvm、Python は uv）
+- Node.js のバージョン管理ツール（例: mise / nvm）
 - エディタ設定（推奨拡張機能、format on save）

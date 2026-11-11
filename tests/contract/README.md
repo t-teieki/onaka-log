@@ -1,0 +1,22 @@
+# 契約テスト（tests/contract）
+
+`contracts/llm/` の Claude API 契約を検査する（roadmap TST-03、ADR-0001）。
+
+## 検査内容
+
+1. 各用途に `input.schema.json` / `output.schema.json` / `prompt.md` が揃い、`prompt.md` に `prompt_version: X.Y.Z` がある
+2. すべてのスキーマが JSON Schema 2020-12 として正しい
+3. `examples/valid/` の例はすべてスキーマに適合する
+4. `examples/invalid/` の例はすべて不適合になる（1ファイル1違反、理由はファイル名）
+5. 用途ごとに input / output それぞれ valid・invalid の例が1件以上ある
+6. 出力スキーマが Structured Outputs 互換（全 object が `additionalProperties: false` かつ `required` = `properties`、許可キーワードのみ、再帰 `$ref` なし）。検査関数自体の自己テストも含む
+7. README の意味上のルール（`status` が `ok` 以外なら `items` 空・`meal_name` が null、OCR は `ok` なら `energy_kcal` 非 null かつ `basis.type` が `unknown` 以外）を valid な出力例で確認
+
+例ファイルの名前は `input-*.json` が input スキーマ、`output-*.json` が output スキーマに対応する。
+
+## 実行
+
+```bash
+uv sync --group dev
+uv run --group dev pytest tests/contract -q
+```

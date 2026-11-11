@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:onaka-log:llm:food-photo-estimate:output:v0.1",
+  "title": "FoodPhotoEstimateOutput",
+  "description": "料理の写真から推定した結果。写っている全量を対象にする。合計値は出力させず、コード側で items から計算する。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "meal_name", "items", "assumptions", "notes"],
+  "properties": {
+    "status": {
+      "description": "ok: 推定できた / not_food: 食べ物が写っていない / unrecognizable: 食べ物だが判別できない",
+      "type": "string",
+      "enum": ["ok", "not_food", "unrecognizable"]
+    },
+    "meal_name": {
+      "description": "食事全体の呼び名（例: から揚げ定食）。1品だけなら料理名。status が ok 以外なら null",
+      "type": ["string", "null"]
+    },
+    "items": {
+      "description": "写っている料理・食品ごとの推定。status が ok 以外なら空配列",
+      "type": "array",
+      "items": { "$ref": "#/$defs/item" }
+    },
+    "assumptions": {
+      "description": "推定の前提（例: 「ご飯は茶碗1杯150gと仮定」）",
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "notes": {
+      "type": ["string", "null"]
+    }
+  },
+  "$defs": {
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "amount", "estimated_weight_g", "nutrients", "confidence"],
+      "properties": {
+        "name": { "type": "string" },
+        "amount": {
+          "description": "量の表現（例: 茶碗1杯 → value 1, unit bowl）",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["value", "unit"],
+          "properties": {
+            "value": { "type": "number", "minimum": 0 },
+            "unit": { "type": "string", "enum": ["g", "ml", "piece", "serving", "bowl", "cup", "slice"] }
+          }
+        },
+        "estimated_weight_g": {
+          "description": "推定重量（g）。推定できなければ null",
+          "type": ["number", "null"],
+          "minimum": 0
+        },
+        "nutrients": { "$ref": "#/$defs/nutrients" },
+        "confidence": { "type": "string", "enum": ["high", "medium", "low"] }
+      }
+    },
+    "nutrients": {
+      "description": "この品目の写っている量に対する推定値",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["energy_kcal", "protein_g", "fat_g", "carbohydrate_g"],
+      "properties": {
+        "energy_kcal": { "type": "number", "minimum": 0 },
+        "protein_g": { "type": "number", "minimum": 0 },
+        "fat_g": { "type": "number", "minimum": 0 },
+        "carbohydrate_g": { "type": "number", "minimum": 0 }
+      }
+    }
+  }
+}

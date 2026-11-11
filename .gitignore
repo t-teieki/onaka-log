@@ -12,6 +12,7 @@ poc/samples/**/*.heic
 # Python
 __pycache__/
 .venv/
+poc/results/
 *.pyc
 
 # OS / editor

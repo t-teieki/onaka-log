@@ -7,8 +7,8 @@
 
 | 項目 | 内容 |
 |---|---|
-| 現在のマイルストーン | **M1 方針決定**（M0 はほぼ完了） |
-| 次にやること | ① REQ-05 機能一覧（F-xxx）への分解 ② DAT-01 ドメインモデルとアクセスパターンの洗い出し（DynamoDB のキー設計の前提） ③ M2 の準備: POC-01 計画、LLM-03 スキーマ初版 ④ INF-10 の残り（予算アラート・MFA・IAM） |
+| 現在のマイルストーン | **M2 PoC**（M1 の残り: REQ-05・DAT-00/01 は並行で進める） |
+| 次にやること | ① サンプルと正解データの作成（ユーザー、POC-03。形式は poc/README.md §4） ② PoC スクリプトの作成（POC-02、PoC-1 バーコードから） ③ REQ-05 機能一覧・DAT-00 アクセスパターンの洗い出し（PoC と並行） ④ INF-10 の残り（予算アラート・MFA・IAM） |
 | ブロッカー | なし（技術スタックの主要な決定はそろった） |
 | 最終更新 | 2026-11-11 |
 
@@ -108,8 +108,8 @@ flowchart LR
 ## POC: PoC 機能1〜3（M2）
 
 共通
-- [ ] **POC-01** PoC 計画（目的・仮説・合否基準・やらないこと） — 成果物: `poc/README.md`
-- [ ] **POC-02** PoC 実行環境（言語: Python 想定? / Anthropic SDK / スキーマ検証ライブラリ）
+- [x] **POC-01** PoC 計画（目的・合格基準・サンプルと正解データの形式・費用の上限） — 成果物: [poc/README.md](../../poc/README.md)
+- [ ] **POC-02** PoC 実行環境：WSL ＋ uv（Python 3.12）、anthropic SDK、jsonschema、pillow、httpx。`pyproject.toml` は作成済み、PoC スクリプトは未着手 (WIP)
 - [ ] **POC-03** 評価サンプル収集と正解データ作成（バーコード番号 30前後、栄養成分表示写真 20前後、料理写真＋正解値 20〜30） — 成果物: `poc/samples/`（画像は Git 管理外、正解値 CSV は管理）。ユーザーが用意中 (WIP)
 - [ ] **POC-04** 評価指標と評価スクリプト（正答率・誤差率・レイテンシ・コスト・出力のブレ）
 - [ ] **POC-05** PoC 結果レポートと判断（採用/条件付き採用/不採用） — 成果物: `poc/reports/`, ADR
@@ -142,15 +142,15 @@ flowchart LR
 
 - [ ] **LLM-01 ★** Claude を使う箇所の確定：OCR構造化 / 写真推定 / テキスト入力推定 / （任意）バーコード未ヒット補完 / （将来）アドバイス — 成果物: `02_design/llm/README.md`
 - [x] **LLM-02 ★** 呼び出し経路：**バックエンド経由**に決定（APIキー保護・コスト制御） — 成果物: [ADR-0003](../adr/0003-phased-release-design.md)
-- [ ] **LLM-03 ★** 用途ごとの入出力契約（JSON Schema）初版 — 成果物: `contracts/llm/<usecase>/`
-- [ ] **LLM-04** 出力の強制方式：Structured Outputs（`output_config.format`）/ strict tool use の選択
-- [ ] **LLM-05** 不確実性の表現（confidence、候補複数、推定根拠、エラー種別: not_food / unreadable 等）
+- [x] **LLM-03 ★** 用途ごとの入出力契約（JSON Schema）初版 v0.1：OCR・写真推定・テキスト推定のスキーマ・プロンプト・例 — 成果物: [contracts/llm/](../../contracts/llm/README.md)（PoC の結果で改訂する）
+- [x] **LLM-04** 出力の強制方式：Structured Outputs（`output_config.format`）。スキーマは制約込みの完全版で書き、API 未対応の制約は SDK が除去してクライアント側で検証 — 成果物: [contracts/llm/README.md](../../contracts/llm/README.md)
+- [ ] **LLM-05** 不確実性の表現：`status`（エラー種別）・`confidence`・`issues`・`assumptions` を v0.1 に入れた。PoC で妥当性を確認 (WIP)
 - [ ] **LLM-06** 数値の単位・基準量・丸め規則の統一（kcal, g、小数何桁）
-- [ ] **LLM-07** プロンプトのバージョン管理（`prompt.md` にバージョン、推定結果にプロンプト版・モデルIDを記録）
+- [x] **LLM-07** プロンプトのバージョン管理：`prompt.md` の `prompt_version` とスキーマ `$id` のバージョン。推定結果にモデルIDと一緒に記録する — 成果物: [contracts/llm/README.md](../../contracts/llm/README.md)
 - [ ] **LLM-08** モデル・effort の設定外部化（用途ごとに切替可能に）
 - [ ] **LLM-09** タイムアウト・リトライ・レート制限・`refusal` 等の stop_reason ハンドリング方針
 - [ ] **LLM-10** コスト制御：ユーザーごと回数制限、画像サイズ上限、キャッシュ
-- [ ] **LLM-11** プロンプトインジェクション対策（画像内テキスト由来の指示を無視、出力はスキーマ検証済みのみ採用）
+- [ ] **LLM-11** プロンプトインジェクション対策：画像内・説明文内の指示に従わないルールを v0.1 プロンプトに入れた。出力はスキーマ検証済みのみ採用。PoC で確認 (WIP)
 - [ ] **LLM-12** ログ方針（入出力・トークン数・レイテンシを記録、画像そのものは残すか）
 - [ ] **LLM-13** LLM プロバイダ抽象化（推定エンジンを interface 化し差し替え可能に）
 - [ ] **LLM-14** 回帰評価（eval）：プロンプト/モデル変更時に PoC データセットで精度比較 → TST-07
@@ -251,7 +251,7 @@ flowchart LR
 
 - [ ] **TST-01 ★** テスト戦略：レイヤごとの責務とテストピラミッド — 成果物: `03_testing/strategy.md`
 - [ ] **TST-02 ★** 仕様⇔テストのトレーサビリティ規約（テスト名・タグに F-xxx / NFR-xxx を含める）
-- [ ] **TST-03 ★** 契約テスト：`contracts/**/examples/valid/*` がスキーマに適合し、`invalid/*` が不適合であることを検証（スタック非依存で M2 から運用）
+- [x] **TST-03 ★** 契約テスト：例の適合・不適合、Structured Outputs 互換、意味上のルールを検査（pytest、88件） — 成果物: [tests/contract/](../../tests/contract/README.md)
 - [ ] **TST-04** Claude API のモック方針：記録済みレスポンス（フィクスチャ）で単体テスト、実API は別枠
 - [ ] **TST-05** 実API スモークテスト（手動/定期実行、コスト上限付き）
 - [ ] **TST-06** API 契約テスト（実装が OpenAPI に準拠しているか）

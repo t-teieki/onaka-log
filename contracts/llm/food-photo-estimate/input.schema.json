@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:onaka-log:llm:food-photo-estimate:input:v0.1",
+  "title": "FoodPhotoEstimateInput",
+  "description": "推定モジュールへの入力。画像はアプリ側で縮小・圧縮済み（Lambda の 6MB 上限に収める）。画像は処理後に破棄する（ADR-0004）。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["image", "locale"],
+  "properties": {
+    "image": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["media_type", "data_base64"],
+      "properties": {
+        "media_type": { "type": "string", "enum": ["image/jpeg", "image/png", "image/webp"] },
+        "data_base64": { "type": "string", "minLength": 1, "maxLength": 5000000 }
+      }
+    },
+    "locale": { "type": "string", "enum": ["ja-JP"] }
+  }
+}

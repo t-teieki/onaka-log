@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:onaka-log:llm:nutrition-label-ocr:output:v0.1",
+  "title": "NutritionLabelOcrOutput",
+  "description": "栄養成分表示の写真から読み取った結果。Claude に Structured Outputs で強制する出力。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "product_name", "basis", "net_content", "nutrients", "confidence", "issues", "notes"],
+  "properties": {
+    "status": {
+      "description": "ok: 読み取れた / unreadable: 栄養成分表示だが主要な値が読めない / not_nutrition_label: 栄養成分表示が写っていない",
+      "type": "string",
+      "enum": ["ok", "unreadable", "not_nutrition_label"]
+    },
+    "product_name": {
+      "description": "写真に商品名が写っていれば、その表記。なければ null",
+      "type": ["string", "null"]
+    },
+    "basis": {
+      "description": "栄養成分の値が何当たりか",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "amount", "unit", "label_text"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["per_100g", "per_100ml", "per_package", "per_serving", "per_piece", "unknown"]
+        },
+        "amount": {
+          "description": "基準量の数値（例: 「1袋（45g）当たり」なら 45）。不明なら null",
+          "type": ["number", "null"],
+          "minimum": 0
+        },
+        "unit": {
+          "type": ["string", "null"],
+          "enum": ["g", "ml", null]
+        },
+        "label_text": {
+          "description": "基準量の表記をそのまま（例: 「1袋（45g）当たり」）",
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "net_content": {
+      "description": "内容量（1包装の量）。写っていなければ各値は null",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["amount", "unit", "pieces", "label_text"],
+      "properties": {
+        "amount": {
+          "type": ["number", "null"],
+          "minimum": 0
+        },
+        "unit": {
+          "type": ["string", "null"],
+          "enum": ["g", "ml", null]
+        },
+        "pieces": {
+          "description": "個数の表記があれば（例: 「6個入り」なら 6）",
+          "type": ["integer", "null"],
+          "minimum": 1
+        },
+        "label_text": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "nutrients": {
+      "description": "表示された値（基準量当たり）。読めない項目は null",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["energy_kcal", "protein_g", "fat_g", "carbohydrate_g", "salt_equivalent_g"],
+      "properties": {
+        "energy_kcal": { "type": ["number", "null"], "minimum": 0 },
+        "protein_g": { "type": ["number", "null"], "minimum": 0 },
+        "fat_g": { "type": ["number", "null"], "minimum": 0 },
+        "carbohydrate_g": {
+          "description": "炭水化物。「糖質」と「食物繊維」に分けて表示されている場合は合計",
+          "type": ["number", "null"],
+          "minimum": 0
+        },
+        "salt_equivalent_g": { "type": ["number", "null"], "minimum": 0 }
+      }
+    },
+    "confidence": {
+      "description": "読み取り結果全体の確からしさ",
+      "type": "string",
+      "enum": ["high", "medium", "low"]
+    },
+    "issues": {
+      "description": "読み取りに影響した要因",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["blurry", "glare", "oblique", "curved", "partially_cut", "small_text", "low_light", "multiple_labels", "kj_only"]
+      }
+    },
+    "notes": {
+      "description": "補足（判断に迷った点など）。なければ null",
+      "type": ["string", "null"]
+    }
+  }
+}

@@ -1,0 +1,16 @@
+[project]
+name = "onaka-log-tools"
+version = "0.0.0"
+description = "onaka-log の契約テスト・PoC 用ツール（アプリ本体ではない）"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.uv]
+package = false
+
+[dependency-groups]
+dev = ["pytest>=8", "jsonschema>=4.23", "referencing>=0.35"]
+poc = ["anthropic", "pillow", "httpx", "python-dotenv"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

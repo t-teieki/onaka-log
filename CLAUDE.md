@@ -52,4 +52,10 @@
 ## 現時点で未決（決まったら更新）
 
 - IaC の方式、データのキー設計、各種ライブラリ → roadmap の ★ 項目と open-questions を参照
-- そのためビルド・テスト実行コマンドはまだない
+- アプリ・バックエンドのビルドコマンドはまだない
+
+## コマンド
+
+- 契約テスト（`contracts/` を変更したら必ず実行。WSL の uv を使う）:
+  `wsl -e bash -lc "cd /mnt/c/project/onaka-log && UV_LINK_MODE=copy ~/.local/bin/uv run --group dev pytest tests/contract -q"`
+- ファイルは UTF-8（BOM なし）・LF で書く。PowerShell の `Set-Content` / `Out-File` は BOM を付けるので使わない
