@@ -40,10 +40,14 @@
 
 - 直近は自分専用、将来はストア公開。Claude API はバックエンド経由で呼ぶ（[ADR-0003](docs/adr/0003-phased-release-design.md)）
 - 撮影画像は保存しない。ログにも残さない（[ADR-0004](docs/adr/0004-no-image-retention.md)）
-- MVP の入力方式はバーコード・OCR・写真推定。分量は人が入力せず読み取りで決める。1日の境界は 4:00（[scope.md](docs/01_requirements/scope.md)）
-- 運用コストは月1000円まで。対象は iOS・Android（実機は iOS のみ）。開発 PC は Windows と WSL+Ubuntu（[non-functional.md](docs/01_requirements/non-functional.md)）
+- 分量は人が入力せず読み取りで決める。1日の境界は 4:00（[scope.md](docs/01_requirements/scope.md)）
+- 運用コストは月1000円まで。対象は iOS・Android（実機は iOS のみ）（[non-functional.md](docs/01_requirements/non-functional.md)）
+- MVP の入力方式はテキスト入力も含めた4つ。分量の既定は「全部食べた」＋ワンタップで修正
+- モバイルは React Native（Expo）+ TypeScript（[ADR-0005](docs/adr/0005-mobile-react-native-expo.md)）
+- 認証は最初から入れる、Sign in with Apple + Google（[ADR-0006](docs/adr/0006-auth-from-day-one.md)）
+- 開発は WSL から、リポジトリは C ドライブ上（[dev-environment.md](docs/00_project/dev-environment.md)）
 
 ## 現時点で未決（決まったら更新）
 
-- 技術スタック（モバイル・バックエンド・DB）、認証方式、インフラ → roadmap の ★ 項目と open-questions を参照
+- バックエンド構成（Supabase か AWS か: Q-12、[比較資料](議論/バックエンド構成/バックエンド構成比較.md)）、DB、インフラ → roadmap の ★ 項目と open-questions を参照
 - そのためビルド・テスト実行コマンドはまだない

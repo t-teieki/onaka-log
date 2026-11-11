@@ -8,8 +8,8 @@
 | 項目 | 内容 |
 |---|---|
 | 現在のマイルストーン | **M1 方針決定**（M0 はほぼ完了） |
-| 次にやること | ① Q-11（モバイルの技術スタック）・Q-12（バックエンド）を決める ② Q-14〜Q-17 を決めて scope.md を確定（REQ-04） ③ DAT-01（ドメインモデルの骨格） ④ M2 の準備: POC-01 計画、LLM-03 スキーマ初版 |
-| ブロッカー | Q-11・Q-12（技術スタック）が未決 → PoC 以外の設計の多くがこれに依存 |
+| 次にやること | ① Q-12（バックエンド構成）を [比較資料](../../議論/バックエンド構成/バックエンド構成比較.md) をもとに決める ② REQ-05 機能一覧（F-xxx）への分解 ③ DAT-01 ドメインモデルの骨格 ④ M2 の準備: POC-01 計画、LLM-03 スキーマ初版 |
+| ブロッカー | Q-12（バックエンド構成）が未決 → 認証基盤・DB・インフラ設計がこれに依存 |
 | 最終更新 | 2026-11-11 |
 
 ## 凡例
@@ -59,7 +59,7 @@ flowchart LR
 - [ ] **PRJ-07** ドキュメント規約（記法・ID体系・テンプレート）の確定 — 成果物: [docs/README.md](../README.md), `docs/templates/`
 - [ ] **PRJ-08** 機能仕様テンプレート・PoCレポートテンプレート作成
 - [ ] **PRJ-09** 用語集の作成（食事 / 食品 / 推定 / 記録元 / 基準量 など） — 成果物: `glossary.md`
-- [ ] **PRJ-10** 開発環境の前提（Windows と WSL+Ubuntu の使い分け（Q-18）、各ランタイムのバージョン管理方法、devcontainer 要否）
+- [ ] **PRJ-10** 開発環境の前提：リポジトリは C ドライブ、開発は WSL から（Q-18）。ランタイムのバージョン管理・エディタ設定は未決 — 成果物: [dev-environment.md](dev-environment.md) (WIP)
 - [ ] **PRJ-11** シークレット管理方針（`.env` / ローカル / CI / 本番の分離、`.env.example`）
 - [ ] **PRJ-12** ライセンス・公開範囲（OSS にするか）
 - [ ] **PRJ-13** タスクランナー（Makefile / just / Taskfile / npm scripts）— 「テスト実行」等を1コマンドに統一
@@ -83,7 +83,7 @@ flowchart LR
 - [x] **REQ-01 ★** 利用者範囲：直近は自分専用、将来はストアで一般公開 — 成果物: [ADR-0003](../adr/0003-phased-release-design.md)
 - [ ] **REQ-02 ★** プロダクトビジョン・提供価値・非ゴール — 成果物: `01_requirements/vision.md`
 - [ ] **REQ-03** ペルソナ・主要ユースケース（いつ・どこで・何を記録するか）
-- [ ] **REQ-04 ★** MVP スコープ：入力方式はバーコード・OCR・写真推定で決定。閲覧・編集の範囲は Q-16 — 成果物: [scope.md](../01_requirements/scope.md) (WIP)
+- [x] **REQ-04 ★** MVP スコープ：入力方式はバーコード・OCR・写真推定・テキスト入力。閲覧は日次合計＋食事一覧、確認・修正、削除 — 成果物: [scope.md](../01_requirements/scope.md)
 - [ ] **REQ-05** 機能一覧と機能ID採番（F-xxx） — 成果物: `01_requirements/features/`
 - [ ] **REQ-06** 記録フロー仕様：入力方式選択 → 取得/推定 → 確認・修正 → 食事に追加 → 保存
 - [ ] **REQ-07** 1食に複数食品を紐づける仕様（追加・削除・並べ替え・後から追記）
@@ -102,8 +102,8 @@ flowchart LR
 - [ ] **REQ-20** データのエクスポート・アカウント削除・データ削除要件
 - [ ] **REQ-21** 多言語・単位系（日本語のみ? kcal 固定?）
 - [ ] **REQ-22** アクセシビリティ・ダークモード
-- [ ] **REQ-23** 分量の自動決定ルール（1包装＝1食とみなすか、100g 当たりの値の換算、複数個入りの扱い、ワンタップ修正） — Q-14
-- [ ] **REQ-24** 読み取れない場合のフォールバック（別方式への誘導・写真推定への切替・最小限の手入力） — Q-15
+- [ ] **REQ-23** 分量の自動決定ルール：既定は「全部食べた」、ワンタップ選択（1/4・1/2 など）で修正可に決定。内容量が読めない場合の扱いは PoC 後 — 成果物: [scope.md](../01_requirements/scope.md) (WIP)
+- [x] **REQ-24** 読み取れない場合：エラーダイアログを表示し、ホームの読み取り方式選択画面に戻る — 成果物: [scope.md](../01_requirements/scope.md)
 
 ## POC: PoC 機能1〜3（M2）
 
@@ -159,7 +159,7 @@ flowchart LR
 
 - [ ] **ARC-01 ★** 全体構成：モバイル / バックエンド / DB / ストレージ / 外部API（Claude・商品DB）の配置 — 成果物: `02_design/architecture.md`
 - [ ] **ARC-02 ★** データの主たる置き場所：ローカルファースト（端末DB＋同期） / サーバーファースト / 端末のみ
-- [ ] **ARC-03 ★** バックエンド形態：BaaS（Supabase / Firebase 等） / サーバーレス（Cloudflare Workers / Lambda / Cloud Run） / 常駐API。バックエンドは必須（ADR-0003）、無料枠に収める（NFR-001） — Q-12
+- [ ] **ARC-03 ★** バックエンド形態：Supabase か AWS（Python/FastAPI）かを検討中。バックエンドは必須（ADR-0003）、無料枠に収める（NFR-001） — Q-12、[比較資料](../../議論/バックエンド構成/バックエンド構成比較.md) (WIP)
 - [ ] **ARC-04** API スタイル：REST + OpenAPI / GraphQL / RPC
 - [ ] **ARC-05** レイヤ構成：ドメイン・ユースケース・アダプタの分離（ヘキサゴナル / クリーンアーキ）
 - [ ] **ARC-06** 推定方式のプラグイン化：`Estimator`（barcode / label-ocr / photo / text / manual）共通インターフェース → 新方式追加に強く
@@ -172,7 +172,7 @@ flowchart LR
 
 ## TEC: 技術スタック（M3、PoC 後に確定）
 
-- [ ] **TEC-01 ★** モバイル：Flutter / React Native（Expo） / ネイティブ。観点：カメラ・バーコードのライブラリ、テストのしやすさ、既存経験（React あり）、Mac なしでのビルド — Q-11
+- [x] **TEC-01 ★** モバイル：React Native（Expo）+ TypeScript — 成果物: [ADR-0005](../adr/0005-mobile-react-native-expo.md)
 - [ ] **TEC-02** 対応OS：iOS・Android 両方に決定。最小OSバージョンは未決 (WIP)
 - [ ] **TEC-03** 状態管理・ルーティング・DI
 - [ ] **TEC-04** 端末DB（必要なら）：SQLite 系（drift / expo-sqlite 等）
@@ -184,13 +184,13 @@ flowchart LR
 - [ ] **TEC-10** バーコード読み取り・カメラ・画像圧縮ライブラリ
 - [ ] **TEC-11** グラフ描画ライブラリ
 - [ ] **TEC-12 ★** Mac なしでの iOS ビルドと実機確認の方法（Expo Go / EAS Build / Codemagic など）
-- [ ] **TEC-13** Apple Developer Program・Google Play の登録時期と費用の扱い — Q-13
+- [ ] **TEC-13** Apple Developer Program・Google Play の登録時期：費用は月1000円とは別枠と決定。登録時期は後で検討（Q-13）
 - [ ] **TEC-14** Android の検証手段（Windows 上のエミュレータ、将来の実機）
 
 ## AUT: 認証・認可（M3）
 
-- [ ] **AUT-01 ★** 認証の導入時期（将来公開が決まったため、最初から入れる方向） — Q-17
-- [ ] **AUT-02** 認証方式：Sign in with Apple / Google / メール+パスワード / マジックリンク / 匿名→本登録アップグレード（iOSでソーシャルログインを出す場合 Apple ログイン必須に注意）
+- [x] **AUT-01 ★** 認証の導入時期：最初から入れる — 成果物: [ADR-0006](../adr/0006-auth-from-day-one.md)
+- [x] **AUT-02** 認証方式：Sign in with Apple + Google（メール＋パスワードは作らない） — 成果物: [ADR-0006](../adr/0006-auth-from-day-one.md)
 - [ ] **AUT-03** IdP：BaaS 付属 Auth / 外部 IdP / 自前
 - [ ] **AUT-04** トークン管理：アクセス/リフレッシュトークン、端末内の安全な保存（Keychain / Keystore）
 - [ ] **AUT-05** 認可：全データを user_id でスコープ（行レベルセキュリティ等）

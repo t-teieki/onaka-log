@@ -82,8 +82,12 @@ onaka-log/
 ├── .github/workflows/            # CI/CD
 ├── .claude/                      # Claude Code ハーネス（skills / settings / agents）
 │   └── skills/handoff/           #   セッション終了時の引継ぎ手順
+├── 議論/                         # 判断材料・比較検討の資料（決定前の議論。決定は ADR に書く）
+│   └── バックエンド構成/
 └── old/                          # 旧ドキュメント（参照のみ。更新しない）
 ```
+
+> `議論/` はユーザーの指定により日本語名とする（方針5の例外）。
 
 ## 置き場所のルール
 
@@ -94,6 +98,7 @@ onaka-log/
 | 「なぜそう決めたか」 | `docs/adr/` |
 | 機械が検証する約束事 | `contracts/` |
 | まだ決まっていないこと | `docs/00_project/open-questions.md` |
+| 決める前の比較・検討資料 | `議論/<テーマ>/` |
 | 今どこまで進んだか | `docs/00_project/roadmap.md`（チェック）＋ `progress-log.md`（経緯） |
 | 単体テスト | 各アプリ内（スタックの慣習に従う） |
 | 契約テスト・E2E・LLM評価 | ルートの `tests/` |
