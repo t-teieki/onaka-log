@@ -76,7 +76,7 @@
 
 **やったこと**
 - Q-11, Q-13〜Q-19 の回答を open-questions・scope・roadmap に反映
-- バックエンド構成の比較資料を作成 → [バックエンド構成比較](../../議論/バックエンド構成/バックエンド構成比較.md)（Supabase / AWS コンテナ / AWS サーバーレス / ハイブリッドの4案。料金は公式ページで確認）
+- バックエンド構成の比較資料を作成 → [バックエンド構成比較](../02_design/discussions/backend-comparison.md)（Supabase / AWS コンテナ / AWS サーバーレス / ハイブリッドの4案。料金は公式ページで確認）
 - 開発環境のドキュメント初版 → [dev-environment.md](dev-environment.md)（WSL から C ドライブ上で開発する場合の注意点）
 
 **決まったこと**
@@ -94,7 +94,7 @@
 **注意点・気づき**
 - 比較資料の試算では、AWS コンテナの常時起動は月4,500円以上で予算（月1000円）を超える。AWS を使うならサーバーレスが現実的
 - Supabase の無料プロジェクトは1週間使わないと一時停止される
-- `議論/` フォルダはユーザーの指定で日本語名（folder-structure.md に追記済み）
+- `議論/` フォルダはユーザーの指定で日本語名（folder-structure.md に追記済み）。※2026-11-12 に `docs/02_design/discussions/backend-comparison.md` へ移動
 - Git Bash の `python3` は Windows ストアのスタブで動かない。スクリプトは WSL で実行する
 
 ---

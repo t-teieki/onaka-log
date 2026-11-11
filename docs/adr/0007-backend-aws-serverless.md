@@ -2,7 +2,7 @@
 
 - ステータス: Accepted（DB は DynamoDB に決定: [ADR-0008](0008-database-dynamodb.md)）
 - 日付: 2026-11-11
-- 関連: Q-12, Q-21, ARC-03, TEC-05, TEC-06, INF-01, AUT-03, [比較資料](../../議論/バックエンド構成/バックエンド構成比較.md)
+- 関連: Q-12, Q-21, ARC-03, TEC-05, TEC-06, INF-01, AUT-03, [比較資料](../02_design/discussions/backend-comparison.md)
 
 ## 背景
 

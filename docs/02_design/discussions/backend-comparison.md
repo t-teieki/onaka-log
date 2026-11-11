@@ -1,8 +1,8 @@
 # バックエンド構成の比較（Q-12 判断材料）
 
-> ステータス: 議論用資料。**結論: C案（AWS サーバーレス）に決定 → [ADR-0007](../../docs/adr/0007-backend-aws-serverless.md)**。DB の選択は Q-21
+> ステータス: 議論用資料。**結論: C案（AWS サーバーレス）に決定 → [ADR-0007](../../adr/0007-backend-aws-serverless.md)**。DB の選択は Q-21
 > 作成: 2026-11-11
-> 関連: [open-questions.md](../../docs/00_project/open-questions.md) Q-12、roadmap ARC-03 / TEC-05 / TEC-06 / INF-01 / AUT-03
+> 関連: [open-questions.md](../../00_project/open-questions.md) Q-12、roadmap ARC-03 / TEC-05 / TEC-06 / INF-01 / AUT-03
 
 ---
 
@@ -131,7 +131,7 @@ flowchart LR
 
 ## 5. コストの目安
 
-> Claude API の費用（自分専用で月 約20〜400円、[non-functional.md](../../docs/01_requirements/non-functional.md)）は全構成で共通なので除いている。1 USD ≒ 150円。
+> Claude API の費用（自分専用で月 約20〜400円、[non-functional.md](../../01_requirements/non-functional.md)）は全構成で共通なので除いている。1 USD ≒ 150円。
 
 ### A. Supabase（Free プラン）
 

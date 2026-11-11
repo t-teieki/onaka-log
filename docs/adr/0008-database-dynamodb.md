@@ -2,7 +2,7 @@
 
 - ステータス: Accepted
 - 日付: 2026-11-11
-- 関連: Q-21, TEC-06, DAT-01, DAT-02, ADR-0007, [比較資料 C-1〜C-3](../../議論/バックエンド構成/バックエンド構成比較.md)
+- 関連: Q-21, TEC-06, DAT-01, DAT-02, ADR-0007, [比較資料 C-1〜C-3](../02_design/discussions/backend-comparison.md)
 
 ## 背景
 
