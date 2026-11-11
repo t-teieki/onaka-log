@@ -1,0 +1,24 @@
+# secrets
+.env
+.env.*
+!.env.example
+
+# PoC samples (raw photos are not committed; ground-truth CSV is)
+poc/samples/**/*.jpg
+poc/samples/**/*.jpeg
+poc/samples/**/*.png
+poc/samples/**/*.heic
+
+# Python
+__pycache__/
+.venv/
+*.pyc
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Claude Code local settings
+.claude/settings.local.json
