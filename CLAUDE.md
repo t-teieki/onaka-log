@@ -34,7 +34,7 @@
 - 図は Mermaid。
 - フォルダ構成と置き場所のルール: [docs/00_project/folder-structure.md](docs/00_project/folder-structure.md)
 - ドキュメント索引: [docs/README.md](docs/README.md)
-- `old/` は旧資料。参考にはしてよいが更新しない・前提にしない。
+- 旧資料（`old/`）は削除済み。必要ならコミット `dbe0211` 以前の Git 履歴から参照できる（前提にはしない）。
 
 ## 決定済みの前提
 
