@@ -7,8 +7,7 @@
 
 | ID | 優先 | 質問 | 関連 | 補足・選択肢（推奨は★） |
 |---|---|---|---|---|
-| Q-12 | 🔴 | バックエンドの構成は？ Supabase（Auth・Postgres・Edge Functions）か、AWS 上に Python(FastAPI)・DB などを置く構成か | ARC-03, TEC-05, TEC-06, INF-01, AUT-03 | 比較資料: [バックエンド構成比較](../../議論/バックエンド構成/バックエンド構成比較.md)。★MVP は Supabase。AWS を使うなら、コンテナの常時起動（月4,500円〜）ではなくサーバーレス（Lambda） |
-| Q-20 | 🟢 | WSL から C ドライブ上のリポジトリで開発するとき、性能や接続の問題が出たらどう対処するか | PRJ-10 | 想定される問題と対処は [dev-environment.md](dev-environment.md)。★まず WSL のミラーモードネットワーク＋ Expo の `--tunnel` で始め、`npm install` やファイル監視が遅ければ見直す |
+| — | — | （現在、ユーザー判断待ちの事項はなし） | — | — |
 
 ## 解決済み
 
@@ -25,6 +24,7 @@
 | Q-08 | 分量入力 | 人が入力せず読み取りで決める。UX 重視で入力の手間を極力なくす。MVP に含める | [scope.md](../01_requirements/scope.md), Q-14, Q-15 |
 | Q-09 | 1日の境界 | 4時 | [scope.md](../01_requirements/scope.md) |
 | Q-10 | PoC サンプル | ユーザーが用意する | roadmap POC-03 |
+| Q-12 | バックエンド構成 | C案: AWS サーバーレス（API Gateway + Lambda(FastAPI) + Cognito）。DB は Q-21 | [ADR-0007](../adr/0007-backend-aws-serverless.md) |
 | Q-11 | モバイルの技術スタック | React Native（Expo）+ TypeScript | [ADR-0005](../adr/0005-mobile-react-native-expo.md) |
 | Q-13 | ストア登録費の扱い | 月1000円とは別枠。登録時期は今は検討しない | roadmap TEC-13 |
 | Q-14 | 分量の自動決定ルール | 既定は「全部食べた」。オプションでワンタップ選択（1/4・1/2 など）で直せる | [scope.md](../01_requirements/scope.md) |
@@ -33,3 +33,5 @@
 | Q-17 | 認証の導入時期 | 最初から入れる。Sign in with Apple + Google | [ADR-0006](../adr/0006-auth-from-day-one.md) |
 | Q-18 | 開発環境 | リポジトリは C ドライブ上に置き、開発は WSL から行う | [dev-environment.md](dev-environment.md) |
 | Q-19 | テキスト入力 | MVP に含める | [scope.md](../01_requirements/scope.md) |
+| Q-20 | リポジトリの置き場所 | C ドライブのまま。性能などが問題になりそうなら WSL 側へ移す | [dev-environment.md](dev-environment.md) |
+| Q-21 | DB | DynamoDB | [ADR-0008](../adr/0008-database-dynamodb.md) |

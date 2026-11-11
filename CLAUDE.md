@@ -45,9 +45,11 @@
 - MVP の入力方式はテキスト入力も含めた4つ。分量の既定は「全部食べた」＋ワンタップで修正
 - モバイルは React Native（Expo）+ TypeScript（[ADR-0005](docs/adr/0005-mobile-react-native-expo.md)）
 - 認証は最初から入れる、Sign in with Apple + Google（[ADR-0006](docs/adr/0006-auth-from-day-one.md)）
-- 開発は WSL から、リポジトリは C ドライブ上（[dev-environment.md](docs/00_project/dev-environment.md)）
+- 開発は WSL から、リポジトリは C ドライブ上。性能などが問題になりそうなら WSL 側へ移す（[dev-environment.md](docs/00_project/dev-environment.md)）
+- バックエンドは AWS サーバーレス: API Gateway + Lambda（Python / FastAPI）+ Cognito、東京リージョン（[ADR-0007](docs/adr/0007-backend-aws-serverless.md)）
+- DB は DynamoDB（[ADR-0008](docs/adr/0008-database-dynamodb.md)）
 
 ## 現時点で未決（決まったら更新）
 
-- バックエンド構成（Supabase か AWS か: Q-12、[比較資料](議論/バックエンド構成/バックエンド構成比較.md)）、DB、インフラ → roadmap の ★ 項目と open-questions を参照
+- IaC の方式、データのキー設計、各種ライブラリ → roadmap の ★ 項目と open-questions を参照
 - そのためビルド・テスト実行コマンドはまだない

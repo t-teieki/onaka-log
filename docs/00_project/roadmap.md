@@ -8,8 +8,8 @@
 | 項目 | 内容 |
 |---|---|
 | 現在のマイルストーン | **M1 方針決定**（M0 はほぼ完了） |
-| 次にやること | ① Q-12（バックエンド構成）を [比較資料](../../議論/バックエンド構成/バックエンド構成比較.md) をもとに決める ② REQ-05 機能一覧（F-xxx）への分解 ③ DAT-01 ドメインモデルの骨格 ④ M2 の準備: POC-01 計画、LLM-03 スキーマ初版 |
-| ブロッカー | Q-12（バックエンド構成）が未決 → 認証基盤・DB・インフラ設計がこれに依存 |
+| 次にやること | ① REQ-05 機能一覧（F-xxx）への分解 ② DAT-01 ドメインモデルとアクセスパターンの洗い出し（DynamoDB のキー設計の前提） ③ M2 の準備: POC-01 計画、LLM-03 スキーマ初版 ④ INF-10 の残り（予算アラート・MFA・IAM） |
+| ブロッカー | なし（技術スタックの主要な決定はそろった） |
 | 最終更新 | 2026-11-11 |
 
 ## 凡例
@@ -59,7 +59,7 @@ flowchart LR
 - [ ] **PRJ-07** ドキュメント規約（記法・ID体系・テンプレート）の確定 — 成果物: [docs/README.md](../README.md), `docs/templates/`
 - [ ] **PRJ-08** 機能仕様テンプレート・PoCレポートテンプレート作成
 - [ ] **PRJ-09** 用語集の作成（食事 / 食品 / 推定 / 記録元 / 基準量 など） — 成果物: `glossary.md`
-- [ ] **PRJ-10** 開発環境の前提：リポジトリは C ドライブ、開発は WSL から（Q-18）。ランタイムのバージョン管理・エディタ設定は未決 — 成果物: [dev-environment.md](dev-environment.md) (WIP)
+- [ ] **PRJ-10** 開発環境の前提：リポジトリは C ドライブ（問題が出たら WSL 側へ移す）、開発は WSL から（Q-18, Q-20）。ランタイムのバージョン管理・エディタ設定は未決 — 成果物: [dev-environment.md](dev-environment.md) (WIP)
 - [ ] **PRJ-11** シークレット管理方針（`.env` / ローカル / CI / 本番の分離、`.env.example`）
 - [ ] **PRJ-12** ライセンス・公開範囲（OSS にするか）
 - [ ] **PRJ-13** タスクランナー（Makefile / just / Taskfile / npm scripts）— 「テスト実行」等を1コマンドに統一
@@ -159,7 +159,7 @@ flowchart LR
 
 - [ ] **ARC-01 ★** 全体構成：モバイル / バックエンド / DB / ストレージ / 外部API（Claude・商品DB）の配置 — 成果物: `02_design/architecture.md`
 - [ ] **ARC-02 ★** データの主たる置き場所：ローカルファースト（端末DB＋同期） / サーバーファースト / 端末のみ
-- [ ] **ARC-03 ★** バックエンド形態：Supabase か AWS（Python/FastAPI）かを検討中。バックエンドは必須（ADR-0003）、無料枠に収める（NFR-001） — Q-12、[比較資料](../../議論/バックエンド構成/バックエンド構成比較.md) (WIP)
+- [x] **ARC-03 ★** バックエンド形態：AWS サーバーレス（API Gateway + Lambda + Cognito） — 成果物: [ADR-0007](../adr/0007-backend-aws-serverless.md)
 - [ ] **ARC-04** API スタイル：REST + OpenAPI / GraphQL / RPC
 - [ ] **ARC-05** レイヤ構成：ドメイン・ユースケース・アダプタの分離（ヘキサゴナル / クリーンアーキ）
 - [ ] **ARC-06** 推定方式のプラグイン化：`Estimator`（barcode / label-ocr / photo / text / manual）共通インターフェース → 新方式追加に強く
@@ -176,8 +176,8 @@ flowchart LR
 - [ ] **TEC-02** 対応OS：iOS・Android 両方に決定。最小OSバージョンは未決 (WIP)
 - [ ] **TEC-03** 状態管理・ルーティング・DI
 - [ ] **TEC-04** 端末DB（必要なら）：SQLite 系（drift / expo-sqlite 等）
-- [ ] **TEC-05 ★** バックエンド言語・FW（TypeScript / Python / Go ...）。ARC-03 と連動
-- [ ] **TEC-06** サーバDB（PostgreSQL / SQLite 系 / NoSQL）・ORM・マイグレーションツール
+- [x] **TEC-05 ★** バックエンド言語・FW：Python（FastAPI）を Lambda で動かす — 成果物: [ADR-0007](../adr/0007-backend-aws-serverless.md)
+- [x] **TEC-06 ★** サーバDB：DynamoDB（ORM・マイグレーションツールは不要、アイテムの形は JSON Schema で定義） — 成果物: [ADR-0008](../adr/0008-database-dynamodb.md)
 - [ ] **TEC-07** スキーマ検証・コード生成：JSON Schema → 型生成（各言語）、OpenAPI → クライアント生成
 - [ ] **TEC-08** テストFW（単体 / ウィジェット・コンポーネント / API / E2E）
 - [ ] **TEC-09** Lint / Formatter / 型チェック
@@ -191,7 +191,7 @@ flowchart LR
 
 - [x] **AUT-01 ★** 認証の導入時期：最初から入れる — 成果物: [ADR-0006](../adr/0006-auth-from-day-one.md)
 - [x] **AUT-02** 認証方式：Sign in with Apple + Google（メール＋パスワードは作らない） — 成果物: [ADR-0006](../adr/0006-auth-from-day-one.md)
-- [ ] **AUT-03** IdP：BaaS 付属 Auth / 外部 IdP / 自前
+- [x] **AUT-03** IdP：Amazon Cognito — 成果物: [ADR-0007](../adr/0007-backend-aws-serverless.md)（Expo からの Apple / Google ログイン連携は実装時に検証）
 - [ ] **AUT-04** トークン管理：アクセス/リフレッシュトークン、端末内の安全な保存（Keychain / Keystore）
 - [ ] **AUT-05** 認可：全データを user_id でスコープ（行レベルセキュリティ等）
 - [ ] **AUT-06** 将来の権限拡張：家族/トレーナーとの共有、管理者ロール
@@ -201,6 +201,7 @@ flowchart LR
 
 ## DAT: データ管理（M1〜M3）
 
+- [ ] **DAT-00 ★** アクセスパターンの洗い出し（日次一覧・食事詳細・削除・将来の推移など）→ DynamoDB のキー設計の前提（ADR-0008）
 - [ ] **DAT-01 ★** ドメインモデル：User / Meal（食事）/ FoodItem（食品、Meal と 1:N）/ Nutrition（栄養値の値オブジェクト）/ EstimationSource（記録元）/ EstimationRun（推定の生結果）/ Product（バーコード商品）/ Goal — 成果物: `02_design/domain-model.md`, `contracts/domain/`
 - [ ] **DAT-02 ★** Meal の合計値：都度計算 / 保存（非正規化）。整合性と集計性能のトレードオフ
 - [ ] **DAT-03** 栄養値の型と精度（小数・丸め・null=不明 の扱い）、拡張栄養素の持ち方（列追加 / 可変キー）
@@ -219,9 +220,10 @@ flowchart LR
 
 ## INF: インフラ（M3）
 
-- [ ] **INF-01 ★** ホスティング先（ARC-03 と連動）とリージョン（日本近傍）
+- [x] **INF-01 ★** ホスティング先：AWS、東京リージョン（ap-northeast-1）を基本 — 成果物: [ADR-0007](../adr/0007-backend-aws-serverless.md)
+- [ ] **INF-10 ★** AWS アカウントの準備：アカウント作成は済み。残りは、プランの確認（Free プランなら6か月で閉じられるため Paid への切り替え時期を決める）、AWS Budgets の予算アラート、root ユーザーの MFA、作業用 IAM ユーザー/ロール (WIP)
 - [ ] **INF-02** 環境構成：local / dev（staging）/ prod の分離
-- [ ] **INF-03** IaC の要否と方式（Terraform / プロバイダCLI / 管理画面手作業を許容するか）
+- [ ] **INF-03** IaC の方式：AWS SAM / CDK / Terraform（ADR-0007 で IaC は必須とした）
 - [ ] **INF-04** シークレット管理（Claude APIキー等はサーバ側のみ、CI は GitHub Secrets / OIDC）
 - [ ] **INF-05** ローカル開発環境（エミュレータ、ローカルDB、モックサーバ）
 - [ ] **INF-06** コスト見積り（無料枠・Claude API）と予算アラート。上限は月1000円（NFR-001、目安は non-functional.md）
