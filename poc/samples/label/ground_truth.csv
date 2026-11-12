@@ -1,0 +1,3 @@
+sample_id,jan,product_name,basis,basis_amount,basis_unit,net_content,net_content_unit,energy_kcal,protein_g,fat_g,carbohydrate_g,notes,image_file,conditions,expected_status
+L001,4902888323324,森永 チョコモナカジャンボ,per_package,150,ml,150,ml,319,3.5,18.2,35.2,1個当たり。食塩相当量0.15g,L001.jpg,oblique,ok
+L002,4902777237022,明治 チョコレート菓子（きのこ/たけのこ系）,per_package,63,g,63,g,345,4.9,20.5,35.0,1箱(63g)当たり。食塩相当量0.3g,L002.jpg,front,ok
