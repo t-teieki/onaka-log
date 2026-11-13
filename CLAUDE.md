@@ -1,7 +1,7 @@
 # onaka-log — Claude Code 向けガイド
 
 食品のカロリー・PFC（タンパク質・脂質・炭水化物）を推定・記録し、1日の摂取量と推移を確認するスマホアプリ。
-入力方式: ①バーコード照合 ②栄養成分表示OCR ③食品写真からAI推定 ④テキスト入力。Claude API を適所で使う。
+入力方式: ①バーコード照合 ②栄養成分表示OCR ③食品写真からAI推定 ④手入力（食品名と数値。他の方式が使えないときの最後の手段）。Claude API は②③で使う。
 記録単位: **食事（Meal）1件に食品（FoodItem）N件** を紐づけ、食品ごとと食事合計の両方の値を持つ。
 
 ## セッション開始時に必ず読む
@@ -42,7 +42,7 @@
 - 撮影画像は保存しない。ログにも残さない（[ADR-0004](docs/adr/0004-no-image-retention.md)）
 - 分量は人が入力せず読み取りで決める。1日の境界は 4:00（[scope.md](docs/01_requirements/scope.md)）
 - 運用コストは月1000円まで。対象は iOS・Android（実機は iOS のみ）（[non-functional.md](docs/01_requirements/non-functional.md)）
-- MVP の入力方式はテキスト入力も含めた4つ。分量の既定は「全部食べた」＋ワンタップで修正
+- MVP の入力方式は手入力も含めた4つ（手入力は Claude を使わない、[ADR-0012](docs/adr/0012-manual-text-input.md)）。分量の既定は「全部食べた」＋ワンタップで修正
 - モバイルは React Native（Expo）+ TypeScript（[ADR-0005](docs/adr/0005-mobile-react-native-expo.md)）
 - 認証は最初から入れる、Sign in with Apple + Google（[ADR-0006](docs/adr/0006-auth-from-day-one.md)）
 - 開発は WSL から、リポジトリは C ドライブ上。性能などが問題になりそうなら WSL 側へ移す（[dev-environment.md](docs/00_project/dev-environment.md)）

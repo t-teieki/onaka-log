@@ -2,7 +2,7 @@
 
 - prompt_version: 0.1.0
 - 出力スキーマ: `output.schema.json`（v0.1）
-- 推奨モデル: PoC-3 で決める（候補: Haiku 5.5 / Sonnet 5.5 / Opus 5.5）
+- モデル: `claude-sonnet-5-5`、effort `medium`。画像は長辺 1024px 程度に縮小して送る（[ADR-0011](../../../docs/adr/0011-food-photo-model.md)）
 - 変更したら prompt_version を上げ、推定結果に記録する（LLM-07）
 
 ## システムプロンプト

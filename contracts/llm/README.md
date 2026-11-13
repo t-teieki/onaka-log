@@ -7,10 +7,9 @@
 | ディレクトリ | 機能 | 入力 | 状態 |
 |---|---|---|---|
 | `nutrition-label-ocr/` | ② 栄養成分表示 OCR | 画像 | 出力 v0.3・prompt 0.2.0（PoC-2 の結果で改訂。[ADR-0010](../../docs/adr/0010-label-ocr-model-and-image-size.md)） |
-| `food-photo-estimate/` | ③ 写真からの推定 | 画像 | v0.1（PoC-3 で検証） |
-| `text-estimate/` | ④ テキスト入力による推定 | テキスト | v0.1（PoC-4 で検証） |
+| `food-photo-estimate/` | ③ 写真からの推定 | 画像 | v0.1（PoC-3 で検証。[ADR-0011](../../docs/adr/0011-food-photo-model.md)） |
 
-① バーコード照合は Claude を使わない。
+① バーコード照合と ④ 手入力は Claude を使わない（④ は [ADR-0012](../../docs/adr/0012-manual-text-input.md)。以前あった `text-estimate/` は削除した）。
 
 ## 各ディレクトリのファイル
 
@@ -37,7 +36,7 @@ Claude の Structured Outputs で使える JSON Schema には制限がある。�
 
 次は JSON Schema では表していない。推定モジュールのコードで検証する（実装時にテストを書く）。契約テストでは同じルールを `tests/contract/conftest.py` の `semantic_errors` で表し、valid の例が満たすことと、違反を検出できることを確かめている。
 
-- `status` が `ok` 以外なら、`items` は空配列、`meal_name` は `null`（写真・テキスト）
+- `status` が `ok` 以外なら、`items` は空配列、`meal_name` は `null`（写真）
 - OCR:
   - `status` が `ok` なら `columns` は1件以上で、各列の `nutrients.energy_kcal` は null 以外
   - `status` が `ok` 以外なら `columns` は空配列
@@ -48,7 +47,7 @@ Claude の Structured Outputs で使える JSON Schema には制限がある。�
 追加を検討中（PoC の結果を見て決める）:
 - OCR の `basis.type` と `basis.unit` の組み合わせ（`per_100g` → `g`、`per_100ml` → `ml`）
 - OCR の複数列の関係（味違いか基準違いか）を出力に持たせるか。今は持たせず、確認画面で利用者が列を選ぶ（Q-26）
-- 写真・テキストの品目の栄養値は null を許していない（推定が難しくても値を出させ、`confidence` を `low` にする設計）。この扱いでよいかを PoC で確認する
+- 写真の品目の栄養値は null を許していない（推定が難しくても値を出させ、`confidence` を `low` にする設計）。この扱いでよいかを PoC で確認する
 
 ## バージョン
 

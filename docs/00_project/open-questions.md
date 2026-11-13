@@ -32,7 +32,7 @@
 | Q-16 | MVP の閲覧・編集範囲 | 日次合計＋食事一覧（4時区切り）、推定結果の確認・修正画面、食品/食事の削除。推移グラフ・目標値は MVP 外 | [scope.md](../01_requirements/scope.md) |
 | Q-17 | 認証の導入時期 | 最初から入れる。Sign in with Apple + Google | [ADR-0006](../adr/0006-auth-from-day-one.md) |
 | Q-18 | 開発環境 | リポジトリは C ドライブ上に置き、開発は WSL から行う | [dev-environment.md](dev-environment.md) |
-| Q-19 | テキスト入力 | MVP に含める | [scope.md](../01_requirements/scope.md) |
+| Q-19 | テキスト入力 | MVP に含める（2026-11-13 訂正: Claude による推定ではなく、利用者が食品名と数値を手入力する方式。Q-30） | [scope.md](../01_requirements/scope.md)、[ADR-0012](../adr/0012-manual-text-input.md) |
 | Q-20 | リポジトリの置き場所 | C ドライブのまま。性能などが問題になりそうなら WSL 側へ移す | [dev-environment.md](dev-environment.md) |
 | Q-21 | DB | DynamoDB | [ADR-0008](../adr/0008-database-dynamodb.md) |
 | Q-22 | PoC-1 の判定（2026-11-13） | 条件付きで採用（出どころの表示と OCR へのワンタップ切り替え） | [ADR-0009](../adr/0009-barcode-adoption-and-net-content.md) |
@@ -41,3 +41,6 @@
 | Q-25 | OCR で読めないとき（2026-11-13） | エラーダイアログに「撮り直す」ボタンと撮り方の案内（正面から・近づけて）を加える。「入力方法の選択に戻る」も残す | [scope.md](../01_requirements/scope.md) |
 | Q-26 | 栄養成分表示に複数列があるとき（2026-11-13） | Claude に全列を返させ、確認画面で利用者が列を選ぶ（出力スキーマ v0.3） | [scope.md](../01_requirements/scope.md)、LLM-03 |
 | Q-27 | 「1個当たり」・複数個入りの分量の既定（2026-11-13） | 既定は「1個」。ワンタップで個数（1・2・…・全部）を選ぶ | [scope.md](../01_requirements/scope.md) |
+| Q-28 | 写真推定の正解データ（2026-11-13） | 用意しない。本番でも正解はなく、推定値をそのまま登録する前提。PoC-3 も正解なしで評価する | [scope.md](../01_requirements/scope.md)、[poc/README.md](../../poc/README.md) |
+| Q-29 | 写真推定のモデル（2026-11-13） | Sonnet 5.5・effort medium | [ADR-0011](../adr/0011-food-photo-model.md) |
+| Q-30 | PoC-4（テキスト推定）の進め方（2026-11-13） | テキスト推定はしない。④は利用者が食品名と数値を手入力する方式で、他の方式で推定できない・不正確なときに使う。text-estimate の契約は削除し、PoC-4 は SKIP | [ADR-0012](../adr/0012-manual-text-input.md) |

@@ -131,7 +131,7 @@ def semantic_errors(usecase: str, data: dict) -> list[str]:
     ルール自体が違反を検出できることを確かめる。
     """
     errors: list[str] = []
-    if usecase in ("food-photo-estimate", "text-estimate"):
+    if usecase == "food-photo-estimate":
         if data["status"] != "ok":
             if data["items"] != []:
                 errors.append("status が ok 以外なのに items が空でない")

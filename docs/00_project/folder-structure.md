@@ -52,7 +52,7 @@ onaka-log/
 ├── contracts/                    # ★機械可読な契約（SSOT）。スタック非依存
 │   ├── domain/                   #   ドメインオブジェクトの JSON Schema
 │   ├── llm/                      #   Claude API 用途ごとの入出力スキーマ
-│   │   └── <usecase>/            #     例: nutrition-label-ocr, food-photo-estimate, text-estimate
+│   │   └── <usecase>/            #     例: nutrition-label-ocr, food-photo-estimate
 │   │       ├── input.schema.json      #   アプリ/バックエンド→LLM層へ渡す入力
 │   │       ├── output.schema.json     #   LLMに強制する出力（Structured Outputs）
 │   │       ├── prompt.md              #   システムプロンプト（バージョン付き）

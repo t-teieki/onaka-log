@@ -8,7 +8,7 @@
 | 項目 | 内容 |
 |---|---|
 | 現在のマイルストーン | **M2 PoC**（M1 の残り: REQ-05・DAT-00/01 は並行で進める） |
-| 次にやること | ① `not_nutrition_label` の確認（キーボード写真、1円未満） ② 料理写真のサンプル収集（ユーザー、PoC-3 用）→ PoC-3 スクリプト ③ REQ-05 機能一覧・DAT-00 アクセスパターン（並行） ④ INF-10 の残り |
+| 次にやること | ① 写真推定のプロンプト 0.2.0（料理単位で分ける・品目の欠落防止）→ 同じ5枚で再実行 ② POC-34・`not_nutrition_label` の確認（食べ物でない写真など） ③ REQ-05 機能一覧・DAT-00 アクセスパターン ④ INF-10 の残り |
 | ブロッカー | なし（技術スタックの主要な決定はそろった） |
 | 最終更新 | 2026-11-13 |
 
@@ -83,7 +83,7 @@ flowchart LR
 - [x] **REQ-01 ★** 利用者範囲：直近は自分専用、将来はストアで一般公開 — 成果物: [ADR-0003](../adr/0003-phased-release-design.md)
 - [ ] **REQ-02 ★** プロダクトビジョン・提供価値・非ゴール — 成果物: `01_requirements/vision.md`
 - [ ] **REQ-03** ペルソナ・主要ユースケース（いつ・どこで・何を記録するか）
-- [x] **REQ-04 ★** MVP スコープ：入力方式はバーコード・OCR・写真推定・テキスト入力。閲覧は日次合計＋食事一覧、確認・修正、削除 — 成果物: [scope.md](../01_requirements/scope.md)
+- [x] **REQ-04 ★** MVP スコープ：入力方式はバーコード・OCR・写真推定・手入力（[ADR-0012](../adr/0012-manual-text-input.md)）。閲覧は日次合計＋食事一覧、確認・修正、削除 — 成果物: [scope.md](../01_requirements/scope.md)
 - [ ] **REQ-05** 機能一覧と機能ID採番（F-xxx） — 成果物: `01_requirements/features/`
 - [ ] **REQ-06** 記録フロー仕様：入力方式選択 → 取得/推定 → 確認・修正 → 食事に追加 → 保存
 - [ ] **REQ-07** 1食に複数食品を紐づける仕様（追加・削除・並べ替え・後から追記）
@@ -127,22 +127,22 @@ flowchart LR
 - [ ] **POC-24** 読み取り不可時の返し方：`unreadable` は全モデルで確認（数値は null、撮り直しの助言つき）。`not_nutrition_label` は未検証。アプリでは撮り直しを案内する（Q-25 → scope.md） (WIP)
 
 機能3: 撮影画像から推定
-- [ ] **POC-31** 出力スキーマ初版（料理名・複数品目への分解・推定量・カロリー・PFC・信頼度）
-- [ ] **POC-32** 精度計測（カロリー誤差の中央値・PFC誤差・料理名の妥当性・同一画像での再現性）
-- [ ] **POC-33** 1枚の写真に複数料理がある場合の扱い（食事1件＋食品N件に自然にマップできるか）
+- [x] **POC-31** 出力スキーマ初版（料理名・複数品目への分解・推定量・カロリー・PFC・信頼度）：v0.1 で60回すべてスキーマ適合 — 成果物: [contracts/llm/food-photo-estimate/](../../contracts/llm/food-photo-estimate/)
+- [ ] **POC-32** 精度計測：正解データでの誤差は測らない（推定値をそのまま登録、Q-28）。代わりに整合（kcal≒4P+9F+4C、175/176品目）・再現性（CV: Sonnet 6.6%、Opus 3.5%、Haiku 約10%）・モデル間の差を計測 — 成果物: [poc3-food-photo.md](../../poc/reports/poc3-food-photo.md) (WIP)
+- [ ] **POC-33** 1枚の写真に複数料理がある場合の扱い：品目への分解はできる。Haiku は品目の欠落あり（納豆パック）、Opus は細かく分けすぎる（サラダを8品目）。プロンプトで料理単位の規則を足す (WIP)
 - [ ] **POC-34** 推定不能時（食べ物でない・ぼやけ）の返し方
 
 横断
-- [ ] **POC-41** モデル比較：OCR は写真4枚（厳しい条件2枚を含む）で全モデル同じ結果、Haiku 5.5・effort low に決定（[ADR-0010](../adr/0010-label-ocr-model-and-image-size.md)）。写真推定は未実施 (WIP)
-- [ ] **POC-42** 画像の縮小：OCR は長辺 1024px で元サイズと同じ精度、768px で1か所誤読。写真推定は未実施 (WIP)
-- [ ] **POC-43** 1回あたりの費用（OCR）: Haiku 約0.1円 / Sonnet 約2円 / Opus 約4円。費用の大半は入力（画像＋スキーマ＋プロンプト） (WIP)
+- [ ] **POC-41** モデル比較：OCR は写真4枚（厳しい条件2枚を含む）で全モデル同じ結果、Haiku 5.5・effort low に決定（[ADR-0010](../adr/0010-label-ocr-model-and-image-size.md)）。写真推定は Sonnet 5.5・effort medium に決定（[ADR-0011](../adr/0011-food-photo-model.md)）。テキスト推定は廃止（④は手入力、ADR-0012） (WIP)
+- [ ] **POC-42** 画像の縮小：OCR は長辺 1024px で元サイズと同じ精度、768px で1か所誤読。写真推定は 1024px で実施（サイズ比較はしていない） (WIP)
+- [ ] **POC-43** 1回あたりの費用（OCR）: Haiku 約0.1円 / Sonnet 約2円 / Opus 約4円。費用の大半は入力（画像＋スキーマ＋プロンプト）。写真推定: Haiku 約0.1円 / Sonnet 約1.9円 / Opus 約4.2円（月90回で Sonnet 約170円） (WIP)
 - [ ] **POC-44** プロンプトキャッシュの効果：OCR では未使用。入力の約6割がスキーマとプロンプトなので効果が見込める。未検証
 
 ## LLM: Claude API 利用設計（M2〜M3）
 
-- [ ] **LLM-01 ★** Claude を使う箇所の確定：OCR構造化 / 写真推定 / テキスト入力推定 / （任意）バーコード未ヒット補完 / （将来）アドバイス — 成果物: `02_design/llm/README.md`
+- [ ] **LLM-01 ★** Claude を使う箇所の確定：OCR構造化 / 写真推定 / ~~テキスト入力推定~~（廃止、ADR-0012） / （任意）バーコード未ヒット補完 / （将来）アドバイス — 成果物: `02_design/llm/README.md`
 - [x] **LLM-02 ★** 呼び出し経路：**バックエンド経由**に決定（APIキー保護・コスト制御） — 成果物: [ADR-0003](../adr/0003-phased-release-design.md)
-- [x] **LLM-03 ★** 用途ごとの入出力契約（JSON Schema）初版 v0.1：OCR・写真推定・テキスト推定のスキーマ・プロンプト・例。OCR は PoC-2 の結果で出力 v0.3・prompt 0.2.0 に改訂 — 成果物: [contracts/llm/](../../contracts/llm/README.md)（PoC の結果で改訂する）
+- [x] **LLM-03 ★** 用途ごとの入出力契約（JSON Schema）初版 v0.1：OCR・写真推定・テキスト推定のスキーマ・プロンプト・例（テキスト推定は ADR-0012 で削除）。OCR は PoC-2 の結果で出力 v0.3・prompt 0.2.0 に改訂 — 成果物: [contracts/llm/](../../contracts/llm/README.md)（PoC の結果で改訂する）
 - [x] **LLM-04** 出力の強制方式：Structured Outputs（`output_config.format`）。スキーマは制約込みの完全版で書き、API 未対応の制約は SDK が除去してクライアント側で検証 — 成果物: [contracts/llm/README.md](../../contracts/llm/README.md)
 - [ ] **LLM-05** 不確実性の表現：`status`（エラー種別）・`confidence`・`issues`・`assumptions` を v0.1 に入れた。PoC で妥当性を確認 (WIP)
 - [ ] **LLM-06** 数値の単位・基準量・丸め規則の統一（kcal, g、小数何桁）
@@ -299,7 +299,7 @@ flowchart LR
 
 - [ ] **IMP-01** ウォーキングスケルトン（アプリ起動 → API 疎通 → DB 保存 → CI 緑）
 - [ ] **IMP-02** ドメイン層（Meal / FoodItem / 合計計算）
-- [ ] **IMP-03** 手入力・テキスト入力による記録
+- [ ] **IMP-03** 手入力（食品名と kcal・PFC）による記録（[ADR-0012](../adr/0012-manual-text-input.md)）
 - [ ] **IMP-04** 閲覧（日次合計・一覧）
 - [ ] **IMP-05** 編集・削除
 - [ ] **IMP-06** バーコード照合

@@ -1,1 +1,6 @@
 sample_id,image_file,dishes,energy_kcal,protein_g,fat_g,carbohydrate_g,truth_source,text_description,expected_status,notes
+P001,P001.jpg,,,,,,none,,ok,自炊。ご飯・レタスサラダ・豆腐の味噌汁・ハンバーグ2個（ソース）。真上から
+P002,P002.jpg,,,,,,none,,ok,自炊。ご飯・鶏もも焼き（ねぎ・たれ）・納豆（未開封パック）。真上から
+P003,P003.jpg,,,,,,none,,ok,外食。ローストビーフとぶどうのサラダ（チーズ）・スープ・ライス・水。斜め
+P004,P004.jpg,,,,,,none,,ok,外食。和菓子（どら焼き風）・お茶。斜め、暗め
+P005,P005.jpg,,,,,,none,,ok,自炊。ご飯・豚肉と玉ねぎの炒め物・味噌汁（豆腐・油揚げ・わかめ・なめこ）

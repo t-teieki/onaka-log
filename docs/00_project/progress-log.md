@@ -5,6 +5,39 @@
 
 ---
 
+## 2026-11-13 セッション1（続き11）: PoC-3（写真推定）を正解なしで実行
+
+**やったこと**
+- コミット `e6612c4`（OCR 出力スキーマ v0.3）
+- ユーザーが料理写真5枚を用意（`work/写真/料理` → `poc/samples/photo/images/P001〜P005.jpg`）。正解データはなし
+- PoC-3 のスクリプト（`poc/poc3-food-photo/`、テスト 9件。PoC 全体で 66件合格）を作成。正解なしで測れること（形式・kcal≒4P+9F+4C・3回推定の CV・モデル間の差）を集計する
+- 了承を得て実行: 5枚 × 4設定（Haiku low/medium・Sonnet medium・Opus medium）× 3回 = 60回、94.4円（PoC 累計 約142円）
+- 結果レポート → [poc3-food-photo.md](../../poc/reports/poc3-food-photo.md)。Q-28（解決済み）・Q-29・Q-30 を追加
+
+**決まったこと**
+- Q-28: 写真推定は正解データで検証しない。推定値をそのまま登録する → scope.md、poc/README.md
+- Q-29: 写真推定のモデルは Sonnet 5.5・effort medium → [ADR-0011](../adr/0011-food-photo-model.md)
+
+**結果**
+- 60回すべてエラーなし・スキーマ適合。kcal と PFC の整合は 175/176品目
+- Haiku: P002 の納豆パックを low で3回とも落とした。合計は Sonnet・Opus より1〜3割低い。CV 約10%（境界）
+- Sonnet medium: 欠落なし、CV 6.6%（最大 10.1%）、p50 4.3秒、約1.9円 → 推奨
+- Opus medium: CV 3.5% で最も安定。ただし p50 7.4秒、約4.2円。サラダを8品目に分けるなど細かすぎる
+
+- Q-30: 入力方式④は「テキスト推定」ではなく「利用者による食品名と数値の手入力」（ユーザーの訂正）。Claude は使わない。`contracts/llm/text-estimate/` を削除し、PoC-4 は SKIP → [ADR-0012](../adr/0012-manual-text-input.md)、scope.md、CLAUDE.md
+
+**次にやること**
+1. 写真推定のプロンプト 0.2.0（料理単位で分ける、パック食品も品目に入れる）→ 同じ5枚で Sonnet 再実行（約30円）
+2. POC-34（食べ物でない・ぼやけた写真）と OCR の `not_nutrition_label` の確認
+3. REQ-05・DAT-00
+
+**注意点・気づき**
+- Q-19 の「テキスト入力」を「テキスト推定」と解釈して契約・PoC 計画を作っていた。曖昧な回答は推測で埋めず確認する
+- 正解がないので「Haiku が低い」のか「Sonnet・Opus が高い」のかは分からない。品目の欠落は正解なしでも分かる欠点
+- PoC-3 のサンプル CSV は truth 列が空（`truth_source` = none）
+
+---
+
 ## 2026-11-13 セッション1（続き10）: OCR の出力スキーマ v0.3（複数列）
 
 **やったこと**
