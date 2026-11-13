@@ -196,15 +196,24 @@ def fnum(v, nd: int = 1) -> str:
     return "-" if v is None else f"{v:.{nd}f}"
 
 
+def _chosen_column(r: dict) -> dict | None:
+    """採点に使った列（v0.3 は columns[column_index]、v0.2 はトップレベル）。"""
+    cols = sc.columns_of(r.get("parsed") or {})
+    i = (r.get("scores") or {}).get("column_index")
+    if i is None:
+        i = 0
+    return cols[i] if 0 <= i < len(cols) else None
+
+
 def _pred_nutrient(r: dict, n: str):
-    p = r.get("parsed")
-    return None if not p else p.get("nutrients", {}).get(n)
+    c = _chosen_column(r)
+    return None if not c else (c.get("nutrients") or {}).get(n)
 
 
-def _basis_str(d: dict | None) -> str:
-    if not d:
+def _basis_str(c: dict | None) -> str:
+    if not c:
         return "-"
-    b = d.get("basis") or {}
+    b = c.get("basis") or {}
     return f"{b.get('type')} {b.get('amount')}{b.get('unit') or ''}"
 
 
@@ -213,6 +222,13 @@ def _net_str(d: dict | None) -> str:
         return "-"
     n = d.get("net_content") or {}
     return f"{n.get('amount')}{n.get('unit') or ''}"
+
+
+def _columns_note(s: dict) -> str:
+    n = s.get("n_columns") or 0
+    if n <= 1:
+        return ""
+    return f"{n}列中 {(s.get('column_index') or 0) + 1}列目で採点"
 
 
 def build_summary(rows: list[dict], truths: dict[str, dict]) -> str:
@@ -279,10 +295,11 @@ def build_summary(rows: list[dict], truths: dict[str, dict]) -> str:
                     f"{fnum(_pred_nutrient(r, n))} / {fnum(t.get(n))}{mark(s['nutrients'][n])}"
                     for n in sc.NUTRIENTS
                 ],
-                f"{_basis_str(p)} / {t.get('basis')} {fnum(t.get('basis_amount'), 0)}{t.get('basis_unit') or ''}{mark(s['basis_correct'])}",
+                f"{_basis_str(_chosen_column(r))} / {t.get('basis')} {fnum(t.get('basis_amount'), 0)}{t.get('basis_unit') or ''}{mark(s['basis_correct'])}",
                 f"{_net_str(p)} / {fnum(t.get('net_content'), 0)}{t.get('net_content_unit') or ''}{mark(s['net_content_correct'])}",
                 fnum(r.get("latency_s")),
-                (r.get("error") or ("schema違反あり" if s.get("schema_valid") is False else ""))[:80],
+                (r.get("error") or ("schema違反あり" if s.get("schema_valid") is False else "")
+                 or _columns_note(s))[:80],
             ]
             L.append("| " + " | ".join(c.replace("|", "\\|") for c in cells) + " |")
         L.append("")

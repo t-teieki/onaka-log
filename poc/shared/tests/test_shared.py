@@ -51,7 +51,7 @@ def test_stripped_ocr_schema():
 
 def test_prompt_extraction():
     system, version = schemas.load_prompt("nutrition-label-ocr")
-    assert version == "0.1.0"
+    assert version == "0.2.0"
     assert system.startswith("あなたは日本の食品パッケージ")
     assert "```" not in system and "安全のためのルール" in system
 

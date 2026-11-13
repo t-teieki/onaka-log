@@ -8,7 +8,7 @@
 | 項目 | 内容 |
 |---|---|
 | 現在のマイルストーン | **M2 PoC**（M1 の残り: REQ-05・DAT-00/01 は並行で進める） |
-| 次にやること | ① OCR 出力スキーマ v0.3（複数列を返す、Q-26）とプロンプト 0.2.0 → 契約テスト ② `not_nutrition_label` の確認（キーボード写真、1円未満） ② 料理写真のサンプル収集（ユーザー、PoC-3 用）→ PoC-3 スクリプト ③ REQ-05 機能一覧・DAT-00 アクセスパターン（並行） ④ INF-10 の残り |
+| 次にやること | ① `not_nutrition_label` の確認（キーボード写真、1円未満） ② 料理写真のサンプル収集（ユーザー、PoC-3 用）→ PoC-3 スクリプト ③ REQ-05 機能一覧・DAT-00 アクセスパターン（並行） ④ INF-10 の残り |
 | ブロッカー | なし（技術スタックの主要な決定はそろった） |
 | 最終更新 | 2026-11-13 |
 
@@ -122,8 +122,8 @@ flowchart LR
 
 機能2: 栄養成分表示 OCR
 - [ ] **POC-21** 方式比較：Claude Vision に画像を直接渡す方式で、読める写真（4枚中3枚）はすべて正確。読めない写真は上位モデルでも読めなかったため、端末 OCR との比較は保留
-- [x] **POC-22** 出力スキーマと Structured Outputs での強制（v0.2。null を許す enum は anyOf で書く） — 成果物: [contracts/llm/nutrition-label-ocr/](../../contracts/llm/nutrition-label-ocr/)
-- [ ] **POC-23** 精度計測：写真4枚。読める3枚は全モデル kcal・P・F・C 正確（逆光も可）。袋の曲面・斜め・小さい文字の1枚は全モデル unreadable（推測なし）、正面から撮り直すと Haiku でも正確。複数列は全列を返して利用者が選ぶ（Q-26、スキーマ v0.3 は未着手） — 成果物: [poc2-label-ocr.md](../../poc/reports/poc2-label-ocr.md) (WIP)
+- [x] **POC-22** 出力スキーマと Structured Outputs での強制（v0.3。表示の列ごとに `columns` で返す。null を許す enum は anyOf で書く） — 成果物: [contracts/llm/nutrition-label-ocr/](../../contracts/llm/nutrition-label-ocr/)
+- [ ] **POC-23** 精度計測：写真4枚。読める3枚は全モデル kcal・P・F・C 正確（逆光も可）。袋の曲面・斜め・小さい文字の1枚は全モデル unreadable（推測なし）、正面から撮り直すと Haiku でも正確。複数列は全列を返して利用者が選ぶ（Q-26、スキーマ v0.3 で対応し、API で2列が返ることを確認） — 成果物: [poc2-label-ocr.md](../../poc/reports/poc2-label-ocr.md) (WIP)
 - [ ] **POC-24** 読み取り不可時の返し方：`unreadable` は全モデルで確認（数値は null、撮り直しの助言つき）。`not_nutrition_label` は未検証。アプリでは撮り直しを案内する（Q-25 → scope.md） (WIP)
 
 機能3: 撮影画像から推定
@@ -142,7 +142,7 @@ flowchart LR
 
 - [ ] **LLM-01 ★** Claude を使う箇所の確定：OCR構造化 / 写真推定 / テキスト入力推定 / （任意）バーコード未ヒット補完 / （将来）アドバイス — 成果物: `02_design/llm/README.md`
 - [x] **LLM-02 ★** 呼び出し経路：**バックエンド経由**に決定（APIキー保護・コスト制御） — 成果物: [ADR-0003](../adr/0003-phased-release-design.md)
-- [x] **LLM-03 ★** 用途ごとの入出力契約（JSON Schema）初版 v0.1：OCR・写真推定・テキスト推定のスキーマ・プロンプト・例 — 成果物: [contracts/llm/](../../contracts/llm/README.md)（PoC の結果で改訂する）
+- [x] **LLM-03 ★** 用途ごとの入出力契約（JSON Schema）初版 v0.1：OCR・写真推定・テキスト推定のスキーマ・プロンプト・例。OCR は PoC-2 の結果で出力 v0.3・prompt 0.2.0 に改訂 — 成果物: [contracts/llm/](../../contracts/llm/README.md)（PoC の結果で改訂する）
 - [x] **LLM-04** 出力の強制方式：Structured Outputs（`output_config.format`）。スキーマは制約込みの完全版で書き、API 未対応の制約は SDK が除去してクライアント側で検証 — 成果物: [contracts/llm/README.md](../../contracts/llm/README.md)
 - [ ] **LLM-05** 不確実性の表現：`status`（エラー種別）・`confidence`・`issues`・`assumptions` を v0.1 に入れた。PoC で妥当性を確認 (WIP)
 - [ ] **LLM-06** 数値の単位・基準量・丸め規則の統一（kcal, g、小数何桁）

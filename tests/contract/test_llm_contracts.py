@@ -10,7 +10,7 @@ from jsonschema import Draft202012Validator
 
 from conftest import (
     LLM_DIR, check_structured_outputs, example_files, load_json, rel,
-    schema_for, usecase_dirs,
+    schema_for, semantic_errors, usecase_dirs,
 )
 
 USECASES = usecase_dirs()
@@ -86,15 +86,46 @@ def test_structured_outputs_check_detects_violations():
 
 @pytest.mark.parametrize("path", VALID_OUTPUTS, ids=[rel(p) for p in VALID_OUTPUTS])
 def test_semantic_rules(path):
+    errors = semantic_errors(path.parents[2].name, load_json(path))
+    assert not errors, errors
+
+
+OCR_OK = LLM_DIR / "nutrition-label-ocr" / "examples" / "valid" / "output-ok-per-package.json"
+OCR_MULTI = LLM_DIR / "nutrition-label-ocr" / "examples" / "valid" / "output-ok-multiple-columns.json"
+
+
+def _ocr_mutations():
+    """スキーマには適合するが、意味上のルールに違反する OCR 出力（ルール, 変更）の組。"""
+    def ok_without_columns(d):
+        d["columns"] = []
+
+    def ok_null_kcal(d):
+        d["columns"][0]["nutrients"]["energy_kcal"] = None
+
+    def unreadable_with_columns(d):
+        d["status"] = "unreadable"
+
+    def multi_without_issue(d):
+        d["issues"] = []
+
+    def per_piece_with_amount(d):
+        d["columns"][0]["basis"]["amount"] = 1
+
+    return [
+        ("columns が空", OCR_OK, ok_without_columns),
+        ("energy_kcal が null", OCR_OK, ok_null_kcal),
+        ("columns が空でない", OCR_OK, unreadable_with_columns),
+        ("multiple_labels", OCR_MULTI, multi_without_issue),
+        ("per_piece", OCR_MULTI, per_piece_with_amount),
+    ]
+
+
+@pytest.mark.parametrize("expected,path,mutate", _ocr_mutations(),
+                         ids=[m[0] for m in _ocr_mutations()])
+def test_ocr_semantic_rules_detect_violations(expected, path, mutate):
     data = load_json(path)
-    usecase = path.parents[2].name
-    if usecase in ("food-photo-estimate", "text-estimate"):
-        if data["status"] != "ok":
-            assert data["items"] == []
-            assert data["meal_name"] is None
-    elif usecase == "nutrition-label-ocr":
-        if data["status"] == "ok":
-            assert data["nutrients"]["energy_kcal"] is not None
-            assert data["basis"]["type"] != "unknown"
-    else:
-        pytest.fail(f"意味ルール未定義の用途: {usecase}")
+    mutate(data)
+    schema = load_json(path.parents[2] / "output.schema.json")
+    assert Draft202012Validator(schema).is_valid(data), "スキーマ違反ではなく意味上の違反だけを作る"
+    errors = semantic_errors("nutrition-label-ocr", data)
+    assert any(expected in e for e in errors), errors

@@ -1,25 +1,30 @@
 {
   "status": "ok",
   "product_name": "サラダチキン プレーン",
-  "basis": {
-    "type": "per_package",
-    "amount": 115,
-    "unit": "g",
-    "label_text": "1袋（115g）当たり"
-  },
   "net_content": {
     "amount": 115,
     "unit": "g",
     "pieces": null,
     "label_text": "内容量 115g"
   },
-  "nutrients": {
-    "energy_kcal": 121,
-    "protein_g": 26.2,
-    "fat_g": 1.4,
-    "carbohydrate_g": 0.3,
-    "salt_equivalent_g": 1.8
-  },
+  "columns": [
+    {
+      "heading": null,
+      "basis": {
+        "type": "per_package",
+        "amount": 115,
+        "unit": "g",
+        "label_text": "1袋（115g）当たり"
+      },
+      "nutrients": {
+        "energy_kcal": 121,
+        "protein_g": 26.2,
+        "fat_g": 1.4,
+        "carbohydrate_g": 0.3,
+        "salt_equivalent_g": 1.8
+      }
+    }
+  ],
   "confidence": "high",
   "issues": [],
   "notes": null

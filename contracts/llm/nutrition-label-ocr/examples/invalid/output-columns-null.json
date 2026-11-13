@@ -1,0 +1,14 @@
+{
+  "status": "ok",
+  "product_name": "サラダチキン プレーン",
+  "net_content": {
+    "amount": 115,
+    "unit": "g",
+    "pieces": null,
+    "label_text": "内容量 115g"
+  },
+  "columns": null,
+  "confidence": "high",
+  "issues": [],
+  "notes": null
+}

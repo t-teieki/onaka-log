@@ -1,25 +1,13 @@
 {
   "status": "unreadable",
   "product_name": null,
-  "basis": {
-    "type": "unknown",
-    "amount": null,
-    "unit": null,
-    "label_text": null
-  },
   "net_content": {
     "amount": null,
     "unit": null,
     "pieces": null,
     "label_text": null
   },
-  "nutrients": {
-    "energy_kcal": null,
-    "protein_g": null,
-    "fat_g": null,
-    "carbohydrate_g": null,
-    "salt_equivalent_g": null
-  },
+  "columns": [],
   "confidence": "low",
   "issues": [
     "blurry",

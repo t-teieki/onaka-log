@@ -1,107 +1,246 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:onaka-log:llm:nutrition-label-ocr:output:v0.2",
+  "$id": "urn:onaka-log:llm:nutrition-label-ocr:output:v0.3",
   "title": "NutritionLabelOcrOutput",
-  "description": "栄養成分表示の写真から読み取った結果。Claude に Structured Outputs で強制する出力。",
+  "description": "栄養成分表示の写真から読み取った結果。Claude に Structured Outputs で強制する出力。表示の列ごとに値を返し、複数列なら利用者が確認画面で選ぶ（Q-26）。",
   "type": "object",
   "additionalProperties": false,
-  "required": ["status", "product_name", "basis", "net_content", "nutrients", "confidence", "issues", "notes"],
+  "required": [
+    "status",
+    "product_name",
+    "net_content",
+    "columns",
+    "confidence",
+    "issues",
+    "notes"
+  ],
   "properties": {
     "status": {
       "description": "ok: 読み取れた / unreadable: 栄養成分表示だが主要な値が読めない / not_nutrition_label: 栄養成分表示が写っていない",
       "type": "string",
-      "enum": ["ok", "unreadable", "not_nutrition_label"]
+      "enum": [
+        "ok",
+        "unreadable",
+        "not_nutrition_label"
+      ]
     },
     "product_name": {
       "description": "写真に商品名が写っていれば、その表記。なければ null",
-      "type": ["string", "null"]
-    },
-    "basis": {
-      "description": "栄養成分の値が何当たりか",
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["type", "amount", "unit", "label_text"],
-      "properties": {
-        "type": {
-          "type": "string",
-          "enum": ["per_100g", "per_100ml", "per_package", "per_serving", "per_piece", "unknown"]
-        },
-        "amount": {
-          "description": "基準量の数値（例: 「1袋（45g）当たり」なら 45）。不明なら null",
-          "type": ["number", "null"],
-          "minimum": 0
-        },
-        "unit": {
-          "anyOf": [
-            { "type": "string", "enum": ["g", "ml"] },
-            { "type": "null" }
-          ]
-        },
-        "label_text": {
-          "description": "基準量の表記をそのまま（例: 「1袋（45g）当たり」）",
-          "type": ["string", "null"]
-        }
-      }
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "net_content": {
       "description": "内容量（1包装の量）。写っていなければ各値は null",
       "type": "object",
       "additionalProperties": false,
-      "required": ["amount", "unit", "pieces", "label_text"],
+      "required": [
+        "amount",
+        "unit",
+        "pieces",
+        "label_text"
+      ],
       "properties": {
         "amount": {
-          "type": ["number", "null"],
+          "type": [
+            "number",
+            "null"
+          ],
           "minimum": 0
         },
         "unit": {
           "anyOf": [
-            { "type": "string", "enum": ["g", "ml"] },
-            { "type": "null" }
+            {
+              "type": "string",
+              "enum": [
+                "g",
+                "ml"
+              ]
+            },
+            {
+              "type": "null"
+            }
           ]
         },
         "pieces": {
           "description": "個数の表記があれば（例: 「6個入り」なら 6）",
-          "type": ["integer", "null"],
+          "type": [
+            "integer",
+            "null"
+          ],
           "minimum": 1
         },
         "label_text": {
-          "type": ["string", "null"]
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },
-    "nutrients": {
-      "description": "表示された値（基準量当たり）。読めない項目は null",
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["energy_kcal", "protein_g", "fat_g", "carbohydrate_g", "salt_equivalent_g"],
-      "properties": {
-        "energy_kcal": { "type": ["number", "null"], "minimum": 0 },
-        "protein_g": { "type": ["number", "null"], "minimum": 0 },
-        "fat_g": { "type": ["number", "null"], "minimum": 0 },
-        "carbohydrate_g": {
-          "description": "炭水化物。「糖質」と「食物繊維」に分けて表示されている場合は合計",
-          "type": ["number", "null"],
-          "minimum": 0
-        },
-        "salt_equivalent_g": { "type": ["number", "null"], "minimum": 0 }
+    "columns": {
+      "description": "栄養成分表示の列。表示の左から順に、読めた列をすべて入れる（味違い・1個当たりと1袋当たりなど）。status が ok 以外なら空配列",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/column"
       }
     },
     "confidence": {
       "description": "読み取り結果全体の確からしさ",
       "type": "string",
-      "enum": ["high", "medium", "low"]
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ]
     },
     "issues": {
       "description": "読み取りに影響した要因",
       "type": "array",
       "items": {
         "type": "string",
-        "enum": ["blurry", "glare", "oblique", "curved", "partially_cut", "small_text", "low_light", "multiple_labels", "kj_only"]
+        "enum": [
+          "blurry",
+          "glare",
+          "oblique",
+          "curved",
+          "partially_cut",
+          "small_text",
+          "low_light",
+          "multiple_labels",
+          "kj_only"
+        ]
       }
     },
     "notes": {
       "description": "補足（判断に迷った点など）。なければ null",
-      "type": ["string", "null"]
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "$defs": {
+    "column": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "heading",
+        "basis",
+        "nutrients"
+      ],
+      "properties": {
+        "heading": {
+          "description": "列の見出しの表記（例: 「シュガー」「チョコ」）。見出しがなければ null",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "basis": {
+          "description": "栄養成分の値が何当たりか",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "amount",
+            "unit",
+            "label_text"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "per_100g",
+                "per_100ml",
+                "per_package",
+                "per_serving",
+                "per_piece"
+              ]
+            },
+            "amount": {
+              "description": "基準量の数値（例: 「1袋（45g）当たり」なら 45）。「1個当たり」のように量の記載がなければ null",
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "unit": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "g",
+                    "ml"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "label_text": {
+              "description": "基準量の表記をそのまま（例: 「1袋（45g）当たり」）",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "nutrients": {
+          "description": "この列に表示された値（基準量当たり）。読めない項目は null",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "energy_kcal",
+            "protein_g",
+            "fat_g",
+            "carbohydrate_g",
+            "salt_equivalent_g"
+          ],
+          "properties": {
+            "energy_kcal": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "protein_g": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "fat_g": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "carbohydrate_g": {
+              "description": "炭水化物。「糖質」と「食物繊維」に分けて表示されている場合は合計",
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "salt_equivalent_g": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            }
+          }
+        }
+      }
     }
   }
 }

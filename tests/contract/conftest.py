@@ -122,3 +122,37 @@ def _find_recursive_defs(schema: dict) -> list[str]:
     if "#" in _refs_in(schema):
         errors.append("#: ルートへの再帰 $ref")
     return errors
+
+
+def semantic_errors(usecase: str, data: dict) -> list[str]:
+    """contracts/llm/README.md「スキーマで表せない意味上のルール」の違反を返す（空なら適合）。
+
+    推定モジュールの実装でも同じルールを検証する。ここでは契約の例がルールを満たすことと、
+    ルール自体が違反を検出できることを確かめる。
+    """
+    errors: list[str] = []
+    if usecase in ("food-photo-estimate", "text-estimate"):
+        if data["status"] != "ok":
+            if data["items"] != []:
+                errors.append("status が ok 以外なのに items が空でない")
+            if data["meal_name"] is not None:
+                errors.append("status が ok 以外なのに meal_name が null でない")
+    elif usecase == "nutrition-label-ocr":
+        cols = data["columns"]
+        if data["status"] == "ok":
+            if not cols:
+                errors.append("status が ok なのに columns が空")
+            for i, c in enumerate(cols):
+                if c["nutrients"]["energy_kcal"] is None:
+                    errors.append(f"columns[{i}]: status が ok なのに energy_kcal が null")
+        elif cols:
+            errors.append("status が ok 以外なのに columns が空でない")
+        if len(cols) > 1 and "multiple_labels" not in data["issues"]:
+            errors.append("列が複数あるのに issues に multiple_labels がない")
+        for i, c in enumerate(cols):
+            b = c["basis"]
+            if b["type"] == "per_piece" and (b["amount"] is not None or b["unit"] is not None):
+                errors.append(f"columns[{i}]: per_piece なのに basis.amount / unit が null でない")
+    else:
+        errors.append(f"意味ルール未定義の用途: {usecase}")
+    return errors

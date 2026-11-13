@@ -1,0 +1,49 @@
+{
+  "status": "ok",
+  "product_name": "ミニドーナツ",
+  "net_content": {
+    "amount": null,
+    "unit": null,
+    "pieces": 4,
+    "label_text": "内容量 4個"
+  },
+  "columns": [
+    {
+      "heading": "プレーン",
+      "basis": {
+        "type": "per_piece",
+        "amount": null,
+        "unit": null,
+        "label_text": "1個当たり"
+      },
+      "nutrients": {
+        "energy_kcal": 180,
+        "protein_g": 2.0,
+        "fat_g": 9.5,
+        "carbohydrate_g": 21.6,
+        "salt_equivalent_g": 0.2
+      }
+    },
+    {
+      "heading": "ココア",
+      "basis": {
+        "type": "per_piece",
+        "amount": null,
+        "unit": null,
+        "label_text": "1個当たり"
+      },
+      "nutrients": {
+        "energy_kcal": 195,
+        "protein_g": 2.4,
+        "fat_g": 10.8,
+        "carbohydrate_g": 22.1,
+        "salt_equivalent_g": 0.2
+      }
+    }
+  ],
+  "confidence": "high",
+  "issues": [
+    "multiple_labels"
+  ],
+  "notes": "味違いの2列表示。どちらの味の袋かは写真から分からない"
+}
