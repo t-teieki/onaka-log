@@ -20,3 +20,8 @@ poc = ["anthropic", "pillow", "httpx", "python-dotenv"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "spec(*ids): このテストが確かめる仕様の ID（例: DM-03, F-030-02）。docs/03_testing/traceability.md",
+    "live: 実際の Claude API・Open Food Facts を呼ぶ（費用がかかる。-m live のときだけ動かす）",
+]
+addopts = "--strict-markers -m 'not live'"

@@ -52,6 +52,7 @@ def test_invalid_example_fails(path):
     assert not validator(schema_for(path)).is_valid(load_json(path)), "不適合な例がスキーマに適合してしまっている"
 
 
+@pytest.mark.spec("DM-01", "DM-02", "DM-03", "DM-04", "DM-05", "DM-06", "DM-07", "DM-08", "DM-09")
 @pytest.mark.parametrize("path", VALID, ids=[rel(p) for p in VALID])
 def test_valid_example_follows_domain_rules(path):
     errors = dr.meal_errors(load_json(path))
@@ -68,11 +69,13 @@ def test_valid_examples_cover_all_methods_and_modes():
 
 # ---- ルール自体の確認（計算） ----
 
+@pytest.mark.spec("DM-02", "DM-03")
 def test_round1_is_half_up():
     assert dr.round1(0.05) == 0.1 and dr.round1(0.15) == 0.2 and dr.round1(2.25) == 2.3
     assert dr.round1(351.0) == 351.0
 
 
+@pytest.mark.spec("DM-01")
 @pytest.mark.parametrize("eaten_at,expected", [
     ("2026-11-14T03:59:59+09:00", "2026-11-13"),  # 4:00 より前は前日
     ("2026-11-14T04:00:00+09:00", "2026-11-14"),
@@ -88,6 +91,7 @@ def _ref(btype, status=None, amount=None, unit=None, pieces=None):
             "nutrients": {n: 100.0 for n in dr.NUTRIENTS}}
 
 
+@pytest.mark.spec("DM-04")
 @pytest.mark.parametrize("ref,expected", [
     (_ref("per_100g", "known", 76, "g"), 0.76),
     (_ref("per_100g", "assumed_from_serving", 60, "g"), 0.6),
@@ -103,6 +107,7 @@ def test_whole_multiplier(ref, expected):
     assert dr.whole_multiplier(ref) == pytest.approx(expected)
 
 
+@pytest.mark.spec("DM-04", "DM-06")
 def test_expected_multiplier_modes():
     ref = _ref("per_100g", "known", 80, "g")
     assert dr.expected_multiplier(ref, {"mode": "fraction", "fraction": 0.25, "pieces": None}) == pytest.approx(0.2)
@@ -176,10 +181,21 @@ def _mutations():
     ]
 
 
-@pytest.mark.parametrize("rule,path,mutate", _mutations(), ids=[f"{m[0]}-{m[2].__name__}" for m in _mutations()])
+@pytest.mark.parametrize("rule,path,mutate", [
+    pytest.param(r, p, m, marks=pytest.mark.spec(r), id=f"{r}-{m.__name__}") for r, p, m in _mutations()
+])
 def test_domain_rules_detect_violations(rule, path, mutate):
     meal = copy.deepcopy(load_json(path))
     mutate(meal)
     assert validator(MEAL_SCHEMA).is_valid(meal), "スキーマ違反ではなく、ルール違反だけを作る"
     errors = dr.meal_errors(meal)
     assert any(e.startswith(rule) or f" {rule}:" in e for e in errors), errors
+
+
+@pytest.mark.spec("DM-08")
+def test_empty_meal_is_detected():
+    """食品が0件の食事（スキーマの minItems でも弾くが、ルールの参照実装でも検出する）。"""
+    meal = copy.deepcopy(load_json(BASE))
+    meal["items"] = []
+    meal["totals"], meal["totals_incomplete"] = dr.totals_of([])
+    assert any(e.startswith("DM-08") for e in dr.meal_errors(meal))

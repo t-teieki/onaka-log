@@ -82,6 +82,7 @@ def test_operation_ids_are_unique():
     assert len(ids) == len(set(ids))
 
 
+@pytest.mark.spec("F-001")
 @pytest.mark.parametrize("path,method,op", OPERATIONS, ids=[f"{m.upper()} {p}" for p, m, _ in OPERATIONS])
 def test_operation_has_auth_and_error_responses(path, method, op):
     assert SPEC["security"] == [{"cognitoJwt": []}] and "security" not in op, "全 API が JWT 必須"
@@ -136,6 +137,7 @@ ESTIMATE_KIND = {"LabelEstimateResponse": "label", "PhotoEstimateResponse": "pho
 ESTIMATES = [p for p in VALID if component_of(p) in ESTIMATE_KIND]
 
 
+@pytest.mark.spec("F-011", "F-012", "F-013")
 @pytest.mark.parametrize("path", ESTIMATES, ids=[rel(p) for p in ESTIMATES])
 def test_estimate_examples_follow_api_rules(path):
     errors = ar.estimate_errors(ESTIMATE_KIND[component_of(path)], load_json(path))
@@ -145,6 +147,7 @@ def test_estimate_examples_follow_api_rules(path):
 CREATES = [p for p in VALID if component_of(p) == "MealCreateRequest"]
 
 
+@pytest.mark.spec("F-030", "DM-01", "DM-02", "DM-03", "DM-04")
 @pytest.mark.parametrize("path", CREATES, ids=[rel(p) for p in CREATES])
 def test_create_request_builds_valid_meal(path):
     """保存 API がバックエンドで計算した結果が、食事のスキーマとドメインのルールを満たす。"""
@@ -153,6 +156,7 @@ def test_create_request_builds_valid_meal(path):
     assert dr.meal_errors(meal) == []
 
 
+@pytest.mark.spec("F-030")
 def test_add_item_request_builds_valid_meal():
     req = load_json(API_DIR / "examples" / "valid" / "AddItemRequest-barcode-drink.json")
     meal = ar.build_meal(load_json(API_DIR / "examples" / "valid" / "MealCreateRequest-photo.json"), "u", "2026-11-13T10:00:00Z")
@@ -163,6 +167,7 @@ def test_add_item_request_builds_valid_meal():
     assert dr.meal_errors(meal) == []
 
 
+@pytest.mark.spec("F-031", "F-032")
 @pytest.mark.parametrize("path", [p for p in VALID if component_of(p) in ("DaySummary", "DeleteItemResponse")],
                          ids=[rel(p) for p in VALID if component_of(p) in ("DaySummary", "DeleteItemResponse")])
 def test_meal_responses_follow_domain_rules(path):
@@ -175,6 +180,7 @@ def test_meal_responses_follow_domain_rules(path):
             assert dr.meal_errors(data["meal"]) == []
 
 
+@pytest.mark.spec("F-020")
 def test_default_portion_rule():
     piece = {"basis": {"type": "per_piece"}, "net_content": {"status": "known", "pieces": 4}}
     assert ar.default_portion(piece) == {"mode": "pieces", "fraction": None, "pieces": 1}

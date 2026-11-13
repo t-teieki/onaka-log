@@ -8,7 +8,7 @@
 | 項目 | 内容 |
 |---|---|
 | 現在のマイルストーン | **M3 基本設計**（M2 PoC は 2026-11-13 に完了 → [poc-summary.md](../../poc/reports/poc-summary.md)。M1 の残り DAT-01 を先に進める） |
-| 次にやること | ① INF-10 の残り（ユーザー: AWS の予算アラート・MFA・IAM） ② TST-01 テスト戦略・TST-02 トレーサビリティ（M4 の入口） ③ ライブラリ選定（TEC-03・07・08・10） ④ UIX-11 デザインシステム |
+| 次にやること | ① INF-10 の残り（ユーザー: AWS の予算アラート・MFA・IAM） ② ライブラリ選定（TEC-03・07・08・10、TST-08 E2E） ③ HNS（ハーネス: CI の土台 CIC-01・02） ④ UIX-11 デザインシステム |
 | ブロッカー | なし（技術スタックの主要な決定はそろった） |
 | 最終更新 | 2026-11-13 |
 
@@ -249,17 +249,17 @@ flowchart LR
 
 ## TST: テスト戦略（M2〜M4）
 
-- [ ] **TST-01 ★** テスト戦略：レイヤごとの責務とテストピラミッド — 成果物: `03_testing/strategy.md`
-- [ ] **TST-02 ★** 仕様⇔テストのトレーサビリティ規約（テスト名・タグに F-xxx / NFR-xxx を含める）
+- [x] **TST-01 ★** テスト戦略：9層（契約・バックエンド単体・API・モバイル・インフラ・dev 確認・E2E・実 API スモーク・LLM 回帰）の責務と実行タイミング — 成果物: [strategy.md](../03_testing/strategy.md)
+- [x] **TST-02 ★** トレーサビリティ規約：`@pytest.mark.spec("DM-03")`、対応表と検査は `tools/trace.py`（DM は必須、MVP の F は警告） — 成果物: [traceability.md](../03_testing/traceability.md)
 - [x] **TST-03 ★** 契約テスト：例の適合・不適合、Structured Outputs 互換、意味上のルールを検査（pytest、88件） — 成果物: [tests/contract/](../../tests/contract/README.md)
-- [ ] **TST-04** Claude API のモック方針：記録済みレスポンス（フィクスチャ）で単体テスト、実API は別枠
-- [ ] **TST-05** 実API スモークテスト（手動/定期実行、コスト上限付き）
-- [ ] **TST-06** API 契約テスト（実装が OpenAPI に準拠しているか）
-- [ ] **TST-07** LLM 精度評価（eval）：PoC データセットを回帰用に流用、合格しきい値、レポート形式 — `tests/eval/`
+- [x] **TST-04** Claude API のモック方針：PoC の出力を記録した応答として `apps/api/tests/fixtures/llm/` に置き、呼び出しを差し替える。失敗（リフューザル・途切れ・違反・429）も再現 — 成果物: [strategy.md](../03_testing/strategy.md) §3-2
+- [ ] **TST-05** 実API スモークテスト：`@pytest.mark.live`、既定では動かさない、1回数円以内と決定。テストは実装時 — 方針: [strategy.md](../03_testing/strategy.md) §3-2 (WIP)
+- [ ] **TST-06** API 契約テスト：API テストで応答を openapi.yaml で検証、パスとメソッドの一覧の一致も検査と決定。テストは実装時 — 方針: [strategy.md](../03_testing/strategy.md) §3-3 (WIP)
+- [ ] **TST-07** LLM 回帰評価：PoC のサンプルとスクリプトを流用、プロンプト・モデル変更時に手動で実行と決定。`tests/eval/` は実装時 — 方針: [strategy.md](../03_testing/strategy.md) §3-2 (WIP)
 - [ ] **TST-08** E2E テストツール選定（モバイル）
-- [ ] **TST-09** テストデータ・フィクスチャ管理（画像サンプルの扱い含む）
-- [ ] **TST-10** カバレッジ目標と計測
-- [ ] **TST-11** 「テスト先行 → 実装」の手順書（誰が・いつ・どのテストを書くか、赤の確認方法） — HNS-03 と連動
+- [x] **TST-09** テストデータ：画像は Git に入れない。単体・API テストはダミー画像と記録した応答、実画像は実 API スモークと回帰評価だけ — 成果物: [strategy.md](../03_testing/strategy.md) §3-4
+- [x] **TST-10** カバレッジ：行カバレッジの数値目標は置かず、仕様の ID とテストの対応で見る。`domain/` だけ行カバレッジの目安 90% — 成果物: [strategy.md](../03_testing/strategy.md) §4
+- [x] **TST-11** テスト先行の手順：仕様（F-xxx-yy）→ 契約 → spec 付きテスト（赤を確認してコミット）→ 実装（緑）→ trace.py --check — 成果物: [strategy.md](../03_testing/strategy.md) §5
 
 ## CIC: CI/CD（M4〜M6）
 

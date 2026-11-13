@@ -21,7 +21,7 @@
 
 1. **仕様**: `docs/01_requirements/`（What）→ `docs/02_design/`（How）
 2. **契約**: `contracts/` に JSON Schema / OpenAPI として機械可読化（SSOT）
-3. **テスト**: 仕様IDに紐づくテストを先に書き、赤（失敗）を確認する
+3. **テスト**: 仕様IDに紐づくテストを先に書き（`@pytest.mark.spec("DM-03")` など、[traceability.md](docs/03_testing/traceability.md)）、赤（失敗）を確認する。層ごとの方針は [strategy.md](docs/03_testing/strategy.md)
 4. **実装**: テストが緑になるまで実装する
 - 実装フェーズでは **テストと契約を変更しない**。変更が必要と判断したら手を止め、ユーザーに確認し、仕様 → 契約 → テストの順に更新する。
 - 重要な決定は `docs/adr/` に ADR として残す。未決事項は推測で埋めず `open-questions.md` に積む。
@@ -60,4 +60,6 @@
 
 - 契約テスト（`contracts/` を変更したら必ず実行。WSL の uv を使う）:
   `wsl -e bash -lc "cd /mnt/c/project/onaka-log && UV_LINK_MODE=copy ~/.local/bin/uv run --group dev pytest tests/contract -q"`
+- 仕様とテストの対応の検査（テストを足したら実行。DM の抜けや仕様にない ID があれば失敗する）:
+  `wsl -e bash -lc "cd /mnt/c/project/onaka-log && UV_LINK_MODE=copy ~/.local/bin/uv run --group dev python tools/trace.py --check"`
 - ファイルは UTF-8（BOM なし）・LF で書く。PowerShell の `Set-Content` / `Out-File` は BOM を付けるので使わない
