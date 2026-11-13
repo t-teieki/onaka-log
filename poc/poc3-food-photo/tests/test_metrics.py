@@ -94,6 +94,10 @@ def test_group_stats_and_summary():
 
 
 def test_latest_runs_keeps_last():
-    a = {"sample_id": "P1", "model": "m", "effort": "low", "size": "1024", "rep": 1, "v": 1}
+    a = {"sample_id": "P1", "model": "m", "effort": "low", "size": "1024", "rep": 1, "v": 1,
+         "prompt_version": "0.1.0"}
     b = dict(a, v=2)
     assert run.latest_runs([a, b]) == [b]
+    # プロンプトのバージョンが違えば別の結果として残す
+    c = dict(a, prompt_version="0.2.0")
+    assert len(run.latest_runs([a, c])) == 2

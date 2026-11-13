@@ -44,3 +44,6 @@
 | Q-28 | 写真推定の正解データ（2026-11-13） | 用意しない。本番でも正解はなく、推定値をそのまま登録する前提。PoC-3 も正解なしで評価する | [scope.md](../01_requirements/scope.md)、[poc/README.md](../../poc/README.md) |
 | Q-29 | 写真推定のモデル（2026-11-13） | Sonnet 5.5・effort medium | [ADR-0011](../adr/0011-food-photo-model.md) |
 | Q-30 | PoC-4（テキスト推定）の進め方（2026-11-13） | テキスト推定はしない。④は利用者が食品名と数値を手入力する方式で、他の方式で推定できない・不正確なときに使う。text-estimate の契約は削除し、PoC-4 は SKIP | [ADR-0012](../adr/0012-manual-text-input.md) |
+| Q-31 | 保存後の修正（2026-11-14） | MVP では保存した食品の値を直さない（間違えたら削除して記録し直す）。食品が0件になった食事は自動で削除する | [scope.md](../01_requirements/scope.md)、[data-access-patterns.md](../02_design/data-access-patterns.md) |
+| Q-32 | 食事のまとまり方と区分（2026-11-14） | 1回の記録で1食事を作り、後から同じ食事に食品を足せる。食事区分（朝・昼・夕・間食）は MVP では持たず、時刻で並べる | [scope.md](../01_requirements/scope.md)、[data-access-patterns.md](../02_design/data-access-patterns.md) |
+| Q-33 | 食べた日時（2026-11-14） | 既定は記録した時刻。確認画面で日時を変えられる（過去の日時も可）。保存後は変えない。タイムゾーンは日本時間に固定（MVP） | [scope.md](../01_requirements/scope.md)、[data-access-patterns.md](../02_design/data-access-patterns.md) |

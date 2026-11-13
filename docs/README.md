@@ -14,7 +14,7 @@
 | パス | 内容 |
 |---|---|
 | `00_project/` | プロジェクト管理・外部記憶（roadmap / progress-log / open-questions / folder-structure / glossary） |
-| `01_requirements/` | vision, scope, features/（F-xxx）, non-functional（NFR-xxx） |
+| `01_requirements/` | vision, scope, features/（F-xxx、索引は features/README.md）, non-functional（NFR-xxx） |
 | `02_design/` | architecture, domain-model, data-model, auth, infra, api, error-handling, llm/, screens/ |
 | `03_testing/` | テスト戦略・トレーサビリティ・eval 方針 |
 | `04_operations/` | CI/CD・リリース・監視 |

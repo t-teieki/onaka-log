@@ -159,11 +159,16 @@ def load_rows(path: Path = RESULTS) -> list[dict]:
 
 
 def latest_runs(rows: list[dict]) -> list[dict]:
-    """同じ (sample, model, effort, size, rep) は最後の1件だけ使う（費用は全件を合算）。"""
+    """同じ (sample, model, effort, size, prompt_version, rep) は最後の1件だけ使う（費用は全件を合算）。"""
     d: dict[tuple, dict] = {}
     for r in rows:
-        d[(r["sample_id"], r["model"], r["effort"], r["size"], r["rep"])] = r
+        d[(r["sample_id"], *cfg_key(r), r["rep"])] = r
     return list(d.values())
+
+
+def cfg_key(r: dict) -> tuple:
+    """集計の単位: モデル・effort・画像サイズ・プロンプトのバージョン。"""
+    return (r["model"], r["effort"], r["size"], str(r.get("prompt_version")))
 
 
 def fnum(v, nd: int = 0) -> str:
@@ -207,7 +212,7 @@ def build_summary(rows: list[dict], samples: dict[str, dict]) -> str:
         return "\n".join(L + ["結果なし。"]) + "\n"
     runs = latest_runs(rows)
     total_cost = sum(r.get("cost_jpy") or 0 for r in rows)
-    configs = sorted({(r["model"], r["effort"], r["size"]) for r in runs})
+    configs = sorted({cfg_key(r) for r in runs})
     sids = sorted({r["sample_id"] for r in runs})
     L += [
         f"- 実行数: {len(rows)} 回 / prompt_version: {', '.join(sorted({str(r.get('prompt_version')) for r in rows}))}"
@@ -218,18 +223,18 @@ def build_summary(rows: list[dict], samples: dict[str, dict]) -> str:
         "",
         "## 設定ごとの結果",
         "",
-        "| モデル | effort | 画像 | 回数 | エラー | status ok | schema | 意味ルール | アトウォーター | CV kcal 平均 | CV kcal 最大 | CV≦10% の写真 | 応答 p50 / p90 (s) | 1回の費用(円) |",
-        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+        "| モデル | effort | 画像 | prompt | 回数 | エラー | status ok | schema | 意味ルール | アトウォーター | CV kcal 平均 | CV kcal 最大 | CV≦10% の写真 | 応答 p50 / p90 (s) | 1回の費用(円) |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for cfg in configs:
-        rs = [r for r in runs if (r["model"], r["effort"], r["size"]) == cfg]
+        rs = [r for r in runs if cfg_key(r) == cfg]
         cost = [r.get("cost_jpy") or 0 for r in rs]
         lat = [r["latency_s"] for r in rs if r.get("latency_s") is not None]
         cvs = [group_stats([r for r in rs if r["sample_id"] == s])["cv_energy_kcal"] for s in sids]
         cvs = [c for c in cvs if c is not None]
         atw = [ok for r in rs for ok in mt.atwater_checks(r.get("parsed"))]
         L.append("| " + " | ".join([
-            cfg[0], cfg[1], cfg[2], str(len(rs)), str(sum(1 for r in rs if r.get("error"))),
+            cfg[0], cfg[1], cfg[2], cfg[3], str(len(rs)), str(sum(1 for r in rs if r.get("error"))),
             frate([bool(r.get("parsed")) and r["parsed"].get("status") == "ok" for r in rs]),
             frate([r.get("schema_errors") == [] for r in rs]),
             frate([r.get("semantic_errors") == [] for r in rs]),
@@ -245,10 +250,10 @@ def build_summary(rows: list[dict], samples: dict[str, dict]) -> str:
     for sid in sids:
         note = samples.get(sid, {}).get("notes") or ""
         L += [f"### {sid} {note}".rstrip(), "",
-              "| モデル | effort | kcal | P | F | C | CV kcal | 品目数 | 中央値との差 |",
-              "|---|---|---|---|---|---|---|---|---|"]
+              "| モデル | effort | prompt | kcal | P | F | C | CV kcal | 品目数 | 中央値との差 |",
+              "|---|---|---|---|---|---|---|---|---|---|"]
         stats = {cfg: group_stats([r for r in runs if r["sample_id"] == sid
-                                   and (r["model"], r["effort"], r["size"]) == cfg]) for cfg in configs}
+                                   and cfg_key(r) == cfg]) for cfg in configs}
         means = [s["mean_energy_kcal"] for s in stats.values() if s["n"] and s["mean_energy_kcal"] is not None]
         med = statistics.median(means) if means else None
         for cfg, s in stats.items():
@@ -258,7 +263,7 @@ def build_summary(rows: list[dict], samples: dict[str, dict]) -> str:
                 str(s["items_min"]) if s["items_min"] == s["items_max"] else f"{s['items_min']}〜{s['items_max']}")
             diff = mt.rel_diff(s["mean_energy_kcal"], med)
             L.append("| " + " | ".join([
-                cfg[0], cfg[1], fnum(s["mean_energy_kcal"]), fnum(s["mean_protein_g"], 1),
+                cfg[0], cfg[1], cfg[3], fnum(s["mean_energy_kcal"]), fnum(s["mean_protein_g"], 1),
                 fnum(s["mean_fat_g"], 1), fnum(s["mean_carbohydrate_g"], 1),
                 fpct(s["cv_energy_kcal"]), items, "-" if diff is None else f"{diff * 100:+.0f}%",
             ]) + " |")
@@ -269,13 +274,13 @@ def build_summary(rows: list[dict], samples: dict[str, dict]) -> str:
         L += [f"### {sid}", ""]
         for cfg in configs:
             first = sorted((r for r in runs if r["sample_id"] == sid
-                            and (r["model"], r["effort"], r["size"]) == cfg), key=lambda r: r["rep"])
+                            and cfg_key(r) == cfg), key=lambda r: r["rep"])
             if not first:
                 continue
             p = first[0].get("parsed") or {}
             parts = [f"{i.get('name')} {fnum((i.get('nutrients') or {}).get('energy_kcal'))}kcal"
                      f"（{fnum(i.get('estimated_weight_g'))}g, {i.get('confidence')}）" for i in p.get("items") or []]
-            L.append(f"- **{cfg[0]} / {cfg[1]}**: {p.get('meal_name')} — " + ("、".join(parts) or first[0].get("error") or "-"))
+            L.append(f"- **{cfg[0]} / {cfg[1]} / prompt {cfg[3]}**: {p.get('meal_name')} — " + ("、".join(parts) or first[0].get("error") or "-"))
         L.append("")
     L += [f"**総費用: {total_cost:.1f} 円**", ""]
     return "\n".join(L)
