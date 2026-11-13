@@ -8,7 +8,7 @@
 | 項目 | 内容 |
 |---|---|
 | 現在のマイルストーン | **M3 基本設計**（M2 PoC は 2026-11-13 に完了 → [poc-summary.md](../../poc/reports/poc-summary.md)。M1 の残り DAT-01 を先に進める） |
-| 次にやること | ① INF-10 の残り（ユーザー: AWS の予算アラート・MFA・IAM） ② ADR-0002 のフォルダ構成を確定（`apps/mobile` `apps/api` `infra/`） ③ UIX 画面一覧・確認画面 ④ TST-01 テスト戦略・TST-02 トレーサビリティ |
+| 次にやること | ① INF-10 の残り（ユーザー: AWS の予算アラート・MFA・IAM） ② UIX 画面一覧・確認画面 ③ TST-01 テスト戦略・TST-02 トレーサビリティ ④ TEC-03・TEC-07〜10 のライブラリ選定 |
 | ブロッカー | なし（技術スタックの主要な決定はそろった） |
 | 最終更新 | 2026-11-13 |
 
@@ -55,7 +55,7 @@ flowchart LR
 - [ ] **PRJ-03** ブランチ戦略（例: GitHub Flow / trunk-based）、main 保護ルール
 - [ ] **PRJ-04** コミット規約（例: Conventional Commits）・PR テンプレート（仕様ID記載欄）
 - [x] **PRJ-05** フォルダ構成の初版 — 成果物: [folder-structure.md](folder-structure.md)
-- [ ] **PRJ-06** フォルダ構成の確定（TEC 決定後に `apps/` 具体化） — 成果物: ADR-0002 を Accepted に
+- [x] **PRJ-06** フォルダ構成の確定：`apps/api`（uv ワークスペース、`src/onaka_api/`）・`apps/mobile`（Expo、npm）・`infra/`（SAM）。`packages/` は作らない — 成果物: [ADR-0002](../adr/0002-monorepo-and-folder-structure.md) Accepted, [folder-structure.md](folder-structure.md)
 - [ ] **PRJ-07** ドキュメント規約（記法・ID体系・テンプレート）の確定 — 成果物: [docs/README.md](../README.md), `docs/templates/`
 - [ ] **PRJ-08** 機能仕様テンプレート・PoCレポートテンプレート作成
 - [ ] **PRJ-09** 用語集の作成（食事 / 食品 / 推定 / 記録元 / 基準量 など） — 成果物: `glossary.md`

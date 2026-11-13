@@ -5,6 +5,29 @@
 
 ---
 
+## 2026-11-14 セッション1（続き16）: フォルダ構成の確定
+
+**やったこと**
+- コミット `c690439`（API 契約・ADR-0016）
+- [ADR-0002](../adr/0002-monorepo-and-folder-structure.md) を Accepted にし、[folder-structure.md](folder-structure.md) を確定版に更新（実在しないフォルダは「未作成」と明記、依存関係の向きの図を追加）
+- `apps/README.md`・`infra/README.md` を中身に合わせて更新。roadmap の PRJ-06 を完了
+
+**決まったこと**（設計判断）
+- Python は uv のワークスペース（ルートがワークスペースのルート、`apps/api` がメンバー、`uv.lock` は1つ）。バックエンドは `apps/api/src/onaka_api/`（routers / domain / estimation / repository）
+- JavaScript は `apps/mobile` だけで npm。`packages/` は作らない（TypeScript の型は OpenAPI から生成）
+- バックエンドは `contracts/llm` を実行時に読むので、ビルド時に `contracts/` を同梱する
+
+**次にやること**
+1. INF-10 の残り（ユーザー作業: AWS Budgets・root の MFA・作業用 IAM）
+2. UIX 画面一覧と確認画面
+3. TST-01 テスト戦略・TST-02 トレーサビリティ（M4 の入口）
+4. ライブラリ選定（TEC-03 状態管理・ルーティング、TEC-07 型生成、TEC-08 テスト FW、TEC-10 カメラ・バーコード）
+
+**注意点・気づき**
+- `apps/api` などの実体はまだ作っていない（ワークスペース化で uv.lock が変わるため、実装の最初に作る）
+
+---
+
 ## 2026-11-14 セッション1（続き15）: API 契約
 
 **やったこと**
