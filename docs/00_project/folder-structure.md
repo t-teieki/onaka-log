@@ -69,7 +69,7 @@ onaka-log/
 │   │   ├── src/onaka_api/
 │   │   │   ├── main.py           #       FastAPI アプリ（ローカルは uvicorn で起動）
 │   │   │   ├── routers/          #       API の入口（estimates / products / meals）。contracts/api に合わせる
-│   │   │   ├── domain/           #       ドメインのルール（倍率・合計・記録日、DM-01〜08）。外部に依存しない純粋なコード
+│   │   │   ├── domain/           #       ドメインのルール（倍率・合計・記録日、DM-01〜09）。外部に依存しない純粋なコード
 │   │   │   ├── estimation/       #       推定・照合（Claude 呼び出し、Open Food Facts、出力の検証、候補への変換）
 │   │   │   ├── repository/       #       DynamoDB の読み書き
 │   │   │   └── settings.py       #       設定（環境ごとのモデルID・テーブル名など。LLM-08）

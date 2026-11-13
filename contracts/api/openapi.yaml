@@ -5,7 +5,7 @@ info:
   description: |
     アプリ ⇔ バックエンドの API 契約（SSOT）。設計方針は docs/02_design/api.md、決定は ADR-0016。
     食品の元の値・出どころなどの形は contracts/domain/meal.schema.json を参照する。
-    倍率・食べた量の値・合計はバックエンドが計算し、ドメインのルール DM-01〜08 で検証する（ADR-0015）。
+    倍率・食べた量の値・合計はバックエンドが計算し、ドメインのルール DM-01〜09 で検証する（ADR-0015）。
 servers:
   - url: https://api.example.invalid
     description: 環境ごとの API Gateway の URL に置き換える（dev / prod）

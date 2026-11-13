@@ -1,4 +1,4 @@
-"""ドメインのルール DM-01〜DM-08（docs/02_design/domain-model.md §6）の参照実装。
+"""ドメインのルール DM-01〜DM-09（docs/02_design/domain-model.md §6）の参照実装。
 
 JSON Schema で表せないルールを、契約テストで例ファイルに当てるためのもの。
 バックエンドの実装でも同じルールを検証する（実装時にこの関数と同じ結果になることをテストする）。
@@ -118,6 +118,10 @@ def item_errors(item: dict) -> list[str]:
         errors.append("DM-06: fraction は mode が fraction のときだけ持つ")
     if (mode == "pieces") != (portion["pieces"] is not None):
         errors.append("DM-06: pieces は mode が pieces のときだけ持つ")
+
+    # DM-09: 手入力は kcal・P・F・C をすべて入力する（Q-38）
+    if method == "manual" and any(ref["nutrients"][n] is None for n in NUTRIENTS):
+        errors.append("DM-09: manual は kcal・P・F・C をすべて持つ（null 不可）")
 
     # DM-04・DM-03: 倍率と食べた量の値
     try:

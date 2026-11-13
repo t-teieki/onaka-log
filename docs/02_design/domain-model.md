@@ -147,3 +147,4 @@ JSON Schema で表せない次のルールは、バックエンドで検証す�
 | DM-06 | `portion.mode = pieces` は基準が `per_piece` のときだけ。manual は `whole` だけ |
 | DM-07 | 食事の中で `item_id` は重複しない |
 | DM-08 | 食事には食品が1件以上ある（0件になったら食事ごと削除する、Q-31） |
+| DM-09 | 手入力（manual）の食品は、kcal・P・F・C のどれも null にしない（すべて必須、Q-38） |

@@ -1,6 +1,6 @@
 """ドメイン契約（contracts/domain）の契約テスト。
 
-roadmap DAT-01 / TST-03。スキーマ・例・ドメインのルール DM-01〜DM-08
+roadmap DAT-01 / TST-03。スキーマ・例・ドメインのルール DM-01〜DM-09
 （docs/02_design/domain-model.md §6、参照実装は domain_rules.py）を検査する。
 """
 import copy
@@ -114,6 +114,7 @@ def test_expected_multiplier_modes():
 
 BASE = DOMAIN_DIR / "examples" / "valid" / "meal-photo-plus-barcode.json"
 OCR = DOMAIN_DIR / "examples" / "valid" / "meal-label-ocr-columns-and-null.json"
+MANUAL = DOMAIN_DIR / "examples" / "valid" / "meal-manual.json"
 
 
 def _mutations():
@@ -154,7 +155,13 @@ def _mutations():
         m["items"][0]["estimate_detail"] = None
         m["items"][0]["portion"].update(mode="fraction", fraction=0.5, multiplier=0.5)
 
+    def manual_with_null(m):
+        m["items"][0]["reference"]["nutrients"]["fat_g"] = None
+        m["items"][0]["nutrients"]["fat_g"] = None
+        m["totals"], m["totals_incomplete"] = dr.totals_of(m["items"])
+
     return [
+        ("DM-09", MANUAL, manual_with_null),
         ("DM-01", BASE, wrong_record_date),
         ("DM-02", BASE, wrong_totals),
         ("DM-02", OCR, missing_incomplete),

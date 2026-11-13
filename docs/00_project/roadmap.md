@@ -8,7 +8,7 @@
 | 項目 | 内容 |
 |---|---|
 | 現在のマイルストーン | **M3 基本設計**（M2 PoC は 2026-11-13 に完了 → [poc-summary.md](../../poc/reports/poc-summary.md)。M1 の残り DAT-01 を先に進める） |
-| 次にやること | ① INF-10 の残り（ユーザー: AWS の予算アラート・MFA・IAM） ② UIX 画面一覧・確認画面 ③ TST-01 テスト戦略・TST-02 トレーサビリティ ④ TEC-03・TEC-07〜10 のライブラリ選定 |
+| 次にやること | ① INF-10 の残り（ユーザー: AWS の予算アラート・MFA・IAM） ② TST-01 テスト戦略・TST-02 トレーサビリティ（M4 の入口） ③ ライブラリ選定（TEC-03・07・08・10） ④ UIX-11 デザインシステム |
 | ブロッカー | なし（技術スタックの主要な決定はそろった） |
 | 最終更新 | 2026-11-13 |
 
@@ -91,7 +91,7 @@ flowchart LR
 - [x] **REQ-09** 食事区分：MVP では持たず、時刻で並べる（Q-32） — 成果物: [scope.md](../01_requirements/scope.md)
 - [x] **REQ-10** 日付の境界は 4:00、日本時間に固定。食べた日時は確認画面で変更可（過去も可）、保存後は不可（Q-33） — 成果物: [scope.md](../01_requirements/scope.md)
 - [ ] **REQ-11** 閲覧仕様：日次合計・PFCバランス・食事ごと小計・週/月推移（グラフ種類）
-- [ ] **REQ-12** 編集・削除仕様：保存後の値の修正はしない（Q-31）。削除の確認ダイアログ・取り消しは画面設計（UIX）で決める (WIP)
+- [x] **REQ-12** 編集・削除仕様：保存後の値の修正はしない（Q-31）。削除は確認なしで消し、約5秒「元に戻す」（Q-39） — 成果物: [screens/README.md](../02_design/screens/README.md) §3-9
 - [ ] **REQ-13** 推定値の扱い：記録元・信頼度の表示、AI推定値と確定値の区別、修正履歴を残すか
 - [ ] **REQ-14** 再利用機能：履歴から再記録・お気に入り・よく食べるもの（MVP か拡張か）
 - [ ] **REQ-15** 目標値（カロリー・PFC）と達成度（MVP か拡張か）
@@ -202,7 +202,7 @@ flowchart LR
 ## DAT: データ管理（M1〜M3）
 
 - [x] **DAT-00 ★** アクセスパターンの洗い出し：AP-01〜AP-11。ADR-0008 のキー案（ソートキーは `記録日#時刻#食事ID`）で MVP のパターンが足りる — 成果物: [data-access-patterns.md](../02_design/data-access-patterns.md)
-- [x] **DAT-01 ★** ドメインモデル：User / Meal / FoodItem（元の値・分量・食べた量の値・出どころ）/ Nutrients。ルール DM-01〜DM-08 — 成果物: [domain-model.md](../02_design/domain-model.md), [contracts/domain/meal.schema.json](../../contracts/domain/meal.schema.json), [ADR-0013](../adr/0013-data-model-keys-and-ids.md)
+- [x] **DAT-01 ★** ドメインモデル：User / Meal / FoodItem（元の値・分量・食べた量の値・出どころ）/ Nutrients。ルール DM-01〜DM-09 — 成果物: [domain-model.md](../02_design/domain-model.md), [contracts/domain/meal.schema.json](../../contracts/domain/meal.schema.json), [ADR-0013](../adr/0013-data-model-keys-and-ids.md)
 - [x] **DAT-02 ★** Meal の合計値：書き込み時に計算して保存。null は 0 として足し、不明を含む栄養素を `totals_incomplete` に残す — 成果物: [domain-model.md](../02_design/domain-model.md)
 - [x] **DAT-03** 栄養値の型と精度：保存は小数第1位（四捨五入）、null = 不明。拡張栄養素は REQ-16 で（スキーマの版を上げて足す） — 成果物: [data-model.md](../02_design/data-model.md)
 - [x] **DAT-04** 分量モデル：元の値（基準・内容量）× 倍率（全部・割合・個数）= 食べた量の値。元の値と食べた量の値の両方を保存 — 成果物: [domain-model.md](../02_design/domain-model.md)
@@ -234,18 +234,18 @@ flowchart LR
 
 ## UIX: 画面設計・UX（M3）
 
-- [ ] **UIX-01** 画面一覧と画面遷移図 — 成果物: `02_design/screens/README.md`
-- [ ] **UIX-02** ホーム（今日の合計・PFCバランス・食事一覧）
-- [ ] **UIX-03** 記録フロー：入力方式選択 → スキャン/撮影/入力 → 推定中 → 結果確認・修正 → 食事への追加（複数食品）→ 保存
-- [ ] **UIX-04** 推定結果確認画面：信頼度表示、修正しやすさ、複数候補の選択
-- [ ] **UIX-05** 食事詳細・食品編集画面
+- [x] **UIX-01** 画面一覧と画面遷移図 — 成果物: [screens/README.md](../02_design/screens/README.md)
+- [x] **UIX-02** ホーム：1日の合計・食事一覧・「記録する」ボタン（Q-36） — 成果物: [screens/README.md](../02_design/screens/README.md) §3-1
+- [x] **UIX-03** 記録フロー：記録する → 入力方式の選択 → 読み取り・撮影・入力 → 推定中 → 確認・修正 → 保存。エラー時は撮り直す・手入力・方式選択へ — 成果物: [screens/README.md](../02_design/screens/README.md) §2
+- [x] **UIX-04** 確認・修正画面：出どころ・基準・内容量不明の表示、列の選択（先頭を選択済み、Q-37）、分量のワンタップ、品目を外す、日時の変更 — 成果物: [screens/README.md](../02_design/screens/README.md) §3-5
+- [x] **UIX-05** 食事の詳細：食品の追加・削除（確認なし＋元に戻す、Q-39）。値の修正はしない（Q-31） — 成果物: [screens/README.md](../02_design/screens/README.md) §3-6, §3-9
 - [ ] **UIX-06** 履歴（カレンダー / 日付移動）・推移グラフ
-- [ ] **UIX-07** 設定（目標値・アカウント・データ管理）
+- [ ] **UIX-07** 設定：MVP はサインアウトと版の表示だけ（目標値・データ管理は次期以降、アカウント削除は公開前） — 成果物: [screens/README.md](../02_design/screens/README.md) §3-7 (WIP)
 - [ ] **UIX-08** オンボーディング・カメラ権限要求・権限拒否時の導線
-- [ ] **UIX-09** ローディング・エラー・空状態のパターン
-- [ ] **UIX-10** ワイヤーフレームの作成方法（Figma / HTMLモック / 手書き）
+- [x] **UIX-09** ローディング・エラー・空状態・オフライン・削除の取り消しのパターンと、エラーダイアログの文言 — 成果物: [screens/README.md](../02_design/screens/README.md) §4
+- [x] **UIX-10** ワイヤーフレーム：MVP は文書内のテキストの図。見た目を詰める段階で HTML モック — 成果物: [screens/README.md](../02_design/screens/README.md) §6
 - [ ] **UIX-11** デザインシステム（色・タイポ・コンポーネント）、ダークモード
-- [ ] **UIX-12** 入力の手間の最小化（タップ数目標、片手操作）
+- [x] **UIX-12** 手数の目標：写真4・バーコード3・成分表示4タップ — 成果物: [screens/README.md](../02_design/screens/README.md) §5
 
 ## TST: テスト戦略（M2〜M4）
 

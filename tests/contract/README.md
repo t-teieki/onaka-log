@@ -4,7 +4,7 @@
 
 - `test_llm_contracts.py`: Claude API 契約（下の「検査内容」）
 - `test_api_contracts.py`: API 契約（`contracts/api/openapi.yaml`）。OpenAPI としての正しさ（openapi-spec-validator）、全 API が JWT 必須で共通のエラー応答を使うこと、エラーコードが api.md の表と一致すること、例の適合・不適合、API のルール（参照実装 `api_rules.py`）、保存 API の入力からバックエンドが作る食事がドメインのルールを満たすこと
-- `test_domain_contracts.py`: ドメイン契約。スキーマの正しさ、valid / invalid の例、ドメインのルール DM-01〜DM-08（参照実装 `domain_rules.py`）を valid の例が満たすこと、ルールが違反を検出できること
+- `test_domain_contracts.py`: ドメイン契約。スキーマの正しさ、valid / invalid の例、ドメインのルール DM-01〜DM-09（参照実装 `domain_rules.py`）を valid の例が満たすこと、ルールが違反を検出できること
 
 ## 検査内容
 

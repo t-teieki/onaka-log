@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:onaka-log:domain:meal:v0.1",
   "title": "Meal",
-  "description": "食事1件と、その中の食品（FoodItem）。DynamoDB の食事アイテムのドメイン部分（PK・SK・entity を除く）と、API で受け渡す形の正。docs/02_design/domain-model.md のルール DM-01〜DM-08 はスキーマでは表さず、コードで検証する。",
+  "description": "食事1件と、その中の食品（FoodItem）。DynamoDB の食事アイテムのドメイン部分（PK・SK・entity を除く）と、API で受け渡す形の正。docs/02_design/domain-model.md のルール DM-01〜DM-09 はスキーマでは表さず、コードで検証する。",
   "type": "object",
   "additionalProperties": false,
   "required": ["meal_id", "user_id", "eaten_at", "record_date", "items", "totals", "totals_incomplete", "version", "created_at", "updated_at"],

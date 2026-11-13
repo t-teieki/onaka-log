@@ -41,7 +41,7 @@
 flowchart LR
     E[推定・照合 API] -->|FoodItemDraft<br>名前・出どころ・元の値・分量の既定| C[確認画面]
     C -->|FoodItemInput<br>候補＋item_id＋選んだ分量| S[保存 API]
-    S -->|倍率・食べた量の値・合計を計算<br>DM-01〜08 を検証| D[(DynamoDB)]
+    S -->|倍率・食べた量の値・合計を計算<br>DM-01〜09 を検証| D[(DynamoDB)]
 ```
 
 | 型 | 中身 |
