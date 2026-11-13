@@ -142,3 +142,31 @@ def test_aggregate_verdicts_with_enough_samples():
     assert ev.aggregate([ok] * 10 + [nf] * 10)["verdict"] == "adopt"
     assert ev.aggregate([ok] * 3 + [nf] * 17)["verdict"] == "demote"
     assert ev.aggregate([ok] * 6 + [nf] * 14)["verdict"] == "consult"
+
+
+def test_serving_quantity_counts_as_net_or_serving_and_matches_truth():
+    # 内容量（product_quantity）は無いが 1食分の量が正解の内容量と同じ（1個売りの商品）
+    r = ev.evaluate_sample(truth(), payload(serving_quantity=200, serving_size="200 g"))
+    assert r["has_net_content"] is False
+    assert r["has_net_or_serving"] is True
+    assert r["serving_equals_truth_net"] is True
+    assert r["off_serving"] == {"value": 200.0, "unit": "g"}
+
+
+def test_serving_quantity_different_from_truth_net():
+    # 6個入りなどで 1食分の量が内容量と違う場合
+    r = ev.evaluate_sample(truth(), payload(serving_quantity=33, serving_size="33 g"))
+    assert r["has_net_or_serving"] is True
+    assert r["serving_equals_truth_net"] is False
+
+
+def test_aggregate_counts_net_or_serving():
+    rs = [
+        ev.evaluate_sample(truth(), payload(product_quantity=200, product_quantity_unit="g")),
+        ev.evaluate_sample(truth(), payload(serving_quantity=200, serving_size="200 g")),
+        ev.evaluate_sample(truth(), payload()),
+    ]
+    m = ev.aggregate(rs)
+    assert m["net_content"] == 1
+    assert m["net_or_serving"] == 2
+    assert m["serving_equals_net"] == 1

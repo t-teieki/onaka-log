@@ -95,6 +95,13 @@ def extract_off(payload: dict | None) -> dict:
         if parsed:
             off_net = {"value": parsed[0], "unit": parsed[1], "source": "quantity"}
 
+    # 1食分の量（serving_quantity）。1個売りの商品では内容量の代わりに使える可能性がある
+    sq = _num(product.get("serving_quantity"))
+    off_serving = None
+    if sq is not None:
+        parsed = parse_quantity(product.get("serving_size"))
+        off_serving = {"value": sq, "unit": parsed[1] if parsed else None}
+
     name = product.get("product_name_ja") or product.get("product_name") or ""
     return {
         "found": True,
@@ -106,6 +113,7 @@ def extract_off(payload: dict | None) -> dict:
         "has_all4_100g": all(per100[n] is not None for n in NUTRIENTS),
         "has_all4_serving": all(serving[n] is not None for n in NUTRIENTS),
         "off_net_content": off_net,
+        "off_serving": off_serving,
     }
 
 
@@ -155,8 +163,11 @@ def evaluate_sample(truth: dict, payload: dict | None) -> dict:
             "value": truth.get("net_content"),
             "unit": truth.get("net_content_unit"),
         },
+        "off_serving": off.get("off_serving"),
         "has_all4_100g": False,
         "has_net_content": False,
+        "has_net_or_serving": False,
+        "serving_equals_truth_net": None,
         "comparable": False,
         "converted": None,
         "nutrients": {},
@@ -171,6 +182,13 @@ def evaluate_sample(truth: dict, payload: dict | None) -> dict:
     result["has_net_content"] = off["off_net_content"] is not None
     if not result["has_net_content"]:
         reasons.append("off_net_content_missing")
+    serving = off["off_serving"]
+    result["has_net_or_serving"] = result["has_net_content"] or serving is not None
+    if serving is not None and truth.get("net_content"):
+        # 単位（g/ml）の違いは問わず、量が正解の内容量と 1% 以内で一致するか
+        result["serving_equals_truth_net"] = (
+            abs(serving["value"] - truth["net_content"]) <= 0.01 * truth["net_content"] + EPS
+        )
     result["has_all4_100g"] = off["has_all4_100g"]
     flags["energy_from_kj"] = off["energy_from_kj"]
     if off["nutrition_data_per"] is None:
@@ -218,6 +236,8 @@ def aggregate(results: list[dict], min_n: int = 20) -> dict:
         per_counts[k] = per_counts.get(k, 0) + 1
     usable = [r for r in found if r["has_all4_100g"]]
     with_net = [r for r in found if r["has_net_content"]]
+    with_net_or_serving = [r for r in found if r["has_net_or_serving"]]
+    serving_eq = [r for r in found if r["serving_equals_truth_net"]]
     all4m = [r for r in comparable if r["all4_match"]]
     m: dict[str, Any] = {
         "n": n,
@@ -227,6 +247,9 @@ def aggregate(results: list[dict], min_n: int = 20) -> dict:
         "all4_rate": _rate(len(usable), len(found)),
         "net_content": len(with_net),
         "net_content_rate": _rate(len(with_net), len(found)),
+        "net_or_serving": len(with_net_or_serving),
+        "net_or_serving_rate": _rate(len(with_net_or_serving), len(found)),
+        "serving_equals_net": len(serving_eq),
         "per_breakdown": per_counts,
         "comparable": len(comparable),
         "nutrient_match": {},

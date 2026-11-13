@@ -69,6 +69,8 @@ def build_summary(results: list[dict], m: dict) -> str:
     L.append(f"| ② 見つかった中で 4項目（100g 当たり）がそろう割合 | {ratio(m['all4'], m['found'])} |")
     L.append(f"| 　うち kJ のみ（kcal は換算） | {m['energy_from_kj']} 件 |")
     L.append(f"| ③ 見つかった中で OFF に内容量がある割合 | {ratio(m['net_content'], m['found'])} |")
+    L.append(f"| ③' 見つかった中で 内容量 または 1食分の量 がある割合 | {ratio(m['net_or_serving'], m['found'])} |")
+    L.append(f"| 　うち 1食分の量が正解の内容量と一致（±1%） | {m['serving_equals_net']} 件 |")
     per = ", ".join(f"{k}: {v}" for k, v in sorted(m["per_breakdown"].items())) or "-"
     L.append(f"| ④ nutrition_data_per の内訳（見つかった商品） | {per} |")
     L.append(f"| ⑤ 比較可能な件数 | {m['comparable']} |")
@@ -121,12 +123,14 @@ def build_summary(results: list[dict], m: dict) -> str:
                 fl=", ".join(flags) or "-",
             )
         )
-    L += ["", "## 内容量（OFF の記載と正解）", "", "| ID | OFF | 正解 |", "|---|---|---|"]
+    L += ["", "## 内容量（OFF の記載と正解）", "", "| ID | OFF 内容量 | OFF 1食分の量 | 正解 |", "|---|---|---|---|"]
     for r in results:
         o = r["off_net_content"]
+        s = r.get("off_serving")
         tn = r["truth_net_content"]
         o_s = "なし" if not o else f"{o['value']:g} {o['unit'] or '?'} ({o['source']})"
-        L.append(f"| {r['sample_id']} | {o_s} | {fmt(tn['value'], 0)} {tn['unit'] or ''} |")
+        s_s = "なし" if not s else f"{s['value']:g} {s['unit'] or '?'}"
+        L.append(f"| {r['sample_id']} | {o_s} | {s_s} | {fmt(tn['value'], 0)} {tn['unit'] or ''} |")
     warns = [r for r in results if r["reasons"] and set(r["reasons"]) - {"off_net_content_missing"}]
     if warns:
         L += ["", "## 注意"]

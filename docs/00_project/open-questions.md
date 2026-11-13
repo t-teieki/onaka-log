@@ -35,3 +35,5 @@
 | Q-19 | テキスト入力 | MVP に含める | [scope.md](../01_requirements/scope.md) |
 | Q-20 | リポジトリの置き場所 | C ドライブのまま。性能などが問題になりそうなら WSL 側へ移す | [dev-environment.md](dev-environment.md) |
 | Q-21 | DB | DynamoDB | [ADR-0008](../adr/0008-database-dynamodb.md) |
+| Q-22 | PoC-1 の判定（2026-11-13） | 条件付きで採用（出どころの表示と OCR へのワンタップ切り替え） | [ADR-0009](../adr/0009-barcode-adoption-and-net-content.md) |
+| Q-23 | 内容量が取れないとき（2026-11-13） | 内容量が不明なまま登録してよい。基準（100g 当たり／1食当たりの推定）と「内容量：不明」を必ず一緒に保存し、確認画面に出す。100g 当たりの値のまま日次合計に含める | [ADR-0009](../adr/0009-barcode-adoption-and-net-content.md) |

@@ -33,7 +33,7 @@
 | 合格の目安 | ①×②が **50% 以上**なら主力として採用。**20% 未満**なら主力にせず、見つからないときは OCR へ誘導する前提で設計する |
 | 比べ方（2026-11-13 決定） | Open Food Facts の 100g 当たりの値を、**正解データの基準量**で換算して比べる。一致は kcal が ±5%（最低 ±5kcal）、P・F・C が ±5% と ±0.5g の広い方。Open Food Facts に内容量があるかは ③ で別に集計する |
 | Claude 使用 | なし |
-| 結果 | [reports/poc1-barcode.md](reports/poc1-barcode.md)（2件で動作確認済み、判定保留） |
+| 結果 | [reports/poc1-barcode.md](reports/poc1-barcode.md)（5件で検証。条件付きで採用に決定: [ADR-0009](../docs/adr/0009-barcode-adoption-and-net-content.md)） |
 
 > Open Food Facts の API は、利用者を識別できる User-Agent を付けるよう求めている。個人情報は入れず、`onaka-log-poc/0.1` のような汎用の名前にする。
 

@@ -1,3 +1,6 @@
 sample_id,jan,product_name,basis,basis_amount,basis_unit,net_content,net_content_unit,energy_kcal,protein_g,fat_g,carbohydrate_g,notes
 B001,4902888323324,森永 チョコモナカジャンボ,per_package,150,ml,150,ml,319,3.5,18.2,35.2,1個当たり。食塩相当量0.15g。写真 L001
 B002,4902777237022,明治 チョコレート菓子（きのこ/たけのこ系）,per_package,63,g,63,g,345,4.9,20.5,35.0,1箱(63g)当たり。食塩相当量0.3g。写真 L002。商品名は箱表面で要確認
+B003,4902105242414,日清食品 カップヌードル チリトマトヌードル,per_package,76,g,76,g,354,8.4,15.4,45.5,Web由来（Green Beans）・パッケージ未確認。JANはURLのGTIN-14から導出（検算済み）。1食(76g)当たり。食塩相当量4.0g
+B004,4902105286890,日清食品 カップヌードルPRO 高たんぱく&低糖質さらに塩分控えめ シーフードヌードル,per_package,78,g,78,g,282,16.1,15.4,39.5,Web由来（Green Beans）・パッケージ未確認。JANはURLのGTIN-14から導出（検算済み）。1食(78g)当たり。食塩相当量3.0g
+B005,4902105288436,日清食品 カップヌードル 14種のスパイス麻辣湯,per_package,75,g,75,g,344,8.9,13.9,45.8,Web由来（Green Beans）・パッケージ未確認。JANはURLのGTIN-14から導出（検算済み）。ページに基準の記載なし→1食=内容量75gと仮定。食塩相当量4.3g
