@@ -81,3 +81,5 @@
 | `docs/` だけ | なし（リンク切れの検査は将来） |
 
 ⑥〜⑨ は CI の既定では動かさない。
+
+2026-11-14 時点で動いているのは ① と、PoC の単体テスト・`tools/trace.py --check` だけ（[ci-cd.md](../04_operations/ci-cd.md) の `contract` ワークフロー）。

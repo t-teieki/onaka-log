@@ -8,7 +8,7 @@
 | 項目 | 内容 |
 |---|---|
 | 現在のマイルストーン | **M3 基本設計**（M2 PoC は 2026-11-13 に完了 → [poc-summary.md](../../poc/reports/poc-summary.md)。M1 の残り DAT-01 を先に進める） |
-| 次にやること | ① INF-10 の残り（ユーザー: AWS の予算アラート・MFA・IAM） ② CI の土台（CIC-01・02: 契約テストと trace.py --check） ③ 最初の機能の詳細仕様（F-xxx-yy）とテスト（赤）→ M4 ④ UIX-11 デザインシステム |
+| 次にやること | ① push して GitHub で `contract` ワークフローが動くことを確認（ユーザー） ② INF-10 の残り（ユーザー: AWS の予算アラート・MFA・IAM） ③ 最初の機能の詳細仕様（F-xxx-yy）とテスト（赤）→ M4 ④ Dependabot（CIC-08） |
 | ブロッカー | なし（技術スタックの主要な決定はそろった） |
 | 最終更新 | 2026-11-13 |
 
@@ -263,8 +263,8 @@ flowchart LR
 
 ## CIC: CI/CD（M4〜M6）
 
-- [ ] **CIC-01** CI 基盤（GitHub Actions 想定）
-- [ ] **CIC-02** PR 時のジョブ：lint / 型 / 単体 / 契約テスト / ビルド。パスフィルタで影響範囲だけ実行
+- [x] **CIC-01** CI 基盤：GitHub Actions。Action は SHA で固定、権限は最小 — 成果物: [.github/workflows/contract.yml](../../.github/workflows/contract.yml), [ci-cd.md](../04_operations/ci-cd.md)
+- [ ] **CIC-02** PR 時のジョブ：契約テスト・PoC の単体テスト・trace.py --check は `contract` ワークフローで実施（パスフィルタあり）。lint・型・アプリのテスト・ビルドは実装時に足す — 成果物: [ci-cd.md](../04_operations/ci-cd.md) (WIP)
 - [ ] **CIC-03** 契約変更時に全関係者（mobile / api / tests）のテストを走らせる仕組み
 - [ ] **CIC-04** LLM 実API テスト・eval の実行タイミング（手動トリガー / 夜間）とコスト上限
 - [ ] **CIC-05** バックエンドの自動デプロイ（main → staging、タグ → prod）とDBマイグレーション

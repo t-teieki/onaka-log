@@ -1,0 +1,49 @@
+# 契約テストと、仕様とテストの対応の検査（CIC-01・02、docs/04_operations/ci-cd.md）
+name: contract
+
+on:
+  push:
+    branches: [main]
+    paths: &paths
+      - "contracts/**"
+      - "tests/**"
+      - "tools/**"
+      - "poc/**"
+      - "docs/01_requirements/**"
+      - "docs/02_design/**"
+      - "docs/03_testing/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".python-version"
+      - ".github/workflows/contract.yml"
+  pull_request:
+    paths: *paths
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: contract-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # Action はタグではなくコミットの SHA で固定する（タグの付け替えによる改ざんを防ぐ）
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+
+      - name: 依存を入れる（uv.lock どおり。Python は .python-version の 3.12）
+        run: uv sync --locked --group dev --group poc
+
+      - name: 契約テストと PoC の単体テスト（実 API は呼ばない。live マーカーは既定で除外）
+        run: uv run --locked --group dev --group poc pytest tests/contract poc -q
+
+      - name: 仕様とテストの対応の検査（DM の抜け・仕様にない ID があれば失敗）
+        run: uv run --locked --group dev python tools/trace.py --check

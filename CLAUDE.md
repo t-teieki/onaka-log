@@ -61,4 +61,5 @@
   `wsl -e bash -lc "cd /mnt/c/project/onaka-log && UV_LINK_MODE=copy ~/.local/bin/uv run --group dev pytest tests/contract -q"`
 - 仕様とテストの対応の検査（テストを足したら実行。DM の抜けや仕様にない ID があれば失敗する）:
   `wsl -e bash -lc "cd /mnt/c/project/onaka-log && UV_LINK_MODE=copy ~/.local/bin/uv run --group dev python tools/trace.py --check"`
+- CI（GitHub Actions）: `.github/workflows/contract.yml` が契約テスト・PoC の単体テスト・trace.py --check を動かす（[ci-cd.md](docs/04_operations/ci-cd.md)）。Action は SHA で固定する
 - ファイルは UTF-8（BOM なし）・LF で書く。PowerShell の `Set-Content` / `Out-File` は BOM を付けるので使わない

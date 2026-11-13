@@ -5,6 +5,27 @@
 
 ---
 
+## 2026-11-14 セッション1（続き20）: CI の土台
+
+**やったこと**
+- コミット `07f51e0`（ライブラリ・道具、ADR-0017）
+- GitHub Actions のワークフロー `.github/workflows/contract.yml`: `uv sync --locked` → 契約テストと PoC の単体テスト → `tools/trace.py --check`。main への push と PR（関係するパスが変わったとき）、手動で動く
+- Action の最新版を GitHub の API で確認し、コミットの SHA で固定（actions/checkout v7.0.1、astral-sh/setup-uv v10.3.3）。権限は `contents: read`、認証情報は残さない
+- 検証: actionlint（Docker）で問題なし。Git 管理下のファイルだけを uv の公式イメージ（Docker）に入れて同じコマンドを実行し、275件合格・trace の検査 OK（PoC の画像がなくても動く）
+- [ci-cd.md](../04_operations/ci-cd.md) を作成。roadmap: CIC-01 完了、CIC-02 は契約の部分だけ
+
+**次にやること**
+1. push して GitHub 上で `contract` ワークフローが動くことを確認（ユーザー。まだ push していない）
+2. INF-10 の残り（ユーザー作業: AWS Budgets・root の MFA・作業用 IAM）
+3. 最初の機能の詳細仕様（F-xxx-yy）とテスト（赤）→ M4
+4. Dependabot の設定（CIC-08）
+
+**注意点・気づき**
+- ワークフローでは YAML のアンカー（`&paths` / `*paths`）で push と PR のパスを共通にしている（GitHub Actions が対応済み、actionlint も通過）。もし GitHub 上でエラーになったら、パスを2か所に書き下す
+- 検証の途中で Docker のイメージ（rhysd/actionlint、ghcr.io/astral-sh/uv）を取得した
+
+---
+
 ## 2026-11-14 セッション1（続き19）: ライブラリ・道具の選定
 
 **やったこと**
