@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:onaka-log:llm:nutrition-label-ocr:output:v0.1",
+  "$id": "urn:onaka-log:llm:nutrition-label-ocr:output:v0.2",
   "title": "NutritionLabelOcrOutput",
   "description": "栄養成分表示の写真から読み取った結果。Claude に Structured Outputs で強制する出力。",
   "type": "object",
@@ -32,8 +32,10 @@
           "minimum": 0
         },
         "unit": {
-          "type": ["string", "null"],
-          "enum": ["g", "ml", null]
+          "anyOf": [
+            { "type": "string", "enum": ["g", "ml"] },
+            { "type": "null" }
+          ]
         },
         "label_text": {
           "description": "基準量の表記をそのまま（例: 「1袋（45g）当たり」）",
@@ -52,8 +54,10 @@
           "minimum": 0
         },
         "unit": {
-          "type": ["string", "null"],
-          "enum": ["g", "ml", null]
+          "anyOf": [
+            { "type": "string", "enum": ["g", "ml"] },
+            { "type": "null" }
+          ]
         },
         "pieces": {
           "description": "個数の表記があれば（例: 「6個入り」なら 6）",

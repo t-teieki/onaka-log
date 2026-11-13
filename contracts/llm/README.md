@@ -31,6 +31,7 @@ Claude の Structured Outputs で使える JSON Schema には制限がある。�
 3. 使ってよいキーワード: `type`, `properties`, `required`, `additionalProperties`, `items`, `enum`, `const`, `anyOf`, `allOf`, `$ref`, `$defs`, `description`, `title`, `$schema`, `$id`, `format`
 4. 数値・文字列の制約（`minimum`, `maximum`, `minLength`, `maxLength`）は書いてよい。API には送られない（SDK が取り除いて送り、受け取った出力をクライアント側で検証する）が、完全版のスキーマとしてコード側の検証に使う
 5. 再帰する `$ref` は使わない
+6. **null を許す enum は `anyOf` で書く**（例: `{"anyOf": [{"type": "string", "enum": ["g", "ml"]}, {"type": "null"}]}`）。`"type": ["string", "null"]` と `enum` の組み合わせは API に 400 で拒否される（2026-11-13、PoC-2 で確認）
 
 ## スキーマで表せない意味上のルール
 

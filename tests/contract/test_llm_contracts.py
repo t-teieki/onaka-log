@@ -72,6 +72,9 @@ def test_structured_outputs_check_detects_violations():
                         "properties": {"c": {"$ref": "#/$defs/n"}}, "required": ["c"]}},
     }
     errors = "\n".join(check_structured_outputs(bad))
+    nullable_enum = {"type": "object", "additionalProperties": False, "required": ["u"],
+                     "properties": {"u": {"type": ["string", "null"], "enum": ["g", None]}}}
+    assert "enum" in "\n".join(check_structured_outputs(nullable_enum))
     assert "additionalProperties" in errors
     assert "required" in errors
     assert "pattern" in errors

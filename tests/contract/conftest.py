@@ -58,6 +58,10 @@ def check_structured_outputs(schema: dict) -> list[str]:
         for key in node:
             if key not in ALLOWED_KEYWORDS:
                 errors.append(f"{path}: 許可されていないキーワード '{key}'")
+        # 型の配列（["string", "null"] など）と enum の組み合わせは API に拒否される
+        # （2026-11-13 の PoC-2 で 400 を確認）。null を許す enum は anyOf で書く
+        if "enum" in node and isinstance(node.get("type"), list):
+            errors.append(f"{path}: type が配列のまま enum を使っている（anyOf で書く）")
         if _is_object_type(node):
             if node.get("additionalProperties") is not False:
                 errors.append(f"{path}: additionalProperties が false ではない")
