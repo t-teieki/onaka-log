@@ -1,0 +1,92 @@
+{
+  "meal_id": "0190f3a2-7c1e-7a01-8b2c-000000000009",
+  "eaten_at": "2026-11-13T10:05:30+09:00",
+  "items": [
+    {
+      "item_id": "0190f3a2-7c1e-7a01-8b2c-000000000007",
+      "name": "ドーナツ（チョコ）",
+      "source": {
+        "method": "label_ocr",
+        "provider": "claude",
+        "product_code": null,
+        "estimation": {
+          "model": "claude-haiku-5-5",
+          "prompt_version": "0.2.0",
+          "schema_id": "urn:onaka-log:llm:nutrition-label-ocr:output:v0.3"
+        },
+        "confidence": null,
+        "column_index": 1,
+        "column_heading": "チョコ"
+      },
+      "reference": {
+        "basis": {
+          "type": "per_piece",
+          "amount": null,
+          "unit": null,
+          "label": "1個当たり"
+        },
+        "net_content": {
+          "status": "known",
+          "amount": null,
+          "unit": null,
+          "pieces": 4
+        },
+        "nutrients": {
+          "energy_kcal": 289,
+          "protein_g": 1.7,
+          "fat_g": 26.1,
+          "carbohydrate_g": 11.7
+        }
+      },
+      "estimate_detail": null,
+      "portion": {
+        "mode": "pieces",
+        "fraction": null,
+        "pieces": 1
+      }
+    },
+    {
+      "item_id": "0190f3a2-7c1e-7a01-8b2c-000000000008",
+      "name": "野菜ジュース",
+      "source": {
+        "method": "label_ocr",
+        "provider": "claude",
+        "product_code": null,
+        "estimation": {
+          "model": "claude-haiku-5-5",
+          "prompt_version": "0.2.0",
+          "schema_id": "urn:onaka-log:llm:nutrition-label-ocr:output:v0.3"
+        },
+        "confidence": null,
+        "column_index": null,
+        "column_heading": null
+      },
+      "reference": {
+        "basis": {
+          "type": "per_package",
+          "amount": 200,
+          "unit": "ml",
+          "label": "1本（200ml）当たり"
+        },
+        "net_content": {
+          "status": "known",
+          "amount": 200,
+          "unit": "ml",
+          "pieces": null
+        },
+        "nutrients": {
+          "energy_kcal": 68,
+          "protein_g": 1.2,
+          "fat_g": null,
+          "carbohydrate_g": 15.8
+        }
+      },
+      "estimate_detail": null,
+      "portion": {
+        "mode": "whole",
+        "fraction": null,
+        "pieces": null
+      }
+    }
+  ]
+}

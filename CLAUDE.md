@@ -48,11 +48,12 @@
 - 開発は WSL から、リポジトリは C ドライブ上。性能などが問題になりそうなら WSL 側へ移す（[dev-environment.md](docs/00_project/dev-environment.md)）
 - バックエンドは AWS サーバーレス: API Gateway + Lambda（Python / FastAPI）+ Cognito、東京リージョン（[ADR-0007](docs/adr/0007-backend-aws-serverless.md)）
 - IaC は AWS SAM、環境は local / dev / prod（[ADR-0014](docs/adr/0014-iac-aws-sam.md)）。記録はサーバーファースト、推定は同期 API、計算はバックエンド（[ADR-0015](docs/adr/0015-server-first-and-sync-estimation.md)）。全体構成: [architecture.md](docs/02_design/architecture.md)
+- API は REST + OpenAPI 3.1、パスで版を分ける（`/v1`）。契約は [contracts/api/openapi.yaml](contracts/api/openapi.yaml)、方針は [api.md](docs/02_design/api.md)（[ADR-0016](docs/adr/0016-api-rest-openapi.md)）
 - DB は DynamoDB（[ADR-0008](docs/adr/0008-database-dynamodb.md)）。キー・ID・値の持ち方は [ADR-0013](docs/adr/0013-data-model-keys-and-ids.md)、形は [contracts/domain/meal.schema.json](contracts/domain/meal.schema.json)
 
 ## 現時点で未決（決まったら更新）
 
-- 各種ライブラリ、API 契約 → roadmap の ★ 項目と open-questions を参照
+- 各種ライブラリ → roadmap の ★ 項目と open-questions を参照
 - アプリ・バックエンドのビルドコマンドはまだない
 
 ## コマンド

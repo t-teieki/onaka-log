@@ -1,0 +1,133 @@
+{
+  "status": "ok",
+  "meal_name": "ハンバーグ定食",
+  "items": [
+    {
+      "name": "ご飯",
+      "source": {
+        "method": "photo",
+        "provider": "claude",
+        "product_code": null,
+        "estimation": {
+          "model": "claude-sonnet-5-5",
+          "prompt_version": "0.2.0",
+          "schema_id": "urn:onaka-log:llm:food-photo-estimate:output:v0.1"
+        },
+        "confidence": "medium",
+        "column_index": null,
+        "column_heading": null
+      },
+      "reference": {
+        "basis": {
+          "type": "as_estimated",
+          "amount": null,
+          "unit": null,
+          "label": null
+        },
+        "net_content": null,
+        "nutrients": {
+          "energy_kcal": 302,
+          "protein_g": 4.5,
+          "fat_g": 0.5,
+          "carbohydrate_g": 66.8
+        }
+      },
+      "estimate_detail": {
+        "amount_value": 1,
+        "amount_unit": "bowl",
+        "estimated_weight_g": 180
+      },
+      "default_portion": {
+        "mode": "whole",
+        "fraction": null,
+        "pieces": null
+      }
+    },
+    {
+      "name": "ハンバーグ（ソース付き）",
+      "source": {
+        "method": "photo",
+        "provider": "claude",
+        "product_code": null,
+        "estimation": {
+          "model": "claude-sonnet-5-5",
+          "prompt_version": "0.2.0",
+          "schema_id": "urn:onaka-log:llm:food-photo-estimate:output:v0.1"
+        },
+        "confidence": "medium",
+        "column_index": null,
+        "column_heading": null
+      },
+      "reference": {
+        "basis": {
+          "type": "as_estimated",
+          "amount": null,
+          "unit": null,
+          "label": null
+        },
+        "net_content": null,
+        "nutrients": {
+          "energy_kcal": 330,
+          "protein_g": 18.0,
+          "fat_g": 22.0,
+          "carbohydrate_g": 14.0
+        }
+      },
+      "estimate_detail": {
+        "amount_value": 2,
+        "amount_unit": "piece",
+        "estimated_weight_g": 150
+      },
+      "default_portion": {
+        "mode": "whole",
+        "fraction": null,
+        "pieces": null
+      }
+    },
+    {
+      "name": "豆腐と玉ねぎの味噌汁",
+      "source": {
+        "method": "photo",
+        "provider": "claude",
+        "product_code": null,
+        "estimation": {
+          "model": "claude-sonnet-5-5",
+          "prompt_version": "0.2.0",
+          "schema_id": "urn:onaka-log:llm:food-photo-estimate:output:v0.1"
+        },
+        "confidence": "medium",
+        "column_index": null,
+        "column_heading": null
+      },
+      "reference": {
+        "basis": {
+          "type": "as_estimated",
+          "amount": null,
+          "unit": null,
+          "label": null
+        },
+        "net_content": null,
+        "nutrients": {
+          "energy_kcal": 70,
+          "protein_g": 5.0,
+          "fat_g": 3.0,
+          "carbohydrate_g": 6.0
+        }
+      },
+      "estimate_detail": {
+        "amount_value": 1,
+        "amount_unit": "bowl",
+        "estimated_weight_g": 200
+      },
+      "default_portion": {
+        "mode": "whole",
+        "fraction": null,
+        "pieces": null
+      }
+    }
+  ],
+  "assumptions": [
+    "ご飯は茶碗1杯180gと見積もった"
+  ],
+  "notes": null
+}

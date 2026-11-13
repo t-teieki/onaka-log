@@ -1,0 +1,41 @@
+{
+  "item": {
+    "item_id": "0190f3a2-7c1e-7a01-8b2c-00000000000f",
+    "name": "ウーロン茶",
+    "source": {
+      "method": "barcode",
+      "provider": "open_food_facts",
+      "product_code": "4901234567801",
+      "estimation": null,
+      "confidence": null,
+      "column_index": null,
+      "column_heading": null
+    },
+    "reference": {
+      "basis": {
+        "type": "per_100ml",
+        "amount": 100,
+        "unit": "ml",
+        "label": null
+      },
+      "net_content": {
+        "status": "known",
+        "amount": 500,
+        "unit": "ml",
+        "pieces": null
+      },
+      "nutrients": {
+        "energy_kcal": 0,
+        "protein_g": 0,
+        "fat_g": 0,
+        "carbohydrate_g": 0.1
+      }
+    },
+    "estimate_detail": null,
+    "portion": {
+      "mode": "whole",
+      "fraction": null,
+      "pieces": null
+    }
+  }
+}

@@ -5,6 +5,33 @@
 
 ---
 
+## 2026-11-14 セッション1（続き15）: API 契約
+
+**やったこと**
+- コミット `d7d78ee`（DAT-01・全体構成・ADR-0013〜0015・AWS 構成図）
+- API 設計 → [api.md](../02_design/api.md)、[ADR-0016](../adr/0016-api-rest-openapi.md)（REST + OpenAPI 3.1、`/v1`、エラー体系）
+- 契約 → [contracts/api/openapi.yaml](../../contracts/api/openapi.yaml)。推定3種（OCR・写真・バーコード）、食事の作成・1日分・1件・削除、食品の追加・削除の9操作。食品の形は contracts/domain、画像の入力は contracts/llm を `$ref` で参照
+- 推定 API は保存用の候補（FoodItemDraft、分量の既定つき）を返し、保存 API は FoodItemInput（分量の選択だけ。倍率・値はバックエンドが計算）を受け取る
+- 例: valid 14件・invalid 10件。API のルールの参照実装 `tests/contract/api_rules.py` と `test_api_contracts.py`（79件）を追加。dev 依存に pyyaml・openapi-spec-validator を追加
+- roadmap: ARC-04・ARC-08・ARC-09 を完了
+
+**決まったこと**（設計判断）
+- 食事は「記録日＋食事ID」で指す（`/v1/days/{record_date}/meals/{meal_id}`）。バックエンドはその日の食事を範囲検索して絞る
+- 読めない・見つからないは HTTP 200 の status で返す。HTTP のエラーは入力不備・認証・外部障害など
+- 再送は 409 `meal_already_exists` / `item_already_exists`、同時更新は `expected_version` と 409 `version_conflict`
+
+**次にやること**
+1. INF-10 の残り（ユーザー作業: AWS Budgets・root の MFA・作業用 IAM）
+2. ADR-0002 のフォルダ構成を確定（`apps/mobile` `apps/api` `infra/`）
+3. UIX 画面一覧と確認画面
+4. TST-01 テスト戦略・TST-02 トレーサビリティ（M4 の入口）
+
+**注意点・気づき**
+- アカウント削除（F-002、`DELETE /v1/me`）は公開前に足す予定で、まだ契約にない
+- OpenAPI から domain・llm のスキーマへの `$ref` は相対パス。テストではファイルの URI と `$id` の両方でスキーマを登録して解決している
+
+---
+
 ## 2026-11-14 セッション1（続き14）: 全体構成と IaC
 
 **やったこと**

@@ -8,7 +8,7 @@
 | 項目 | 内容 |
 |---|---|
 | 現在のマイルストーン | **M3 基本設計**（M2 PoC は 2026-11-13 に完了 → [poc-summary.md](../../poc/reports/poc-summary.md)。M1 の残り DAT-01 を先に進める） |
-| 次にやること | ① INF-10 の残り（ユーザー: AWS の予算アラート・MFA・IAM） ② API 契約（`contracts/api` の OpenAPI、ARC-04） ③ ADR-0002 のフォルダ構成を確定（`apps/` `infra/`） ④ UIX 画面一覧・確認画面 |
+| 次にやること | ① INF-10 の残り（ユーザー: AWS の予算アラート・MFA・IAM） ② ADR-0002 のフォルダ構成を確定（`apps/mobile` `apps/api` `infra/`） ③ UIX 画面一覧・確認画面 ④ TST-01 テスト戦略・TST-02 トレーサビリティ |
 | ブロッカー | なし（技術スタックの主要な決定はそろった） |
 | 最終更新 | 2026-11-13 |
 
@@ -160,12 +160,12 @@ flowchart LR
 - [x] **ARC-01 ★** 全体構成：Expo アプリ → API Gateway（JWT）→ Lambda（FastAPI）→ DynamoDB / Claude / Open Food Facts、Cognito、SSM — 成果物: [architecture.md](../02_design/architecture.md)
 - [x] **ARC-02 ★** データの主たる置き場所：サーバーファースト（Q-35） — 成果物: [ADR-0015](../adr/0015-server-first-and-sync-estimation.md)
 - [x] **ARC-03 ★** バックエンド形態：AWS サーバーレス（API Gateway + Lambda + Cognito） — 成果物: [ADR-0007](../adr/0007-backend-aws-serverless.md)
-- [ ] **ARC-04** API スタイル：REST + OpenAPI / GraphQL / RPC
+- [x] **ARC-04** API スタイル：REST + OpenAPI 3.1。食品の形は contracts/domain を参照 — 成果物: [ADR-0016](../adr/0016-api-rest-openapi.md), [contracts/api/openapi.yaml](../../contracts/api/openapi.yaml), [api.md](../02_design/api.md)
 - [ ] **ARC-05** レイヤ構成：ドメイン・ユースケース・アダプタの分離（ヘキサゴナル / クリーンアーキ）
 - [ ] **ARC-06** 推定方式のプラグイン化：`Estimator`（barcode / label-ocr / photo / text / manual）共通インターフェース → 新方式追加に強く
 - [x] **ARC-07** 推定処理は同期 API（PoC の応答は p90 約5秒）。推定と保存は別の API — 成果物: [ADR-0015](../adr/0015-server-first-and-sync-estimation.md)
-- [ ] **ARC-08** エラー体系・エラーコード（クライアント表示文言との対応） — 成果物: `02_design/error-handling.md`
-- [ ] **ARC-09** API バージョニング方針（モバイルは旧バージョンが残るため必須）
+- [x] **ARC-08** エラー体系：`{"error": {"code", "message"}}`、code 11種と HTTP の対応。画面の文言はアプリが code から決める。読めない等の推定結果は 200 の status — 成果物: [api.md](../02_design/api.md) §5
+- [x] **ARC-09** API バージョニング：パスの `/v1`。互換を壊す変更は `/v2`、古い版は一定期間残す — 成果物: [ADR-0016](../adr/0016-api-rest-openapi.md)
 - [ ] **ARC-10** 設定管理・Feature flag（新入力方式の段階公開など）
 - [ ] **ARC-11** ロギング・監視・トレース・クラッシュレポート
 - [ ] **ARC-12** 拡張シナリオ検証：栄養素追加 / 新入力方式 / LLM差し替え / 複数ユーザー共有 / ヘルスケア連携 に設計が耐えるか

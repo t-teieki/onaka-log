@@ -1,0 +1,94 @@
+{
+  "status": "ok",
+  "product_name": "ドーナツ",
+  "candidates": [
+    {
+      "name": "ドーナツ（シュガー）",
+      "source": {
+        "method": "label_ocr",
+        "provider": "claude",
+        "product_code": null,
+        "estimation": {
+          "model": "claude-haiku-5-5",
+          "prompt_version": "0.2.0",
+          "schema_id": "urn:onaka-log:llm:nutrition-label-ocr:output:v0.3"
+        },
+        "confidence": null,
+        "column_index": 0,
+        "column_heading": "シュガー"
+      },
+      "reference": {
+        "basis": {
+          "type": "per_piece",
+          "amount": null,
+          "unit": null,
+          "label": "1個当たり"
+        },
+        "net_content": {
+          "status": "known",
+          "amount": null,
+          "unit": null,
+          "pieces": 4
+        },
+        "nutrients": {
+          "energy_kcal": 250,
+          "protein_g": 1.5,
+          "fat_g": 22.7,
+          "carbohydrate_g": 10.0
+        }
+      },
+      "estimate_detail": null,
+      "default_portion": {
+        "mode": "pieces",
+        "fraction": null,
+        "pieces": 1
+      }
+    },
+    {
+      "name": "ドーナツ（チョコ）",
+      "source": {
+        "method": "label_ocr",
+        "provider": "claude",
+        "product_code": null,
+        "estimation": {
+          "model": "claude-haiku-5-5",
+          "prompt_version": "0.2.0",
+          "schema_id": "urn:onaka-log:llm:nutrition-label-ocr:output:v0.3"
+        },
+        "confidence": null,
+        "column_index": 1,
+        "column_heading": "チョコ"
+      },
+      "reference": {
+        "basis": {
+          "type": "per_piece",
+          "amount": null,
+          "unit": null,
+          "label": "1個当たり"
+        },
+        "net_content": {
+          "status": "known",
+          "amount": null,
+          "unit": null,
+          "pieces": 4
+        },
+        "nutrients": {
+          "energy_kcal": 289,
+          "protein_g": 1.7,
+          "fat_g": 26.1,
+          "carbohydrate_g": 11.7
+        }
+      },
+      "estimate_detail": null,
+      "default_portion": {
+        "mode": "pieces",
+        "fraction": null,
+        "pieces": 1
+      }
+    }
+  ],
+  "issues": [
+    "multiple_labels"
+  ],
+  "notes": "味違いの2列表示"
+}

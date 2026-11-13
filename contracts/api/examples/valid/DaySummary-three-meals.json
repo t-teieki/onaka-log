@@ -1,0 +1,265 @@
+{
+  "record_date": "2026-11-13",
+  "totals": {
+    "energy_kcal": 898.0,
+    "protein_g": 23.7,
+    "fat_g": 53.7,
+    "carbohydrate_g": 78.3
+  },
+  "totals_incomplete": [
+    "fat_g"
+  ],
+  "meals": [
+    {
+      "meal_id": "0190f3a2-7c1e-7a01-8b2c-000000000009",
+      "user_id": "ap-northeast-1:3f1c9b2e-5d4a-4e8f-9a7b-1c2d3e4f5a6b",
+      "eaten_at": "2026-11-13T10:05:30+09:00",
+      "record_date": "2026-11-13",
+      "items": [
+        {
+          "item_id": "0190f3a2-7c1e-7a01-8b2c-000000000007",
+          "name": "ドーナツ（チョコ）",
+          "source": {
+            "method": "label_ocr",
+            "provider": "claude",
+            "product_code": null,
+            "estimation": {
+              "model": "claude-haiku-5-5",
+              "prompt_version": "0.2.0",
+              "schema_id": "urn:onaka-log:llm:nutrition-label-ocr:output:v0.3"
+            },
+            "confidence": null,
+            "column_index": 1,
+            "column_heading": "チョコ"
+          },
+          "reference": {
+            "basis": {
+              "type": "per_piece",
+              "amount": null,
+              "unit": null,
+              "label": "1個当たり"
+            },
+            "net_content": {
+              "status": "known",
+              "amount": null,
+              "unit": null,
+              "pieces": 4
+            },
+            "nutrients": {
+              "energy_kcal": 289,
+              "protein_g": 1.7,
+              "fat_g": 26.1,
+              "carbohydrate_g": 11.7
+            }
+          },
+          "portion": {
+            "mode": "pieces",
+            "fraction": null,
+            "pieces": 1,
+            "multiplier": 1.0
+          },
+          "nutrients": {
+            "energy_kcal": 289.0,
+            "protein_g": 1.7,
+            "fat_g": 26.1,
+            "carbohydrate_g": 11.7
+          },
+          "estimate_detail": null
+        },
+        {
+          "item_id": "0190f3a2-7c1e-7a01-8b2c-000000000008",
+          "name": "野菜ジュース",
+          "source": {
+            "method": "label_ocr",
+            "provider": "claude",
+            "product_code": null,
+            "estimation": {
+              "model": "claude-haiku-5-5",
+              "prompt_version": "0.2.0",
+              "schema_id": "urn:onaka-log:llm:nutrition-label-ocr:output:v0.3"
+            },
+            "confidence": null,
+            "column_index": null,
+            "column_heading": null
+          },
+          "reference": {
+            "basis": {
+              "type": "per_package",
+              "amount": 200,
+              "unit": "ml",
+              "label": "1本（200ml）当たり"
+            },
+            "net_content": {
+              "status": "known",
+              "amount": 200,
+              "unit": "ml",
+              "pieces": null
+            },
+            "nutrients": {
+              "energy_kcal": 68,
+              "protein_g": 1.2,
+              "fat_g": null,
+              "carbohydrate_g": 15.8
+            }
+          },
+          "portion": {
+            "mode": "whole",
+            "fraction": null,
+            "pieces": null,
+            "multiplier": 1.0
+          },
+          "nutrients": {
+            "energy_kcal": 68.0,
+            "protein_g": 1.2,
+            "fat_g": null,
+            "carbohydrate_g": 15.8
+          },
+          "estimate_detail": null
+        }
+      ],
+      "totals": {
+        "energy_kcal": 357.0,
+        "protein_g": 2.9,
+        "fat_g": 26.1,
+        "carbohydrate_g": 27.5
+      },
+      "totals_incomplete": [
+        "fat_g"
+      ],
+      "version": 1,
+      "created_at": "2026-11-13T03:30:07Z",
+      "updated_at": "2026-11-13T03:30:07Z"
+    },
+    {
+      "meal_id": "0190f3a2-7c1e-7a01-8b2c-000000000002",
+      "user_id": "ap-northeast-1:3f1c9b2e-5d4a-4e8f-9a7b-1c2d3e4f5a6b",
+      "eaten_at": "2026-11-13T12:30:05+09:00",
+      "record_date": "2026-11-13",
+      "items": [
+        {
+          "item_id": "0190f3a2-7c1e-7a01-8b2c-000000000001",
+          "name": "カップ麺（しょうゆ味）",
+          "source": {
+            "method": "barcode",
+            "provider": "open_food_facts",
+            "product_code": "4901234567900",
+            "estimation": null,
+            "confidence": null,
+            "column_index": null,
+            "column_heading": null
+          },
+          "reference": {
+            "basis": {
+              "type": "per_100g",
+              "amount": 100,
+              "unit": "g",
+              "label": null
+            },
+            "net_content": {
+              "status": "known",
+              "amount": 78,
+              "unit": "g",
+              "pieces": null
+            },
+            "nutrients": {
+              "energy_kcal": 450.0,
+              "protein_g": 12.6,
+              "fat_g": 18.7,
+              "carbohydrate_g": 57.4
+            }
+          },
+          "portion": {
+            "mode": "whole",
+            "fraction": null,
+            "pieces": null,
+            "multiplier": 0.78
+          },
+          "nutrients": {
+            "energy_kcal": 351.0,
+            "protein_g": 9.8,
+            "fat_g": 14.6,
+            "carbohydrate_g": 44.8
+          },
+          "estimate_detail": null
+        }
+      ],
+      "totals": {
+        "energy_kcal": 351.0,
+        "protein_g": 9.8,
+        "fat_g": 14.6,
+        "carbohydrate_g": 44.8
+      },
+      "totals_incomplete": [],
+      "version": 1,
+      "created_at": "2026-11-13T03:30:07Z",
+      "updated_at": "2026-11-13T03:30:07Z"
+    },
+    {
+      "meal_id": "0190f3a2-7c1e-7a01-8b2c-000000000012",
+      "user_id": "ap-northeast-1:3f1c9b2e-5d4a-4e8f-9a7b-1c2d3e4f5a6b",
+      "eaten_at": "2026-11-13T13:00:00+09:00",
+      "record_date": "2026-11-13",
+      "items": [
+        {
+          "item_id": "0190f3a2-7c1e-7a01-8b2c-000000000011",
+          "name": "豚の生姜焼き",
+          "source": {
+            "method": "photo",
+            "provider": "claude",
+            "product_code": null,
+            "estimation": {
+              "model": "claude-sonnet-5-5",
+              "prompt_version": "0.2.0",
+              "schema_id": "urn:onaka-log:llm:food-photo-estimate:output:v0.1"
+            },
+            "confidence": "medium",
+            "column_index": null,
+            "column_heading": null
+          },
+          "reference": {
+            "basis": {
+              "type": "as_estimated",
+              "amount": null,
+              "unit": null,
+              "label": null
+            },
+            "net_content": null,
+            "nutrients": {
+              "energy_kcal": 380,
+              "protein_g": 22.0,
+              "fat_g": 26.0,
+              "carbohydrate_g": 12.0
+            }
+          },
+          "portion": {
+            "mode": "fraction",
+            "fraction": 0.5,
+            "pieces": null,
+            "multiplier": 0.5
+          },
+          "nutrients": {
+            "energy_kcal": 190.0,
+            "protein_g": 11.0,
+            "fat_g": 13.0,
+            "carbohydrate_g": 6.0
+          },
+          "estimate_detail": {
+            "amount_value": 1,
+            "amount_unit": "serving",
+            "estimated_weight_g": 220
+          }
+        }
+      ],
+      "totals": {
+        "energy_kcal": 190.0,
+        "protein_g": 11.0,
+        "fat_g": 13.0,
+        "carbohydrate_g": 6.0
+      },
+      "totals_incomplete": [],
+      "version": 1,
+      "created_at": "2026-11-13T03:30:07Z",
+      "updated_at": "2026-11-13T03:30:07Z"
+    }
+  ]
+}

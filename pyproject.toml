@@ -9,7 +9,13 @@ dependencies = []
 package = false
 
 [dependency-groups]
-dev = ["pytest>=8", "jsonschema>=4.23", "referencing>=0.35"]
+dev = [
+    "pytest>=8",
+    "jsonschema>=4.23",
+    "referencing>=0.35",
+    "pyyaml>=6.0.3",
+    "openapi-spec-validator>=0.9.0",
+]
 poc = ["anthropic", "pillow", "httpx", "python-dotenv"]
 
 [tool.pytest.ini_options]

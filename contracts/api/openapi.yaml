@@ -1,0 +1,454 @@
+openapi: 3.1.0
+info:
+  title: onaka-log API
+  version: 0.1.0
+  description: |
+    アプリ ⇔ バックエンドの API 契約（SSOT）。設計方針は docs/02_design/api.md、決定は ADR-0016。
+    食品の元の値・出どころなどの形は contracts/domain/meal.schema.json を参照する。
+    倍率・食べた量の値・合計はバックエンドが計算し、ドメインのルール DM-01〜08 で検証する（ADR-0015）。
+servers:
+  - url: https://api.example.invalid
+    description: 環境ごとの API Gateway の URL に置き換える（dev / prod）
+security:
+  - cognitoJwt: []
+tags:
+  - name: estimates
+    description: 推定・照合（保存はしない）
+  - name: meals
+    description: 食事の保存・取得・削除
+
+paths:
+  /v1/estimates/label:
+    post:
+      tags: [estimates]
+      operationId: estimateLabel
+      summary: 栄養成分表示の画像を読み、食品の候補（列ごと）を返す（F-012）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../llm/nutrition-label-ocr/input.schema.json'
+      responses:
+        '200':
+          description: 読み取り結果。読めない・栄養成分表示でないときも 200 で status に入れる
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabelEstimateResponse'
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '422': { $ref: '#/components/responses/EstimationFailed' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '502': { $ref: '#/components/responses/UpstreamUnavailable' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /v1/estimates/photo:
+    post:
+      tags: [estimates]
+      operationId: estimatePhoto
+      summary: 料理の画像から、品目ごとの食品の候補を返す（F-013）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../llm/food-photo-estimate/input.schema.json'
+      responses:
+        '200':
+          description: 推定結果。食べ物でない・判別できないときも 200 で status に入れる
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhotoEstimateResponse'
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '422': { $ref: '#/components/responses/EstimationFailed' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '502': { $ref: '#/components/responses/UpstreamUnavailable' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /v1/products/{product_code}:
+    get:
+      tags: [estimates]
+      operationId: lookupProduct
+      summary: バーコードの番号で Open Food Facts を照合し、食品の候補を返す（F-011）
+      parameters:
+        - name: product_code
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{8,14}$'
+      responses:
+        '200':
+          description: 照合結果。見つからないときも 200 で status に入れる
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductLookupResponse'
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '502': { $ref: '#/components/responses/UpstreamUnavailable' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /v1/meals:
+    post:
+      tags: [meals]
+      operationId: createMeal
+      summary: 食事を作って保存する（F-030、AP-02）
+      description: meal_id・item_id はアプリで作る UUIDv7。同じ meal_id で再送されたら 409 meal_already_exists。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MealCreateRequest'
+      responses:
+        '201':
+          description: 保存した食事（倍率・食べた量の値・合計はバックエンドが計算）
+          content:
+            application/json:
+              schema:
+                $ref: '../domain/meal.schema.json'
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /v1/days/{record_date}:
+    get:
+      tags: [meals]
+      operationId: getDay
+      summary: 1日分の食事と日次合計（F-031、AP-01）
+      parameters:
+        - $ref: '#/components/parameters/RecordDate'
+      responses:
+        '200':
+          description: その日の食事（時刻順）と合計。食事がなければ meals は空
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DaySummary'
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /v1/days/{record_date}/meals/{meal_id}:
+    parameters:
+      - $ref: '#/components/parameters/RecordDate'
+      - $ref: '#/components/parameters/MealId'
+    get:
+      tags: [meals]
+      operationId: getMeal
+      summary: 食事1件（AP-03）
+      responses:
+        '200':
+          description: 食事
+          content:
+            application/json:
+              schema:
+                $ref: '../domain/meal.schema.json'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+    delete:
+      tags: [meals]
+      operationId: deleteMeal
+      summary: 食事を削除する（F-032、AP-04）
+      responses:
+        '204':
+          description: 削除した
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /v1/days/{record_date}/meals/{meal_id}/items:
+    parameters:
+      - $ref: '#/components/parameters/RecordDate'
+      - $ref: '#/components/parameters/MealId'
+    post:
+      tags: [meals]
+      operationId: addMealItem
+      summary: 既存の食事に食品を足す（F-030、AP-06、Q-32）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddItemRequest'
+      responses:
+        '200':
+          description: 食品を足した後の食事（version が +1）
+          content:
+            application/json:
+              schema:
+                $ref: '../domain/meal.schema.json'
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /v1/days/{record_date}/meals/{meal_id}/items/{item_id}:
+    parameters:
+      - $ref: '#/components/parameters/RecordDate'
+      - $ref: '#/components/parameters/MealId'
+      - name: item_id
+        in: path
+        required: true
+        schema:
+          $ref: '../domain/meal.schema.json#/$defs/uuid'
+    delete:
+      tags: [meals]
+      operationId: deleteMealItem
+      summary: 食事から食品を消す。最後の1件なら食事ごと削除する（F-032、AP-05、Q-31）
+      parameters:
+        - name: expected_version
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: 消した後の食事。食事ごと削除したときは meal が null、meal_deleted が true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteItemResponse'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+components:
+  securitySchemes:
+    cognitoJwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Cognito の ID トークン。API Gateway の JWT オーソライザーが検証する。利用者 ID は sub を使う
+
+  parameters:
+    RecordDate:
+      name: record_date
+      in: path
+      required: true
+      description: 記録日（4:00 区切り、日本時間）
+      schema:
+        type: string
+        pattern: '^\d{4}-\d{2}-\d{2}$'
+    MealId:
+      name: meal_id
+      in: path
+      required: true
+      schema:
+        $ref: '../domain/meal.schema.json#/$defs/uuid'
+
+  responses:
+    ValidationError:
+      description: 入力がスキーマやドメインのルールに合わない（validation_error）
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Unauthorized:
+      description: トークンがない・無効（unauthorized）
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: 食事・食品がない（not_found）
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Conflict:
+      description: 再送（meal_already_exists / item_already_exists）または版の不一致（version_conflict）
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    PayloadTooLarge:
+      description: 画像が大きすぎる（payload_too_large）
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    EstimationFailed:
+      description: Claude の応答がスキーマ・ルールに合わない、リフューザル、出力の途切れ（estimation_failed）
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    RateLimited:
+      description: 回数の上限（rate_limited）
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    UpstreamUnavailable:
+      description: Claude・Open Food Facts に届かない（upstream_unavailable）
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    InternalError:
+      description: それ以外（internal_error）
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+    Error:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              enum: [validation_error, unauthorized, not_found, meal_already_exists, item_already_exists,
+                     version_conflict, payload_too_large, estimation_failed, rate_limited,
+                     upstream_unavailable, internal_error]
+            message:
+              description: 開発者向け。画面の文言はアプリが code から決める
+              type: string
+
+    PortionInput:
+      description: 分量の選択（倍率は送らない。バックエンドが計算する）
+      type: object
+      additionalProperties: false
+      required: [mode, fraction, pieces]
+      properties:
+        mode: { type: string, enum: [whole, fraction, pieces] }
+        fraction: { type: ['number', 'null'], exclusiveMinimum: 0, maximum: 1 }
+        pieces: { type: ['integer', 'null'], minimum: 1 }
+
+    FoodItemDraft:
+      description: 推定・照合 API が返す食品の候補。確認画面で選び、分量を決めて FoodItemInput として保存 API に送る
+      type: object
+      additionalProperties: false
+      required: [name, source, reference, estimate_detail, default_portion]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100 }
+        source: { $ref: '../domain/meal.schema.json#/$defs/source' }
+        reference: { $ref: '../domain/meal.schema.json#/$defs/reference' }
+        estimate_detail: { $ref: '../domain/meal.schema.json#/$defs/food_item/properties/estimate_detail' }
+        default_portion: { $ref: '#/components/schemas/PortionInput' }
+
+    FoodItemInput:
+      description: 保存 API に送る食品。候補の source・reference・estimate_detail はそのまま返す
+      type: object
+      additionalProperties: false
+      required: [item_id, name, source, reference, estimate_detail, portion]
+      properties:
+        item_id: { $ref: '../domain/meal.schema.json#/$defs/uuid' }
+        name: { type: string, minLength: 1, maxLength: 100 }
+        source: { $ref: '../domain/meal.schema.json#/$defs/source' }
+        reference: { $ref: '../domain/meal.schema.json#/$defs/reference' }
+        estimate_detail: { $ref: '../domain/meal.schema.json#/$defs/food_item/properties/estimate_detail' }
+        portion: { $ref: '#/components/schemas/PortionInput' }
+
+    LabelEstimateResponse:
+      type: object
+      additionalProperties: false
+      required: [status, product_name, candidates, issues, notes]
+      properties:
+        status: { type: string, enum: [ok, unreadable, not_nutrition_label] }
+        product_name: { type: ['string', 'null'] }
+        candidates:
+          description: 列ごとの候補（status が ok なら1件以上、それ以外は空）。2件以上なら利用者に列を選ばせる
+          type: array
+          items: { $ref: '#/components/schemas/FoodItemDraft' }
+        issues:
+          type: array
+          items:
+            type: string
+            enum: [blurry, glare, oblique, curved, partially_cut, small_text, low_light, multiple_labels, kj_only]
+        notes: { type: ['string', 'null'] }
+
+    PhotoEstimateResponse:
+      type: object
+      additionalProperties: false
+      required: [status, meal_name, items, assumptions, notes]
+      properties:
+        status: { type: string, enum: [ok, not_food, unrecognizable] }
+        meal_name: { type: ['string', 'null'] }
+        items:
+          description: 品目ごとの候補（status が ok なら1件以上、それ以外は空）
+          type: array
+          items: { $ref: '#/components/schemas/FoodItemDraft' }
+        assumptions:
+          type: array
+          items: { type: string }
+        notes: { type: ['string', 'null'] }
+
+    ProductLookupResponse:
+      type: object
+      additionalProperties: false
+      required: [status, item]
+      properties:
+        status: { type: string, enum: [found, not_found] }
+        item:
+          description: status が found なら候補、not_found なら null
+          oneOf:
+            - $ref: '#/components/schemas/FoodItemDraft'
+            - type: 'null'
+
+    MealCreateRequest:
+      type: object
+      additionalProperties: false
+      required: [meal_id, eaten_at, items]
+      properties:
+        meal_id: { $ref: '../domain/meal.schema.json#/$defs/uuid' }
+        eaten_at:
+          description: 食べた日時（日本時間）。既定は記録した時刻、確認画面で変えられる（Q-33）。record_date はバックエンドが計算する
+          $ref: '../domain/meal.schema.json#/properties/eaten_at'
+        items:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items: { $ref: '#/components/schemas/FoodItemInput' }
+
+    AddItemRequest:
+      type: object
+      additionalProperties: false
+      required: [expected_version, item]
+      properties:
+        expected_version:
+          description: 読んだときの食事の version。違えば 409 version_conflict
+          type: integer
+          minimum: 1
+        item: { $ref: '#/components/schemas/FoodItemInput' }
+
+    DeleteItemResponse:
+      type: object
+      additionalProperties: false
+      required: [meal_deleted, meal]
+      properties:
+        meal_deleted: { type: boolean }
+        meal:
+          oneOf:
+            - $ref: '../domain/meal.schema.json'
+            - type: 'null'
+
+    DaySummary:
+      type: object
+      additionalProperties: false
+      required: [record_date, totals, totals_incomplete, meals]
+      properties:
+        record_date: { type: string, pattern: '^\d{4}-\d{2}-\d{2}$' }
+        totals:
+          description: その日の食事の totals の和（小数第1位で四捨五入）
+          $ref: '../domain/meal.schema.json#/$defs/totals'
+        totals_incomplete:
+          description: その日の食事のどれかで不明を含む栄養素
+          type: array
+          uniqueItems: true
+          items: { $ref: '../domain/meal.schema.json#/$defs/nutrient_name' }
+        meals:
+          description: 時刻順
+          type: array
+          items: { $ref: '../domain/meal.schema.json' }
