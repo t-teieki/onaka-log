@@ -31,7 +31,7 @@
 
 - ディレクトリ名・ファイル名は英語（ASCII）。ドキュメント本文は日本語。コード識別子は英語。
 - ID体系: 機能 `F-xxx`、非機能 `NFR-xxx`、ADR `ADR-xxxx`、ロードマップ項目 `PRJ-01` 等、未決事項 `Q-xx`。採番済みIDは再利用しない。
-- 図は Mermaid。
+- 図は Mermaid。AWS の構成図だけは公式アイコンを使うため、Python の `diagrams` で PNG を作る（元のコード: [docs/02_design/diagrams/architecture.py](docs/02_design/diagrams/architecture.py)）。
 - フォルダ構成と置き場所のルール: [docs/00_project/folder-structure.md](docs/00_project/folder-structure.md)
 - ドキュメント索引: [docs/README.md](docs/README.md)
 - 旧資料（`old/`）は削除済み。必要ならコミット `dbe0211` 以前の Git 履歴から参照できる（前提にはしない）。
@@ -47,11 +47,12 @@
 - 認証は最初から入れる、Sign in with Apple + Google（[ADR-0006](docs/adr/0006-auth-from-day-one.md)）
 - 開発は WSL から、リポジトリは C ドライブ上。性能などが問題になりそうなら WSL 側へ移す（[dev-environment.md](docs/00_project/dev-environment.md)）
 - バックエンドは AWS サーバーレス: API Gateway + Lambda（Python / FastAPI）+ Cognito、東京リージョン（[ADR-0007](docs/adr/0007-backend-aws-serverless.md)）
-- DB は DynamoDB（[ADR-0008](docs/adr/0008-database-dynamodb.md)）
+- IaC は AWS SAM、環境は local / dev / prod（[ADR-0014](docs/adr/0014-iac-aws-sam.md)）。記録はサーバーファースト、推定は同期 API、計算はバックエンド（[ADR-0015](docs/adr/0015-server-first-and-sync-estimation.md)）。全体構成: [architecture.md](docs/02_design/architecture.md)
+- DB は DynamoDB（[ADR-0008](docs/adr/0008-database-dynamodb.md)）。キー・ID・値の持ち方は [ADR-0013](docs/adr/0013-data-model-keys-and-ids.md)、形は [contracts/domain/meal.schema.json](contracts/domain/meal.schema.json)
 
 ## 現時点で未決（決まったら更新）
 
-- IaC の方式、データのキー設計、各種ライブラリ → roadmap の ★ 項目と open-questions を参照
+- 各種ライブラリ、API 契約 → roadmap の ★ 項目と open-questions を参照
 - アプリ・バックエンドのビルドコマンドはまだない
 
 ## コマンド

@@ -1,0 +1,64 @@
+{
+  "meal_id": "0190f3a2-7c1e-7a01-8b2c-000000000002",
+  "user_id": "ap-northeast-1:3f1c9b2e-5d4a-4e8f-9a7b-1c2d3e4f5a6b",
+  "eaten_at": "2026-11-13T03:30:05Z",
+  "record_date": "2026-11-13",
+  "items": [
+    {
+      "item_id": "0190f3a2-7c1e-7a01-8b2c-000000000001",
+      "name": "カップ麺（しょうゆ味）",
+      "source": {
+        "method": "barcode",
+        "provider": "open_food_facts",
+        "product_code": "4901234567900",
+        "estimation": null,
+        "confidence": null,
+        "column_index": null,
+        "column_heading": null
+      },
+      "reference": {
+        "basis": {
+          "type": "per_100g",
+          "amount": 100,
+          "unit": "g",
+          "label": null
+        },
+        "net_content": {
+          "status": "known",
+          "amount": 78,
+          "unit": "g",
+          "pieces": null
+        },
+        "nutrients": {
+          "energy_kcal": 450.0,
+          "protein_g": 12.6,
+          "fat_g": 18.7,
+          "carbohydrate_g": 57.4
+        }
+      },
+      "portion": {
+        "mode": "whole",
+        "fraction": null,
+        "pieces": null,
+        "multiplier": 0.78
+      },
+      "nutrients": {
+        "energy_kcal": 351.0,
+        "protein_g": 9.8,
+        "fat_g": 14.6,
+        "carbohydrate_g": 44.8
+      },
+      "estimate_detail": null
+    }
+  ],
+  "totals": {
+    "energy_kcal": 351.0,
+    "protein_g": 9.8,
+    "fat_g": 14.6,
+    "carbohydrate_g": 44.8
+  },
+  "totals_incomplete": [],
+  "version": 1,
+  "created_at": "2026-11-13T03:30:07Z",
+  "updated_at": "2026-11-13T03:30:07Z"
+}

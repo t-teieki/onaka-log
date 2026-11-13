@@ -1,0 +1,63 @@
+{
+  "meal_id": "0190f3a2-7c1e-7a01-8b2c-000000000014",
+  "user_id": "ap-northeast-1:3f1c9b2e-5d4a-4e8f-9a7b-1c2d3e4f5a6b",
+  "eaten_at": "2026-11-13T08:00:00+09:00",
+  "record_date": "2026-11-13",
+  "items": [
+    {
+      "item_id": "0190f3a2-7c1e-7a01-8b2c-000000000013",
+      "name": "職場のお菓子",
+      "source": {
+        "method": "manual",
+        "provider": "user",
+        "product_code": null,
+        "estimation": null,
+        "confidence": null,
+        "column_index": null,
+        "column_heading": null
+      },
+      "reference": {
+        "basis": {
+          "type": "as_entered",
+          "amount": null,
+          "unit": null,
+          "label": null
+        },
+        "net_content": null,
+        "nutrients": {
+          "energy_kcal": 150,
+          "protein_g": null,
+          "fat_g": null,
+          "carbohydrate_g": null
+        }
+      },
+      "portion": {
+        "mode": "whole",
+        "fraction": null,
+        "pieces": null,
+        "multiplier": 1.0
+      },
+      "nutrients": {
+        "energy_kcal": 150.0,
+        "protein_g": null,
+        "fat_g": null,
+        "carbohydrate_g": null
+      },
+      "estimate_detail": null
+    }
+  ],
+  "totals": {
+    "energy_kcal": 150.0,
+    "protein_g": 0.0,
+    "fat_g": 0.0,
+    "carbohydrate_g": 0.0
+  },
+  "totals_incomplete": [
+    "protein_g",
+    "fat_g",
+    "carbohydrate_g"
+  ],
+  "version": 1,
+  "created_at": "2026-11-13T03:30:07Z",
+  "updated_at": "2026-11-13T03:30:07Z"
+}

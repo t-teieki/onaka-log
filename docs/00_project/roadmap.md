@@ -8,7 +8,7 @@
 | 項目 | 内容 |
 |---|---|
 | 現在のマイルストーン | **M3 基本設計**（M2 PoC は 2026-11-13 に完了 → [poc-summary.md](../../poc/reports/poc-summary.md)。M1 の残り DAT-01 を先に進める） |
-| 次にやること | ① DAT-01 ドメインモデルとデータモデル（キー・属性・`contracts/domain/`） ② INF-10 の残り（ユーザー: AWS の予算アラート・MFA・IAM） ③ ARC-01 全体構成・INF-03 IaC の方式 ④ UIX 画面一覧・確認画面 |
+| 次にやること | ① INF-10 の残り（ユーザー: AWS の予算アラート・MFA・IAM） ② API 契約（`contracts/api` の OpenAPI、ARC-04） ③ ADR-0002 のフォルダ構成を確定（`apps/` `infra/`） ④ UIX 画面一覧・確認画面 |
 | ブロッカー | なし（技術スタックの主要な決定はそろった） |
 | 最終更新 | 2026-11-13 |
 
@@ -96,7 +96,7 @@ flowchart LR
 - [ ] **REQ-14** 再利用機能：履歴から再記録・お気に入り・よく食べるもの（MVP か拡張か）
 - [ ] **REQ-15** 目標値（カロリー・PFC）と達成度（MVP か拡張か）
 - [ ] **REQ-16** 対象栄養素：カロリー・PFC のみか、食塩相当量・食物繊維・糖質等を将来拡張できる設計にするか
-- [ ] **REQ-17** オフライン要件（閲覧・手入力はオフライン可か、推定はオンライン必須か）
+- [x] **REQ-17** オフライン要件：MVP ではオフラインの記録・閲覧はしない（推定はどれもオンラインが必要） — 成果物: [ADR-0015](../adr/0015-server-first-and-sync-estimation.md)
 - [ ] **REQ-18** 非機能要件：コスト上限（月1000円）・画像非保存・対応OS は決定。応答時間などは PoC 後 — 成果物: [non-functional.md](../01_requirements/non-functional.md) (WIP)
 - [x] **REQ-19** 画像の保持方針：推定後すぐ破棄し、どこにも保存しない — 成果物: [ADR-0004](../adr/0004-no-image-retention.md)
 - [ ] **REQ-20** データのエクスポート・アカウント削除・データ削除要件
@@ -157,13 +157,13 @@ flowchart LR
 
 ## ARC: アーキテクチャ（M3）
 
-- [ ] **ARC-01 ★** 全体構成：モバイル / バックエンド / DB / ストレージ / 外部API（Claude・商品DB）の配置 — 成果物: `02_design/architecture.md`
-- [ ] **ARC-02 ★** データの主たる置き場所：ローカルファースト（端末DB＋同期） / サーバーファースト / 端末のみ
+- [x] **ARC-01 ★** 全体構成：Expo アプリ → API Gateway（JWT）→ Lambda（FastAPI）→ DynamoDB / Claude / Open Food Facts、Cognito、SSM — 成果物: [architecture.md](../02_design/architecture.md)
+- [x] **ARC-02 ★** データの主たる置き場所：サーバーファースト（Q-35） — 成果物: [ADR-0015](../adr/0015-server-first-and-sync-estimation.md)
 - [x] **ARC-03 ★** バックエンド形態：AWS サーバーレス（API Gateway + Lambda + Cognito） — 成果物: [ADR-0007](../adr/0007-backend-aws-serverless.md)
 - [ ] **ARC-04** API スタイル：REST + OpenAPI / GraphQL / RPC
 - [ ] **ARC-05** レイヤ構成：ドメイン・ユースケース・アダプタの分離（ヘキサゴナル / クリーンアーキ）
 - [ ] **ARC-06** 推定方式のプラグイン化：`Estimator`（barcode / label-ocr / photo / text / manual）共通インターフェース → 新方式追加に強く
-- [ ] **ARC-07** 推定処理の同期/非同期（待ち時間が長い場合のジョブ化・ポーリング/プッシュ）
+- [x] **ARC-07** 推定処理は同期 API（PoC の応答は p90 約5秒）。推定と保存は別の API — 成果物: [ADR-0015](../adr/0015-server-first-and-sync-estimation.md)
 - [ ] **ARC-08** エラー体系・エラーコード（クライアント表示文言との対応） — 成果物: `02_design/error-handling.md`
 - [ ] **ARC-09** API バージョニング方針（モバイルは旧バージョンが残るため必須）
 - [ ] **ARC-10** 設定管理・Feature flag（新入力方式の段階公開など）
@@ -202,15 +202,15 @@ flowchart LR
 ## DAT: データ管理（M1〜M3）
 
 - [x] **DAT-00 ★** アクセスパターンの洗い出し：AP-01〜AP-11。ADR-0008 のキー案（ソートキーは `記録日#時刻#食事ID`）で MVP のパターンが足りる — 成果物: [data-access-patterns.md](../02_design/data-access-patterns.md)
-- [ ] **DAT-01 ★** ドメインモデル：User / Meal（食事）/ FoodItem（食品、Meal と 1:N）/ Nutrition（栄養値の値オブジェクト）/ EstimationSource（記録元）/ EstimationRun（推定の生結果）/ Product（バーコード商品）/ Goal — 成果物: `02_design/domain-model.md`, `contracts/domain/`
-- [ ] **DAT-02 ★** Meal の合計値：都度計算 / 保存（非正規化）。整合性と集計性能のトレードオフ
-- [ ] **DAT-03** 栄養値の型と精度（小数・丸め・null=不明 の扱い）、拡張栄養素の持ち方（列追加 / 可変キー）
-- [ ] **DAT-04** 分量モデル：基準量（per 100g / per serving）×摂取量 → 実摂取値。元値と換算後の両方を保持するか
-- [ ] **DAT-05** AI推定の生データ保存（モデルID・プロンプト版・生出力・ユーザー修正差分）→ 精度改善・監査用
-- [ ] **DAT-06** ID 方式（UUIDv7 等をクライアント生成 → オフライン/同期に有利）
-- [ ] **DAT-07** 日時の保存（UTC＋タイムゾーン、"食べた日" のローカル日付）
-- [ ] **DAT-08** 論理削除 / 物理削除、更新履歴
-- [ ] **DAT-09** 同期と競合解決（ARC-02 でローカルファーストを選んだ場合）
+- [x] **DAT-01 ★** ドメインモデル：User / Meal / FoodItem（元の値・分量・食べた量の値・出どころ）/ Nutrients。ルール DM-01〜DM-08 — 成果物: [domain-model.md](../02_design/domain-model.md), [contracts/domain/meal.schema.json](../../contracts/domain/meal.schema.json), [ADR-0013](../adr/0013-data-model-keys-and-ids.md)
+- [x] **DAT-02 ★** Meal の合計値：書き込み時に計算して保存。null は 0 として足し、不明を含む栄養素を `totals_incomplete` に残す — 成果物: [domain-model.md](../02_design/domain-model.md)
+- [x] **DAT-03** 栄養値の型と精度：保存は小数第1位（四捨五入）、null = 不明。拡張栄養素は REQ-16 で（スキーマの版を上げて足す） — 成果物: [data-model.md](../02_design/data-model.md)
+- [x] **DAT-04** 分量モデル：元の値（基準・内容量）× 倍率（全部・割合・個数）= 食べた量の値。元の値と食べた量の値の両方を保存 — 成果物: [domain-model.md](../02_design/domain-model.md)
+- [x] **DAT-05** AI推定の記録：食品ごとにモデルID・prompt_version・スキーマの ID と元の値を保存。Claude の生出力全体と画像は保存しない — 成果物: [domain-model.md](../02_design/domain-model.md)
+- [x] **DAT-06** ID 方式：UUIDv7 をアプリで作る（再送しても同じ ID、条件付き書き込みで二重保存を防ぐ） — 成果物: [data-model.md](../02_design/data-model.md), ADR-0013
+- [x] **DAT-07** 日時の保存：eaten_at は日本時間の ISO 8601、record_date は 4時間引いた日付、作成・更新は UTC — 成果物: [data-model.md](../02_design/data-model.md)
+- [x] **DAT-08** 削除：物理削除。更新履歴は持たない（保存後の修正なし、Q-31） — 成果物: [data-model.md](../02_design/data-model.md)
+- [ ] **DAT-09** 同期と競合解決 (SKIP: サーバーファーストのため不要、ADR-0015)
 - [ ] **DAT-10** 商品マスタ：外部DB結果のキャッシュ、ユーザー登録商品、共有するか個人別か
 - [ ] **DAT-11** 画像ストレージ (SKIP: 画像を保存しないため。ADR-0004)
 - [ ] **DAT-12** マイグレーション戦略（サーバ・端末とも）、シードデータ
@@ -222,9 +222,9 @@ flowchart LR
 
 - [x] **INF-01 ★** ホスティング先：AWS、東京リージョン（ap-northeast-1）を基本 — 成果物: [ADR-0007](../adr/0007-backend-aws-serverless.md)
 - [ ] **INF-10 ★** AWS アカウントの準備：アカウント作成は済み。残りは、プランの確認（Free プランなら6か月で閉じられるため Paid への切り替え時期を決める）、AWS Budgets の予算アラート、root ユーザーの MFA、作業用 IAM ユーザー/ロール (WIP)
-- [ ] **INF-02** 環境構成：local / dev（staging）/ prod の分離
-- [ ] **INF-03** IaC の方式：AWS SAM / CDK / Terraform（ADR-0007 で IaC は必須とした）
-- [ ] **INF-04** シークレット管理（Claude APIキー等はサーバ側のみ、CI は GitHub Secrets / OIDC）
+- [x] **INF-02** 環境構成：local（uvicorn＋DynamoDB Local）/ dev / prod。dev と prod は別スタック・別テーブル・別 Cognito — 成果物: [ADR-0014](../adr/0014-iac-aws-sam.md)
+- [x] **INF-03** IaC の方式：AWS SAM（Q-34） — 成果物: [ADR-0014](../adr/0014-iac-aws-sam.md), [比較](../02_design/discussions/iac-comparison.md)
+- [ ] **INF-04** シークレット管理：Claude API キーは SSM Parameter Store の SecureString（手で入れる）、CI は GitHub OIDC と決定。具体的な設定は実装時 (WIP)
 - [ ] **INF-05** ローカル開発環境（エミュレータ、ローカルDB、モックサーバ）
 - [ ] **INF-06** コスト見積り（無料枠・Claude API）と予算アラート。上限は月1000円（NFR-001、目安は non-functional.md）
 - [ ] **INF-07** 監視・アラート・ログ保管

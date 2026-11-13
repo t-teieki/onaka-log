@@ -1,0 +1,211 @@
+{
+  "meal_id": "0190f3a2-7c1e-7a01-8b2c-000000000010",
+  "user_id": "ap-northeast-1:3f1c9b2e-5d4a-4e8f-9a7b-1c2d3e4f5a6b",
+  "eaten_at": "2026-11-13T19:15:00+09:00",
+  "record_date": "2026-11-13",
+  "items": [
+    {
+      "item_id": "0190f3a2-7c1e-7a01-8b2c-00000000000c",
+      "name": "ご飯",
+      "source": {
+        "method": "photo",
+        "provider": "claude",
+        "product_code": null,
+        "estimation": {
+          "model": "claude-sonnet-5-5",
+          "prompt_version": "0.2.0",
+          "schema_id": "urn:onaka-log:llm:food-photo-estimate:output:v0.1"
+        },
+        "confidence": "medium",
+        "column_index": null,
+        "column_heading": null
+      },
+      "reference": {
+        "basis": {
+          "type": "as_estimated",
+          "amount": null,
+          "unit": null,
+          "label": null
+        },
+        "net_content": null,
+        "nutrients": {
+          "energy_kcal": 302,
+          "protein_g": 4.5,
+          "fat_g": 0.5,
+          "carbohydrate_g": 66.8
+        }
+      },
+      "portion": {
+        "mode": "whole",
+        "fraction": null,
+        "pieces": null,
+        "multiplier": 1.0
+      },
+      "nutrients": {
+        "energy_kcal": 302.0,
+        "protein_g": 4.5,
+        "fat_g": 0.5,
+        "carbohydrate_g": 66.8
+      },
+      "estimate_detail": {
+        "amount_value": 1,
+        "amount_unit": "bowl",
+        "estimated_weight_g": 180
+      }
+    },
+    {
+      "item_id": "0190f3a2-7c1e-7a01-8b2c-00000000000d",
+      "name": "ハンバーグ（ソース付き）",
+      "source": {
+        "method": "photo",
+        "provider": "claude",
+        "product_code": null,
+        "estimation": {
+          "model": "claude-sonnet-5-5",
+          "prompt_version": "0.2.0",
+          "schema_id": "urn:onaka-log:llm:food-photo-estimate:output:v0.1"
+        },
+        "confidence": "medium",
+        "column_index": null,
+        "column_heading": null
+      },
+      "reference": {
+        "basis": {
+          "type": "as_estimated",
+          "amount": null,
+          "unit": null,
+          "label": null
+        },
+        "net_content": null,
+        "nutrients": {
+          "energy_kcal": 330,
+          "protein_g": 18.0,
+          "fat_g": 22.0,
+          "carbohydrate_g": 14.0
+        }
+      },
+      "portion": {
+        "mode": "whole",
+        "fraction": null,
+        "pieces": null,
+        "multiplier": 1.0
+      },
+      "nutrients": {
+        "energy_kcal": 330.0,
+        "protein_g": 18.0,
+        "fat_g": 22.0,
+        "carbohydrate_g": 14.0
+      },
+      "estimate_detail": {
+        "amount_value": 2,
+        "amount_unit": "piece",
+        "estimated_weight_g": 150
+      }
+    },
+    {
+      "item_id": "0190f3a2-7c1e-7a01-8b2c-00000000000e",
+      "name": "豆腐と玉ねぎの味噌汁",
+      "source": {
+        "method": "photo",
+        "provider": "claude",
+        "product_code": null,
+        "estimation": {
+          "model": "claude-sonnet-5-5",
+          "prompt_version": "0.2.0",
+          "schema_id": "urn:onaka-log:llm:food-photo-estimate:output:v0.1"
+        },
+        "confidence": "medium",
+        "column_index": null,
+        "column_heading": null
+      },
+      "reference": {
+        "basis": {
+          "type": "as_estimated",
+          "amount": null,
+          "unit": null,
+          "label": null
+        },
+        "net_content": null,
+        "nutrients": {
+          "energy_kcal": 70,
+          "protein_g": 5.0,
+          "fat_g": 3.0,
+          "carbohydrate_g": 6.0
+        }
+      },
+      "portion": {
+        "mode": "whole",
+        "fraction": null,
+        "pieces": null,
+        "multiplier": 1.0
+      },
+      "nutrients": {
+        "energy_kcal": 70.0,
+        "protein_g": 5.0,
+        "fat_g": 3.0,
+        "carbohydrate_g": 6.0
+      },
+      "estimate_detail": {
+        "amount_value": 1,
+        "amount_unit": "bowl",
+        "estimated_weight_g": 200
+      }
+    },
+    {
+      "item_id": "0190f3a2-7c1e-7a01-8b2c-00000000000f",
+      "name": "ウーロン茶",
+      "source": {
+        "method": "barcode",
+        "provider": "open_food_facts",
+        "product_code": "4901234567801",
+        "estimation": null,
+        "confidence": null,
+        "column_index": null,
+        "column_heading": null
+      },
+      "reference": {
+        "basis": {
+          "type": "per_100ml",
+          "amount": 100,
+          "unit": "ml",
+          "label": null
+        },
+        "net_content": {
+          "status": "known",
+          "amount": 500,
+          "unit": "ml",
+          "pieces": null
+        },
+        "nutrients": {
+          "energy_kcal": 0,
+          "protein_g": 0,
+          "fat_g": 0,
+          "carbohydrate_g": 0.1
+        }
+      },
+      "portion": {
+        "mode": "whole",
+        "fraction": null,
+        "pieces": null,
+        "multiplier": 5.0
+      },
+      "nutrients": {
+        "energy_kcal": 0.0,
+        "protein_g": 0.0,
+        "fat_g": 0.0,
+        "carbohydrate_g": 0.5
+      },
+      "estimate_detail": null
+    }
+  ],
+  "totals": {
+    "energy_kcal": 702.0,
+    "protein_g": 27.5,
+    "fat_g": 25.5,
+    "carbohydrate_g": 87.3
+  },
+  "totals_incomplete": [],
+  "version": 2,
+  "created_at": "2026-11-13T10:15:02Z",
+  "updated_at": "2026-11-13T10:18:40Z"
+}

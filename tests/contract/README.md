@@ -1,6 +1,9 @@
 # 契約テスト（tests/contract）
 
-`contracts/llm/` の Claude API 契約を検査する（roadmap TST-03、ADR-0001）。
+`contracts/llm/` の Claude API 契約と、`contracts/domain/` のドメイン契約を検査する（roadmap TST-03、ADR-0001）。
+
+- `test_llm_contracts.py`: Claude API 契約（下の「検査内容」）
+- `test_domain_contracts.py`: ドメイン契約。スキーマの正しさ、valid / invalid の例、ドメインのルール DM-01〜DM-08（参照実装 `domain_rules.py`）を valid の例が満たすこと、ルールが違反を検出できること
 
 ## 検査内容
 

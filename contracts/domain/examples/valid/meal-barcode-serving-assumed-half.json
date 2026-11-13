@@ -1,0 +1,64 @@
+{
+  "meal_id": "0190f3a2-7c1e-7a01-8b2c-000000000004",
+  "user_id": "ap-northeast-1:3f1c9b2e-5d4a-4e8f-9a7b-1c2d3e4f5a6b",
+  "eaten_at": "2026-11-13T15:10:00+09:00",
+  "record_date": "2026-11-13",
+  "items": [
+    {
+      "item_id": "0190f3a2-7c1e-7a01-8b2c-000000000003",
+      "name": "チョコレートビスケット",
+      "source": {
+        "method": "barcode",
+        "provider": "open_food_facts",
+        "product_code": "4901234567894",
+        "estimation": null,
+        "confidence": null,
+        "column_index": null,
+        "column_heading": null
+      },
+      "reference": {
+        "basis": {
+          "type": "per_100g",
+          "amount": 100,
+          "unit": "g",
+          "label": null
+        },
+        "net_content": {
+          "status": "assumed_from_serving",
+          "amount": 60,
+          "unit": "g",
+          "pieces": null
+        },
+        "nutrients": {
+          "energy_kcal": 520.0,
+          "protein_g": 6.5,
+          "fat_g": 27.0,
+          "carbohydrate_g": 62.0
+        }
+      },
+      "portion": {
+        "mode": "fraction",
+        "fraction": 0.5,
+        "pieces": null,
+        "multiplier": 0.3
+      },
+      "nutrients": {
+        "energy_kcal": 156.0,
+        "protein_g": 2.0,
+        "fat_g": 8.1,
+        "carbohydrate_g": 18.6
+      },
+      "estimate_detail": null
+    }
+  ],
+  "totals": {
+    "energy_kcal": 156.0,
+    "protein_g": 2.0,
+    "fat_g": 8.1,
+    "carbohydrate_g": 18.6
+  },
+  "totals_incomplete": [],
+  "version": 1,
+  "created_at": "2026-11-13T03:30:07Z",
+  "updated_at": "2026-11-13T03:30:07Z"
+}

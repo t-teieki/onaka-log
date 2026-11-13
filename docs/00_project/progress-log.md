@@ -5,6 +5,56 @@
 
 ---
 
+## 2026-11-14 セッション1（続き14）: 全体構成と IaC
+
+**やったこと**
+- 全体構成 → [architecture.md](../02_design/architecture.md)（構成図、推定・保存の流れ、環境、セキュリティとログ、月の費用見込み 約200円）
+- IaC の比較資料 → [iac-comparison.md](../02_design/discussions/iac-comparison.md)
+- Q-34・Q-35 をユーザーに確認し、ADR を作成: [ADR-0014](../adr/0014-iac-aws-sam.md)、[ADR-0015](../adr/0015-server-first-and-sync-estimation.md)
+- roadmap: ARC-01・ARC-02・ARC-07・REQ-17・INF-02・INF-03 を完了、DAT-09 を SKIP、INF-04 は方針のみ
+
+**決まったこと**
+- Q-34: IaC は AWS SAM。環境は local（uvicorn＋DynamoDB Local）/ dev / prod
+- Q-35: サーバーファースト。オフラインの記録・閲覧は MVP では作らない
+- 設計判断（ADR-0015）: 推定は同期 API、推定と保存は別 API、倍率・合計の計算とルール検証はバックエンド、Open Food Facts はバックエンドから呼ぶ。Claude API キーは SSM Parameter Store の SecureString
+
+**次にやること**
+1. INF-10 の残り（ユーザー作業: AWS Budgets・root の MFA・作業用 IAM）
+2. API 契約（`contracts/api` の OpenAPI）: 推定（OCR・写真・バーコード）、食事の保存・取得・削除、食品の追加・削除
+3. ADR-0002 のフォルダ構成を確定（`apps/mobile` `apps/api` `infra/` など）
+4. UIX 画面一覧と確認画面
+
+**注意点・気づき**
+- DAT-01 の作業（ドメインモデル・データモデル・ADR-0013・contracts/domain）は未コミットのまま、この作業に入った
+
+---
+
+## 2026-11-14 セッション1（続き13）: DAT-01 ドメインモデルとデータモデル
+
+**やったこと**
+- コミット `2640702`（写真推定 prompt 0.2.0、M2 完了、機能一覧・アクセスパターン、Q-31〜Q-33）
+- ドメインモデル → [domain-model.md](../02_design/domain-model.md)。食品は「元の値（基準・内容量）× 倍率（全部・割合・個数）= 食べた量の値」で持ち、出どころ（方式・提供元・JAN・モデル/プロンプト/スキーマ）を残す。ルール DM-01〜DM-08
+- データモデル（DynamoDB）→ [data-model.md](../02_design/data-model.md)。1テーブル、`PK = USER#<sub>`、`SK = MEAL#記録日#時刻#食事ID`、楽観的ロック（version）、物理削除
+- [ADR-0013](../adr/0013-data-model-keys-and-ids.md)（キー・ID・値の持ち方）
+- 契約: [contracts/domain/meal.schema.json](../../contracts/domain/meal.schema.json)（v0.1）、valid 例8件・invalid 例11件。ルールの参照実装 `tests/contract/domain_rules.py` と `test_domain_contracts.py` を追加。契約テスト 128件が合格
+- roadmap の DAT-01〜DAT-08 を完了
+
+**決まったこと**（設計判断。ユーザー確認が要る論点はなし）
+- ID は UUIDv7 をアプリで作る。合計は書き込み時に保存、null は 0 として足して `totals_incomplete` に記録
+- 内容量の状態は known / assumed_from_serving（ADR-0009 の優先2）/ unknown の3つ。OCR で 100g 当たり・内容量不明のときもバーコードと同じく「100g 食べた」とみなす
+
+**次にやること**
+1. INF-10 の残り（ユーザー作業: AWS Budgets・root の MFA・作業用 IAM）
+2. ARC-01 全体構成、INF-03 IaC の方式（SAM / CDK / Terraform）
+3. API 契約（`contracts/api` の OpenAPI）。食事の保存・取得・食品の追加削除・推定（OCR・写真）
+4. UIX 画面一覧と確認画面
+
+**注意点・気づき**
+- 例ファイルの計算値は `domain_rules.py` で生成・検証した。例の商品名・JAN はダミー（実在商品と結びつけない）
+- OCR で「100g 当たり・内容量不明」の扱いは scope.md で「PoC 後に決める」としていたが、ADR-0009 と同じ扱いにした（domain-model.md §2-3）
+
+---
+
 ## 2026-11-13 セッション1（続き12）: 写真推定プロンプト 0.2.0、M2 完了、機能一覧・アクセスパターン
 
 **やったこと**

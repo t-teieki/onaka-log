@@ -47,3 +47,5 @@
 | Q-31 | 保存後の修正（2026-11-14） | MVP では保存した食品の値を直さない（間違えたら削除して記録し直す）。食品が0件になった食事は自動で削除する | [scope.md](../01_requirements/scope.md)、[data-access-patterns.md](../02_design/data-access-patterns.md) |
 | Q-32 | 食事のまとまり方と区分（2026-11-14） | 1回の記録で1食事を作り、後から同じ食事に食品を足せる。食事区分（朝・昼・夕・間食）は MVP では持たず、時刻で並べる | [scope.md](../01_requirements/scope.md)、[data-access-patterns.md](../02_design/data-access-patterns.md) |
 | Q-33 | 食べた日時（2026-11-14） | 既定は記録した時刻。確認画面で日時を変えられる（過去の日時も可）。保存後は変えない。タイムゾーンは日本時間に固定（MVP） | [scope.md](../01_requirements/scope.md)、[data-access-patterns.md](../02_design/data-access-patterns.md) |
+| Q-34 | IaC の方式（2026-11-14） | AWS SAM。環境は local / dev / prod | [ADR-0014](../adr/0014-iac-aws-sam.md) |
+| Q-35 | 記録データの置き場所（2026-11-14） | サーバーファースト（記録の正は DynamoDB）。オフラインの記録・閲覧は MVP では作らない | [ADR-0015](../adr/0015-server-first-and-sync-estimation.md) |
