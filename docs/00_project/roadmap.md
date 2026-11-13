@@ -8,7 +8,7 @@
 | 項目 | 内容 |
 |---|---|
 | 現在のマイルストーン | **M3 基本設計**（M2 PoC は 2026-11-13 に完了 → [poc-summary.md](../../poc/reports/poc-summary.md)。M1 の残り DAT-01 を先に進める） |
-| 次にやること | ① INF-10 の残り（ユーザー: AWS の予算アラート・MFA・IAM） ② ライブラリ選定（TEC-03・07・08・10、TST-08 E2E） ③ HNS（ハーネス: CI の土台 CIC-01・02） ④ UIX-11 デザインシステム |
+| 次にやること | ① INF-10 の残り（ユーザー: AWS の予算アラート・MFA・IAM） ② CI の土台（CIC-01・02: 契約テストと trace.py --check） ③ 最初の機能の詳細仕様（F-xxx-yy）とテスト（赤）→ M4 ④ UIX-11 デザインシステム |
 | ブロッカー | なし（技術スタックの主要な決定はそろった） |
 | 最終更新 | 2026-11-13 |
 
@@ -174,25 +174,25 @@ flowchart LR
 
 - [x] **TEC-01 ★** モバイル：React Native（Expo）+ TypeScript — 成果物: [ADR-0005](../adr/0005-mobile-react-native-expo.md)
 - [ ] **TEC-02** 対応OS：iOS・Android 両方に決定。最小OSバージョンは未決 (WIP)
-- [ ] **TEC-03** 状態管理・ルーティング・DI
-- [ ] **TEC-04** 端末DB（必要なら）：SQLite 系（drift / expo-sqlite 等）
+- [x] **TEC-03** 状態管理・ルーティング・DI：Expo Router、TanStack Query、React の state / Context。DI コンテナは使わない — 成果物: [ADR-0017](../adr/0017-libraries-and-tooling.md)
+- [ ] **TEC-04** 端末DB (SKIP: サーバーファーストのため使わない、ADR-0015)
 - [x] **TEC-05 ★** バックエンド言語・FW：Python（FastAPI）を Lambda で動かす — 成果物: [ADR-0007](../adr/0007-backend-aws-serverless.md)
 - [x] **TEC-06 ★** サーバDB：DynamoDB（ORM・マイグレーションツールは不要、アイテムの形は JSON Schema で定義） — 成果物: [ADR-0008](../adr/0008-database-dynamodb.md)
-- [ ] **TEC-07** スキーマ検証・コード生成：JSON Schema → 型生成（各言語）、OpenAPI → クライアント生成
-- [ ] **TEC-08** テストFW（単体 / ウィジェット・コンポーネント / API / E2E）
-- [ ] **TEC-09** Lint / Formatter / 型チェック
-- [ ] **TEC-10** バーコード読み取り・カメラ・画像圧縮ライブラリ
-- [ ] **TEC-11** グラフ描画ライブラリ
-- [ ] **TEC-12 ★** Mac なしでの iOS ビルドと実機確認の方法（Expo Go / EAS Build / Codemagic など）
-- [ ] **TEC-13** Apple Developer Program・Google Play の登録時期：費用は月1000円とは別枠と決定。登録時期は後で検討（Q-13）
-- [ ] **TEC-14** Android の検証手段（Windows 上のエミュレータ、将来の実機）
+- [x] **TEC-07** 型生成：openapi-typescript ＋ openapi-fetch（OpenAPI を bundle してから生成）。バックエンドの Pydantic モデルは手書きし契約テストで守る — 成果物: [ADR-0017](../adr/0017-libraries-and-tooling.md)
+- [x] **TEC-08** テストFW：pytest・TestClient＋DynamoDB Local、Jest（jest-expo）＋RNTL、E2E は Maestro — 成果物: [ADR-0017](../adr/0017-libraries-and-tooling.md)
+- [x] **TEC-09** Lint / Formatter / 型：Ruff・mypy（domain は strict）、TypeScript strict・ESLint・Prettier、cfn-lint — 成果物: [ADR-0017](../adr/0017-libraries-and-tooling.md)
+- [x] **TEC-10** カメラ・バーコード・画像：expo-camera（EAN-13/8）、expo-image-manipulator — 成果物: [ADR-0017](../adr/0017-libraries-and-tooling.md)
+- [ ] **TEC-11** グラフ描画ライブラリ (SKIP: MVP では推移グラフを作らない。次期に選ぶ)
+- [x] **TEC-12 ★** Mac なしでの確認：Apple Developer Program は最低優先（Q-41）。日常は Android エミュレーターの development build、iPhone は Expo Go で見た目の確認。iOS の配布は登録後に EAS Build＋Submit — 成果物: [ADR-0017](../adr/0017-libraries-and-tooling.md)
+- [x] **TEC-13** 登録時期：Apple Developer Program はストア公開を決めたとき（Q-41）。Google Play も同様 — 成果物: [ADR-0017](../adr/0017-libraries-and-tooling.md)
+- [x] **TEC-14** Android の検証：Windows の Android Studio のエミュレーター（実機は将来） — 成果物: [ADR-0017](../adr/0017-libraries-and-tooling.md)
 
 ## AUT: 認証・認可（M3）
 
 - [x] **AUT-01 ★** 認証の導入時期：最初から入れる — 成果物: [ADR-0006](../adr/0006-auth-from-day-one.md)
 - [x] **AUT-02** 認証方式：Sign in with Apple + Google（メール＋パスワードは作らない） — 成果物: [ADR-0006](../adr/0006-auth-from-day-one.md)
 - [x] **AUT-03** IdP：Amazon Cognito — 成果物: [ADR-0007](../adr/0007-backend-aws-serverless.md)（Expo からの Apple / Google ログイン連携は実装時に検証）
-- [ ] **AUT-04** トークン管理：アクセス/リフレッシュトークン、端末内の安全な保存（Keychain / Keystore）
+- [ ] **AUT-04** トークン管理：expo-secure-store に保存と決定。更新・失効の扱いは実装時 (WIP)
 - [ ] **AUT-05** 認可：全データを user_id でスコープ（行レベルセキュリティ等）
 - [ ] **AUT-06** 将来の権限拡張：家族/トレーナーとの共有、管理者ロール
 - [ ] **AUT-07** API 不正利用対策：レート制限、App Attest / Play Integrity
@@ -256,7 +256,7 @@ flowchart LR
 - [ ] **TST-05** 実API スモークテスト：`@pytest.mark.live`、既定では動かさない、1回数円以内と決定。テストは実装時 — 方針: [strategy.md](../03_testing/strategy.md) §3-2 (WIP)
 - [ ] **TST-06** API 契約テスト：API テストで応答を openapi.yaml で検証、パスとメソッドの一覧の一致も検査と決定。テストは実装時 — 方針: [strategy.md](../03_testing/strategy.md) §3-3 (WIP)
 - [ ] **TST-07** LLM 回帰評価：PoC のサンプルとスクリプトを流用、プロンプト・モデル変更時に手動で実行と決定。`tests/eval/` は実装時 — 方針: [strategy.md](../03_testing/strategy.md) §3-2 (WIP)
-- [ ] **TST-08** E2E テストツール選定（モバイル）
+- [x] **TST-08** E2E：Maestro（Android エミュレーター）。iOS の E2E は対象外 — 成果物: [ADR-0017](../adr/0017-libraries-and-tooling.md)
 - [x] **TST-09** テストデータ：画像は Git に入れない。単体・API テストはダミー画像と記録した応答、実画像は実 API スモークと回帰評価だけ — 成果物: [strategy.md](../03_testing/strategy.md) §3-4
 - [x] **TST-10** カバレッジ：行カバレッジの数値目標は置かず、仕様の ID とテストの対応で見る。`domain/` だけ行カバレッジの目安 90% — 成果物: [strategy.md](../03_testing/strategy.md) §4
 - [x] **TST-11** テスト先行の手順：仕様（F-xxx-yy）→ 契約 → spec 付きテスト（赤を確認してコミット）→ 実装（緑）→ trace.py --check — 成果物: [strategy.md](../03_testing/strategy.md) §5

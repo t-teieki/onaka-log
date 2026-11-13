@@ -5,6 +5,32 @@
 
 ---
 
+## 2026-11-14 セッション1（続き19）: ライブラリ・道具の選定
+
+**やったこと**
+- コミット `c73c2f7`（テスト戦略・トレーサビリティ）
+- Web で現状を確認（Expo は SDK 58、App Store の Expo Go は遅れて出ることがある。expo-auth-session で Cognito の画面を開く方法が一般的）
+- 比較資料 → [library-selection.md](../02_design/discussions/library-selection.md)
+- Q-40〜Q-42 をユーザーに確認し、[ADR-0017](../adr/0017-libraries-and-tooling.md) を作成
+- roadmap: TEC-03・07〜10・12〜14、TST-08 を完了。TEC-04・TEC-11 は SKIP。AUT-04 は保存先だけ決定
+
+**決まったこと**
+- Q-40: 推奨の一式（Expo Router、TanStack Query、openapi-typescript＋openapi-fetch、expo-camera、FastAPI＋boto3、Jest＋RNTL、Maestro、Ruff＋mypy など）
+- Q-41: Apple Developer Program は最低優先（ストア公開が未確定のため）。開発は Android エミュレーター中心、iPhone は Expo Go で見た目を確認。Expo の SDK は App Store の Expo Go が対応する版に合わせる
+- Q-42: サインインは expo-auth-session ＋ Cognito のサインイン画面
+
+**次にやること**
+1. INF-10 の残り（ユーザー作業: AWS Budgets・root の MFA・作業用 IAM）
+2. CI の土台（CIC-01・02: GitHub Actions で契約テストと trace.py --check）
+3. 最初の機能の詳細仕様（F-xxx-yy）とテスト（赤）を書き、M4 を進める
+4. UIX-11 デザインシステム
+
+**注意点・気づき**
+- iOS 実機での確認が遅れるため、Sign in with Apple・カメラの権限文言など iOS 固有の部分は登録後にまとめて確かめる
+- Expo Go では Cognito のサインインの戻り先 URL などが扱いにくい可能性がある。認証まわりは Android の development build で確かめる
+
+---
+
 ## 2026-11-14 セッション1（続き18）: テスト戦略とトレーサビリティ
 
 **やったこと**

@@ -43,7 +43,7 @@
 - 分量は人が入力せず読み取りで決める。1日の境界は 4:00（[scope.md](docs/01_requirements/scope.md)）
 - 運用コストは月1000円まで。対象は iOS・Android（実機は iOS のみ）（[non-functional.md](docs/01_requirements/non-functional.md)）
 - MVP の入力方式は手入力も含めた4つ（手入力は Claude を使わない、[ADR-0012](docs/adr/0012-manual-text-input.md)）。分量の既定は「全部食べた」＋ワンタップで修正
-- モバイルは React Native（Expo）+ TypeScript（[ADR-0005](docs/adr/0005-mobile-react-native-expo.md)）
+- モバイルは React Native（Expo）+ TypeScript（[ADR-0005](docs/adr/0005-mobile-react-native-expo.md)）。ライブラリ・道具は [ADR-0017](docs/adr/0017-libraries-and-tooling.md)。Apple Developer Program は最低優先で、開発は Android エミュレーター中心（iPhone は Expo Go で確認）
 - 認証は最初から入れる、Sign in with Apple + Google（[ADR-0006](docs/adr/0006-auth-from-day-one.md)）
 - 開発は WSL から、リポジトリは C ドライブ上。性能などが問題になりそうなら WSL 側へ移す（[dev-environment.md](docs/00_project/dev-environment.md)）
 - バックエンドは AWS サーバーレス: API Gateway + Lambda（Python / FastAPI）+ Cognito、東京リージョン（[ADR-0007](docs/adr/0007-backend-aws-serverless.md)）
@@ -53,7 +53,6 @@
 
 ## 現時点で未決（決まったら更新）
 
-- 各種ライブラリ → roadmap の ★ 項目と open-questions を参照
 - アプリ・バックエンドのビルドコマンドはまだない
 
 ## コマンド

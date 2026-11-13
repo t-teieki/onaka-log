@@ -26,7 +26,7 @@
 | Q-10 | PoC サンプル | ユーザーが用意する | roadmap POC-03 |
 | Q-12 | バックエンド構成 | C案: AWS サーバーレス（API Gateway + Lambda(FastAPI) + Cognito）。DB は Q-21 | [ADR-0007](../adr/0007-backend-aws-serverless.md) |
 | Q-11 | モバイルの技術スタック | React Native（Expo）+ TypeScript | [ADR-0005](../adr/0005-mobile-react-native-expo.md) |
-| Q-13 | ストア登録費の扱い | 月1000円とは別枠。登録時期は今は検討しない | roadmap TEC-13 |
+| Q-13 | ストア登録費の扱い | 月1000円とは別枠。登録時期は今は検討しない（2026-11-14: Apple Developer Program は最低優先。ストア公開を決めたときに登録、Q-41） | roadmap TEC-13、[ADR-0017](../adr/0017-libraries-and-tooling.md) |
 | Q-14 | 分量の自動決定ルール | 既定は「全部食べた」。オプションでワンタップ選択（1/4・1/2 など）で直せる | [scope.md](../01_requirements/scope.md) |
 | Q-15 | 読み取れない場合 | エラーダイアログを表示し、ホームの読み取り方式選択画面に戻る | [scope.md](../01_requirements/scope.md) |
 | Q-16 | MVP の閲覧・編集範囲 | 日次合計＋食事一覧（4時区切り）、推定結果の確認・修正画面、食品/食事の削除。推移グラフ・目標値は MVP 外 | [scope.md](../01_requirements/scope.md) |
@@ -53,3 +53,6 @@
 | Q-37 | 複数列の初期選択（2026-11-14） | 先頭の列を選んだ状態で開き、そのまま保存できる | [screens/README.md](../02_design/screens/README.md) |
 | Q-38 | 手入力の必須項目（2026-11-14） | 食品名と kcal・P・F・C のすべて（不明は登録できない） | [screens/README.md](../02_design/screens/README.md)、[domain-model.md](../02_design/domain-model.md) DM-09 |
 | Q-39 | 削除のしかた（2026-11-14） | 確認ダイアログなしで消し、約5秒「元に戻す」を出す。アプリは削除 API を送るのを遅らせて実現する | [screens/README.md](../02_design/screens/README.md) §3-9 |
+| Q-40 | ライブラリ・道具（2026-11-14） | 比較資料の推奨の一式（Expo Router、TanStack Query、openapi-typescript＋openapi-fetch、expo-camera、FastAPI＋boto3、Jest＋RNTL、Maestro、Ruff＋mypy など） | [ADR-0017](../adr/0017-libraries-and-tooling.md) |
+| Q-41 | Apple Developer Program の登録時期（2026-11-14） | ストア公開はまだ確定ではないので最低優先。当面は Android エミュレーター中心で開発し、iPhone は Expo Go で確認する | [ADR-0017](../adr/0017-libraries-and-tooling.md) |
+| Q-42 | サインインの実装（2026-11-14） | expo-auth-session で Cognito のサインイン画面を開く（Apple・Google は Cognito 側で連携） | [ADR-0017](../adr/0017-libraries-and-tooling.md) |
