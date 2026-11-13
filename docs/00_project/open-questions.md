@@ -37,3 +37,7 @@
 | Q-21 | DB | DynamoDB | [ADR-0008](../adr/0008-database-dynamodb.md) |
 | Q-22 | PoC-1 の判定（2026-11-13） | 条件付きで採用（出どころの表示と OCR へのワンタップ切り替え） | [ADR-0009](../adr/0009-barcode-adoption-and-net-content.md) |
 | Q-23 | 内容量が取れないとき（2026-11-13） | 内容量が不明なまま登録してよい。基準（100g 当たり／1食当たりの推定）と「内容量：不明」を必ず一緒に保存し、確認画面に出す。100g 当たりの値のまま日次合計に含める | [ADR-0009](../adr/0009-barcode-adoption-and-net-content.md) |
+| Q-24 | OCR のモデルと画像サイズ（2026-11-13） | Haiku 5.5・effort low。画像は長辺 1024〜1568px に縮小 | [ADR-0010](../adr/0010-label-ocr-model-and-image-size.md) |
+| Q-25 | OCR で読めないとき（2026-11-13） | エラーダイアログに「撮り直す」ボタンと撮り方の案内（正面から・近づけて）を加える。「入力方法の選択に戻る」も残す | [scope.md](../01_requirements/scope.md) |
+| Q-26 | 栄養成分表示に複数列があるとき（2026-11-13） | Claude に全列を返させ、確認画面で利用者が列を選ぶ（出力スキーマ v0.3） | [scope.md](../01_requirements/scope.md)、LLM-03 |
+| Q-27 | 「1個当たり」・複数個入りの分量の既定（2026-11-13） | 既定は「1個」。ワンタップで個数（1・2・…・全部）を選ぶ | [scope.md](../01_requirements/scope.md) |

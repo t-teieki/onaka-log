@@ -1,3 +1,6 @@
 sample_id,jan,product_name,basis,basis_amount,basis_unit,net_content,net_content_unit,energy_kcal,protein_g,fat_g,carbohydrate_g,notes,image_file,conditions,expected_status
 L001,4902888323324,森永 チョコモナカジャンボ,per_package,150,ml,150,ml,319,3.5,18.2,35.2,1個当たり。食塩相当量0.15g,L001.jpg,oblique,ok
 L002,4902777237022,明治 チョコレート菓子（きのこ/たけのこ系）,per_package,63,g,63,g,345,4.9,20.5,35.0,1箱(63g)当たり。食塩相当量0.3g,L002.jpg,front,ok
+L003,,山崎製パン ドーナツ（シュガー）,per_serving,,,,,250,1.5,22.7,10.0,1個当たり。内容量4個。表にシュガー/チョコの2列あり、撮影写真ではどちらの袋か判別不能のため L003（シュガー）と L004（チョコ）の2行で同じ画像を指す。採点は片方一致で可。目安値。食塩相当量0.2g。正解画像 reference/L003_ref.jpg,L003.jpg,oblique;curved;small_text,ok
+L004,,山崎製パン ドーナツ（チョコ）,per_serving,,,,,289,1.7,26.1,11.7,1個当たり。内容量4個。L003 と同じ画像（片方一致で可）。目安値。食塩相当量0.1g。正解画像 reference/L003_ref.jpg,L004.jpg,oblique;curved;small_text,ok
+L005,4902720166409,森永乳業 MOW（味は表面で要確認）,per_serving,140,ml,140,ml,206,3.4,9.6,26.4,1カップ(140ml)当たり。目安値。食塩相当量0.10g。逆光で暗い。正解画像 reference/L005_ref.jpg,L005.jpg,oblique;small_text,ok
