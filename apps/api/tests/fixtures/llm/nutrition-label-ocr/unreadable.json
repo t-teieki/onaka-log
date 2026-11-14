@@ -1,0 +1,27 @@
+{
+  "meta": {
+    "model": "claude-haiku-5-5",
+    "prompt_version": "0.2.0",
+    "schema_id": "urn:onaka-log:llm:nutrition-label-ocr:output:v0.3",
+    "note": "PoC-2 の L003 を Haiku 5.5 で読んだ実際の出力（画像は含まない）"
+  },
+  "output": {
+    "status": "unreadable",
+    "product_name": null,
+    "net_content": {
+      "amount": null,
+      "unit": null,
+      "pieces": null,
+      "label_text": null
+    },
+    "columns": [],
+    "confidence": "low",
+    "issues": [
+      "small_text",
+      "oblique",
+      "curved",
+      "glare"
+    ],
+    "notes": "栄養成分表示は写っているが、袋が斜めに持たれて湾曲しており、文字が小さく数値を確実に読み取れないため、列を特定できませんでした。袋を平らにして正面から撮影し直すと読み取れる可能性があります。"
+  }
+}

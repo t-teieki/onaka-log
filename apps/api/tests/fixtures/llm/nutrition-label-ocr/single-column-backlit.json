@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "model": "claude-haiku-5-5",
+    "prompt_version": "0.2.0",
+    "schema_id": "urn:onaka-log:llm:nutrition-label-ocr:output:v0.3",
+    "note": "PoC-2 の L005 を Haiku 5.5 で読んだ実際の出力（画像は含まない）"
+  },
+  "output": {
+    "status": "ok",
+    "product_name": null,
+    "net_content": {
+      "amount": null,
+      "unit": null,
+      "pieces": null,
+      "label_text": null
+    },
+    "columns": [
+      {
+        "heading": null,
+        "basis": {
+          "type": "per_serving",
+          "amount": 140,
+          "unit": "ml",
+          "label_text": "1カップ(140ml)当たり"
+        },
+        "nutrients": {
+          "energy_kcal": 206,
+          "protein_g": 3.4,
+          "fat_g": 9.6,
+          "carbohydrate_g": 26.4,
+          "salt_equivalent_g": 0.1
+        }
+      }
+    ],
+    "confidence": "medium",
+    "issues": [
+      "oblique",
+      "small_text"
+    ],
+    "notes": "写真が斜めに回転しており文字が小さいため、数値の読み取りに不確かさがあります。炭水化物は『炭水化物』表示として読みましたが、糖質と食物繊維の内訳は確認できません。内容量と商品名は写真に写っていないため null としました。"
+  }
+}

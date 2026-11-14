@@ -3,7 +3,7 @@ name = "onaka-api"
 version = "0.1.0"
 description = "onaka-log のバックエンド（FastAPI on Lambda）。ドメインのルール・推定・照合・保存"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = ["jsonschema>=4.23"]
 
 [build-system]
 requires = ["hatchling"]

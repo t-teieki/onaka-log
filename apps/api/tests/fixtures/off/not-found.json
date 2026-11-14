@@ -1,0 +1,6 @@
+{
+  "_note": "合成データ（Open Food Facts の API v2 の応答の形をまねたもの。実在の商品ではない）",
+  "code": "4900000000000",
+  "status": 0,
+  "status_verbose": "product not found"
+}

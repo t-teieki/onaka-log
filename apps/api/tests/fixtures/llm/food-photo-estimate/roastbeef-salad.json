@@ -1,0 +1,66 @@
+{
+  "meta": {
+    "model": "claude-sonnet-5-5",
+    "prompt_version": "0.2.0",
+    "schema_id": "urn:onaka-log:llm:food-photo-estimate:output:v0.1",
+    "note": "PoC-3 の P003 を Sonnet 5.5 で推定した実際の出力（画像は含まない）"
+  },
+  "output": {
+    "status": "ok",
+    "meal_name": "ローストビーフサラダ定食",
+    "items": [
+      {
+        "name": "ローストビーフとぶどうのサラダ（チーズ・マスタードシード・ドレッシング）",
+        "amount": {
+          "value": 1,
+          "unit": "serving"
+        },
+        "estimated_weight_g": 230,
+        "nutrients": {
+          "energy_kcal": 330,
+          "protein_g": 20,
+          "fat_g": 22,
+          "carbohydrate_g": 13
+        },
+        "confidence": "medium"
+      },
+      {
+        "name": "ハーブ入りご飯（味付きご飯）",
+        "amount": {
+          "value": 1,
+          "unit": "bowl"
+        },
+        "estimated_weight_g": 170,
+        "nutrients": {
+          "energy_kcal": 290,
+          "protein_g": 5,
+          "fat_g": 3,
+          "carbohydrate_g": 59
+        },
+        "confidence": "medium"
+      },
+      {
+        "name": "野菜(玉ねぎ)のコンソメスープ",
+        "amount": {
+          "value": 1,
+          "unit": "cup"
+        },
+        "estimated_weight_g": 180,
+        "nutrients": {
+          "energy_kcal": 30,
+          "protein_g": 1,
+          "fat_g": 1,
+          "carbohydrate_g": 5
+        },
+        "confidence": "medium"
+      }
+    ],
+    "assumptions": [
+      "サラダは大皿1枚、レタス約100g、ローストビーフ約60g、粉チーズ約10g、ぶどう数粒、ドレッシング込みと仮定",
+      "ご飯は小ぶりの器に茶碗1杯弱(約170g)と仮定",
+      "スープは小鍋型容器に約180ml、具は玉ねぎ中心と仮定",
+      "水は入れていない"
+    ],
+    "notes": null
+  }
+}

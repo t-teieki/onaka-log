@@ -25,6 +25,7 @@ dev = [
     "onaka-api",
     "ruff",
     "mypy",
+    "types-jsonschema",
 ]
 poc = ["anthropic", "pillow", "httpx", "python-dotenv"]
 

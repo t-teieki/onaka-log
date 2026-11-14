@@ -1,0 +1,81 @@
+{
+  "meta": {
+    "model": "claude-sonnet-5-5",
+    "prompt_version": "0.2.0",
+    "schema_id": "urn:onaka-log:llm:food-photo-estimate:output:v0.1",
+    "note": "PoC-3 の P001 を Sonnet 5.5 で推定した実際の出力（画像は含まない）"
+  },
+  "output": {
+    "status": "ok",
+    "meal_name": "ハンバーグ定食",
+    "items": [
+      {
+        "name": "ご飯",
+        "amount": {
+          "value": 1,
+          "unit": "bowl"
+        },
+        "estimated_weight_g": 180,
+        "nutrients": {
+          "energy_kcal": 302,
+          "protein_g": 4.5,
+          "fat_g": 0.5,
+          "carbohydrate_g": 66.8
+        },
+        "confidence": "medium"
+      },
+      {
+        "name": "ハンバーグ（ソース付き）",
+        "amount": {
+          "value": 2,
+          "unit": "piece"
+        },
+        "estimated_weight_g": 150,
+        "nutrients": {
+          "energy_kcal": 330,
+          "protein_g": 22,
+          "fat_g": 23,
+          "carbohydrate_g": 8
+        },
+        "confidence": "medium"
+      },
+      {
+        "name": "レタスのサラダ（ドレッシング・ごま和え）",
+        "amount": {
+          "value": 1,
+          "unit": "serving"
+        },
+        "estimated_weight_g": 70,
+        "nutrients": {
+          "energy_kcal": 45,
+          "protein_g": 1.2,
+          "fat_g": 3.5,
+          "carbohydrate_g": 3
+        },
+        "confidence": "medium"
+      },
+      {
+        "name": "豆腐と玉ねぎの味噌汁",
+        "amount": {
+          "value": 1,
+          "unit": "bowl"
+        },
+        "estimated_weight_g": 200,
+        "nutrients": {
+          "energy_kcal": 70,
+          "protein_g": 5.5,
+          "fat_g": 3.2,
+          "carbohydrate_g": 5.5
+        },
+        "confidence": "medium"
+      }
+    ],
+    "assumptions": [
+      "ご飯は大きめの茶碗1杯180gと仮定",
+      "ハンバーグは2つ合わせて約150gで、赤茶色のソース付きと仮定",
+      "サラダはレタス中心でごまドレッシング少量と仮定",
+      "味噌汁は豆腐・玉ねぎ・ねぎ入りで約200mlと仮定"
+    ],
+    "notes": null
+  }
+}

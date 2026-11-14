@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "model": "claude-haiku-5-5",
+    "prompt_version": "0.2.0",
+    "schema_id": "urn:onaka-log:llm:nutrition-label-ocr:output:v0.3",
+    "note": "PoC-2 の L003R を Haiku 5.5 で読んだ実際の出力（画像は含まない）"
+  },
+  "output": {
+    "status": "ok",
+    "product_name": null,
+    "net_content": {
+      "amount": null,
+      "unit": null,
+      "pieces": 4,
+      "label_text": "4個"
+    },
+    "columns": [
+      {
+        "heading": "シュガー",
+        "basis": {
+          "type": "per_piece",
+          "amount": null,
+          "unit": null,
+          "label_text": "1個当たり"
+        },
+        "nutrients": {
+          "energy_kcal": 250,
+          "protein_g": 1.5,
+          "fat_g": 22.7,
+          "carbohydrate_g": 10.0,
+          "salt_equivalent_g": 0.2
+        }
+      },
+      {
+        "heading": "チョコ",
+        "basis": {
+          "type": "per_piece",
+          "amount": null,
+          "unit": null,
+          "label_text": "1個当たり"
+        },
+        "nutrients": {
+          "energy_kcal": 289,
+          "protein_g": 1.7,
+          "fat_g": 26.1,
+          "carbohydrate_g": 11.7,
+          "salt_equivalent_g": 0.1
+        }
+      }
+    ],
+    "confidence": "high",
+    "issues": [
+      "multiple_labels"
+    ],
+    "notes": "表示は「1個当たり」で、味違いの2列（シュガー・チョコ）が写っています。炭水化物は表示どおり転記しました。"
+  }
+}

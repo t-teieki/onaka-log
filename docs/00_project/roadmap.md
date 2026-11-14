@@ -7,8 +7,8 @@
 
 | 項目 | 内容 |
 |---|---|
-| 現在のマイルストーン | **M4〜M5**（設計はほぼ完了。テスト先行で実装を始めた: バックエンドのドメインまで）。M2 PoC は 2026-11-13 に完了 → [poc-summary.md](../../poc/reports/poc-summary.md) |
-| 次にやること | ① 推定・照合のテスト（赤）→ 実装（Claude の出力・Open Food Facts の応答から候補へ、IMP-06〜08 の土台） ② API テスト（DynamoDB Local）→ ルートの実装 ③ INF-10 の残り（ユーザー: AWS の予算アラート・MFA・IAM） ④ Dependabot（CIC-08） |
+| 現在のマイルストーン | **M4〜M5**（設計はほぼ完了。テスト先行で実装中: バックエンドのドメインと、推定・照合の候補の作り方まで）。M2 PoC は 2026-11-13 に完了 → [poc-summary.md](../../poc/reports/poc-summary.md) |
+| 次にやること | ① API テスト（TestClient＋DynamoDB Local）→ ルート・DynamoDB・Claude と OFF の呼び出しの実装 ② INF-10 の残り（ユーザー: AWS の予算アラート・MFA・IAM） ③ SAM テンプレートと dev へのデプロイ ④ Dependabot（CIC-08） |
 | ブロッカー | なし（技術スタックの主要な決定はそろった） |
 | 最終更新 | 2026-11-13 |
 
@@ -252,7 +252,7 @@ flowchart LR
 - [x] **TST-01 ★** テスト戦略：9層（契約・バックエンド単体・API・モバイル・インフラ・dev 確認・E2E・実 API スモーク・LLM 回帰）の責務と実行タイミング — 成果物: [strategy.md](../03_testing/strategy.md)
 - [x] **TST-02 ★** トレーサビリティ規約：`@pytest.mark.spec("DM-03")`、対応表と検査は `tools/trace.py`（DM は必須、MVP の F は警告） — 成果物: [traceability.md](../03_testing/traceability.md)
 - [x] **TST-03 ★** 契約テスト：例の適合・不適合、Structured Outputs 互換、意味上のルールを検査（pytest、88件） — 成果物: [tests/contract/](../../tests/contract/README.md)
-- [x] **TST-04** Claude API のモック方針：PoC の出力を記録した応答として `apps/api/tests/fixtures/llm/` に置き、呼び出しを差し替える。失敗（リフューザル・途切れ・違反・429）も再現 — 成果物: [strategy.md](../03_testing/strategy.md) §3-2
+- [x] **TST-04** Claude API のモック方針：PoC の出力を記録した応答として `apps/api/tests/fixtures/llm/` に置いた（OCR 4件・写真 5件）。失敗（リフューザル・途切れ・違反・429）の再現は呼び出し部分の実装時 — 成果物: [strategy.md](../03_testing/strategy.md) §3-2
 - [ ] **TST-05** 実API スモークテスト：`@pytest.mark.live`、既定では動かさない、1回数円以内と決定。テストは実装時 — 方針: [strategy.md](../03_testing/strategy.md) §3-2 (WIP)
 - [ ] **TST-06** API 契約テスト：API テストで応答を openapi.yaml で検証、パスとメソッドの一覧の一致も検査と決定。テストは実装時 — 方針: [strategy.md](../03_testing/strategy.md) §3-3 (WIP)
 - [ ] **TST-07** LLM 回帰評価：PoC のサンプルとスクリプトを流用、プロンプト・モデル変更時に手動で実行と決定。`tests/eval/` は実装時 — 方針: [strategy.md](../03_testing/strategy.md) §3-2 (WIP)
@@ -302,9 +302,9 @@ flowchart LR
 - [ ] **IMP-03** 手入力（食品名と kcal・PFC）による記録（[ADR-0012](../adr/0012-manual-text-input.md)）
 - [ ] **IMP-04** 閲覧（日次合計・一覧）
 - [ ] **IMP-05** 編集・削除
-- [ ] **IMP-06** バーコード照合
-- [ ] **IMP-07** 栄養成分表示 OCR
-- [ ] **IMP-08** 写真推定
+- [ ] **IMP-06** バーコード照合：OFF の応答から候補を作る部分は実装済み（F-011、テスト先行）。OFF の呼び出し・ルートは未 (WIP)
+- [ ] **IMP-07** 栄養成分表示 OCR：Claude の出力の検証と候補を作る部分は実装済み（F-012）。Claude の呼び出し・ルートは未 (WIP)
+- [ ] **IMP-08** 写真推定：Claude の出力の検証と候補を作る部分は実装済み（F-013）。Claude の呼び出し・ルートは未 (WIP)
 - [ ] **IMP-09** 認証
 - [ ] **IMP-10** 推移表示
 

@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "model": "claude-sonnet-5-5",
+    "prompt_version": "0.2.0",
+    "schema_id": "urn:onaka-log:llm:food-photo-estimate:output:v0.1",
+    "note": "PoC-3 の P004 を Sonnet 5.5 で推定した実際の出力（画像は含まない）"
+  },
+  "output": {
+    "status": "ok",
+    "meal_name": "どら焼き",
+    "items": [
+      {
+        "name": "どら焼き（あんこ入り）",
+        "amount": {
+          "value": 1,
+          "unit": "piece"
+        },
+        "estimated_weight_g": 90,
+        "nutrients": {
+          "energy_kcal": 260,
+          "protein_g": 5.5,
+          "fat_g": 2.5,
+          "carbohydrate_g": 55
+        },
+        "confidence": "medium"
+      }
+    ],
+    "assumptions": [
+      "小豆あんをはさんだどら焼き1個、約90gと仮定",
+      "器に対して丸く厚みがあるため、やや大きめの1個として見積もった",
+      "お茶は無糖と見なし、品目に含めない"
+    ],
+    "notes": "生地の間にあんこが見えるため、どら焼きまたはそれに近い和菓子と判断した。"
+  }
+}

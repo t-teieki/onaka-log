@@ -1,0 +1,18 @@
+{
+  "_note": "合成データ（Open Food Facts の API v2 の応答の形をまねたもの。実在の商品ではない）",
+  "code": "4901234567894",
+  "status": 1,
+  "status_verbose": "product found",
+  "product": {
+    "product_name_ja": "チョコレートビスケット",
+    "serving_quantity": 60,
+    "serving_size": "1袋（60g）",
+    "nutrition_data_per": "100g",
+    "nutriments": {
+      "energy-kcal_100g": 520,
+      "proteins_100g": 6.5,
+      "fat_100g": 27,
+      "carbohydrates_100g": 62
+    }
+  }
+}

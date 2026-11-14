@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "model": "claude-haiku-5-5",
+    "prompt_version": "0.2.0",
+    "schema_id": "urn:onaka-log:llm:nutrition-label-ocr:output:v0.3",
+    "note": "PoC-2 の L002 を Haiku 5.5 で読んだ実際の出力（画像は含まない）"
+  },
+  "output": {
+    "status": "ok",
+    "product_name": null,
+    "net_content": {
+      "amount": 63,
+      "unit": "g",
+      "pieces": null,
+      "label_text": "内容量 63g"
+    },
+    "columns": [
+      {
+        "heading": null,
+        "basis": {
+          "type": "per_package",
+          "amount": 63,
+          "unit": "g",
+          "label_text": "1箱(63g)当たり"
+        },
+        "nutrients": {
+          "energy_kcal": 345,
+          "protein_g": 4.9,
+          "fat_g": 20.5,
+          "carbohydrate_g": 35.0,
+          "salt_equivalent_g": 0.3
+        }
+      }
+    ],
+    "confidence": "high",
+    "issues": [],
+    "notes": "栄養成分表示は「推定値」の表記あり。炭水化物は食物繊維の分けての表示がないため35.0gをそのまま記録。"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "_note": "合成データ（Open Food Facts の API v2 の応答の形をまねたもの。実在の商品ではない）",
+  "code": "4901234567801",
+  "status": 1,
+  "status_verbose": "product found",
+  "product": {
+    "product_name": "Oolong tea",
+    "quantity": "1.5 L",
+    "nutrition_data_per": "100g",
+    "nutriments": {
+      "energy-kcal_100g": 0,
+      "proteins_100g": 0,
+      "fat_100g": 0,
+      "carbohydrates_100g": 0.1
+    }
+  }
+}

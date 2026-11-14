@@ -42,3 +42,39 @@ def assert_same(actual: Any, expected: Any, path: str = "$") -> None:
         assert math.isclose(actual, expected, abs_tol=1e-9), f"{path}: {actual} != {expected}"
     else:
         assert actual == expected, f"{path}: {actual!r} != {expected!r}"
+
+
+FIXTURES = Path(__file__).resolve().parent / "fixtures"
+
+
+def fixture(*parts: str) -> Any:
+    return load_json(FIXTURES.joinpath(*parts))
+
+
+def _api_registry() -> tuple[Any, str]:
+    """contracts/api/openapi.yaml と、そこから参照するスキーマを解決できるレジストリ（契約テストと同じ仕組み）。"""
+    import yaml
+    from referencing import Registry, Resource
+    from referencing.jsonschema import DRAFT202012
+
+    openapi = REPO_ROOT / "contracts" / "api" / "openapi.yaml"
+    spec = yaml.safe_load(openapi.read_text(encoding="utf-8"))
+    resources = [(openapi.as_uri(), Resource(contents=spec, specification=DRAFT202012))]
+    for path in list((REPO_ROOT / "contracts").glob("*/*.schema.json")) + list(
+        (REPO_ROOT / "contracts" / "llm").glob("*/*.schema.json")
+    ):
+        contents = load_json(path)
+        res = Resource(contents=contents, specification=DRAFT202012)
+        resources.append((path.as_uri(), res))
+        if "$id" in contents:
+            resources.append((contents["$id"], res))
+    return Registry().with_resources(resources), openapi.as_uri()
+
+
+def api_schema_errors(component: str, data: Any) -> list[str]:
+    """contracts/api/openapi.yaml の components.schemas[component] での検証エラー（空なら適合）。"""
+    from jsonschema import Draft202012Validator
+
+    registry, uri = _api_registry()
+    validator = Draft202012Validator({"$ref": f"{uri}#/components/schemas/{component}"}, registry=registry)
+    return [f"{list(e.absolute_path)}: {e.message}" for e in validator.iter_errors(data)]

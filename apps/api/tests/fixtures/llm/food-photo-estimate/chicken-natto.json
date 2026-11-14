@@ -1,0 +1,65 @@
+{
+  "meta": {
+    "model": "claude-sonnet-5-5",
+    "prompt_version": "0.2.0",
+    "schema_id": "urn:onaka-log:llm:food-photo-estimate:output:v0.1",
+    "note": "PoC-3 の P002 を Sonnet 5.5 で推定した実際の出力（画像は含まない）"
+  },
+  "output": {
+    "status": "ok",
+    "meal_name": "ねぎ塩だれ鶏もも焼き定食（ご飯・納豆）",
+    "items": [
+      {
+        "name": "ご飯",
+        "amount": {
+          "value": 1,
+          "unit": "bowl"
+        },
+        "estimated_weight_g": 180,
+        "nutrients": {
+          "energy_kcal": 281,
+          "protein_g": 4.5,
+          "fat_g": 0.5,
+          "carbohydrate_g": 62.1
+        },
+        "confidence": "medium"
+      },
+      {
+        "name": "鶏もも肉のソテー ねぎだれ",
+        "amount": {
+          "value": 1,
+          "unit": "serving"
+        },
+        "estimated_weight_g": 150,
+        "nutrients": {
+          "energy_kcal": 280,
+          "protein_g": 22,
+          "fat_g": 18,
+          "carbohydrate_g": 6
+        },
+        "confidence": "medium"
+      },
+      {
+        "name": "納豆（未開封パック）",
+        "amount": {
+          "value": 1,
+          "unit": "piece"
+        },
+        "estimated_weight_g": 40,
+        "nutrients": {
+          "energy_kcal": 80,
+          "protein_g": 6.6,
+          "fat_g": 4,
+          "carbohydrate_g": 5.4
+        },
+        "confidence": "medium"
+      }
+    ],
+    "assumptions": [
+      "ご飯は大きめの茶碗1杯で約180gと仮定",
+      "鶏もも肉は皮付きで約120g、たれとねぎを含め約150gと仮定",
+      "納豆は1パック40g（たれ・からし付き）と仮定"
+    ],
+    "notes": null
+  }
+}

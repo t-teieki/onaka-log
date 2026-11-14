@@ -1,0 +1,65 @@
+{
+  "meta": {
+    "model": "claude-sonnet-5-5",
+    "prompt_version": "0.2.0",
+    "schema_id": "urn:onaka-log:llm:food-photo-estimate:output:v0.1",
+    "note": "PoC-3 の P005 を Sonnet 5.5 で推定した実際の出力（画像は含まない）"
+  },
+  "output": {
+    "status": "ok",
+    "meal_name": "豚肉と玉ねぎの炒め定食",
+    "items": [
+      {
+        "name": "豚肉と玉ねぎの炒め物",
+        "amount": {
+          "value": 1,
+          "unit": "serving"
+        },
+        "estimated_weight_g": 220,
+        "nutrients": {
+          "energy_kcal": 380,
+          "protein_g": 18,
+          "fat_g": 28,
+          "carbohydrate_g": 13
+        },
+        "confidence": "medium"
+      },
+      {
+        "name": "ご飯",
+        "amount": {
+          "value": 1,
+          "unit": "bowl"
+        },
+        "estimated_weight_g": 200,
+        "nutrients": {
+          "energy_kcal": 336,
+          "protein_g": 5,
+          "fat_g": 0.6,
+          "carbohydrate_g": 74
+        },
+        "confidence": "medium"
+      },
+      {
+        "name": "味噌汁（豆腐・油揚げ・わかめ）",
+        "amount": {
+          "value": 1,
+          "unit": "bowl"
+        },
+        "estimated_weight_g": 220,
+        "nutrients": {
+          "energy_kcal": 70,
+          "protein_g": 5,
+          "fat_g": 3.5,
+          "carbohydrate_g": 5
+        },
+        "confidence": "medium"
+      }
+    ],
+    "assumptions": [
+      "豚肉炒めは豚バラ肉や肩ロース肉約100gと玉ねぎ約100gを甘辛く炒めたものと仮定",
+      "ご飯は大きめの茶碗1杯で約200gと仮定",
+      "味噌汁は豆腐・油揚げ・わかめ・にんじん入りで約220mlと仮定"
+    ],
+    "notes": null
+  }
+}
