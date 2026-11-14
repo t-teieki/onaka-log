@@ -1,0 +1,28 @@
+# sam deploy の環境ごとの設定（ADR-0014）。使い方は infra/README.md
+version = 0.1
+
+[default.global.parameters]
+region = "ap-northeast-1"
+
+[default.validate.parameters]
+lint = true
+
+[dev.deploy.parameters]
+stack_name = "onaka-log-dev"
+resolve_s3 = true
+s3_prefix = "onaka-log-dev"
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
+fail_on_empty_changeset = false
+parameter_overrides = "Env=dev ClaudeApiKeyParamName=/onaka-log/dev/claude-api-key"
+tags = "project=onaka-log env=dev"
+
+[prod.deploy.parameters]
+stack_name = "onaka-log-prod"
+resolve_s3 = true
+s3_prefix = "onaka-log-prod"
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
+fail_on_empty_changeset = false
+parameter_overrides = "Env=prod ClaudeApiKeyParamName=/onaka-log/prod/claude-api-key"
+tags = "project=onaka-log env=prod"

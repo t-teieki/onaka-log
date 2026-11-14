@@ -1,0 +1,201 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >-
+  onaka-log のバックエンド（ADR-0007・ADR-0014、docs/02_design/architecture.md）。
+  Cognito・API Gateway（HTTP API・JWT 認可）・Lambda（FastAPI＋Lambda Web Adapter）・DynamoDB。
+  Lambda のコードは infra/build.sh で infra/build/api に作ってから sam deploy する。
+
+Parameters:
+  Env:
+    Type: String
+    AllowedValues: [dev, prod]
+    Description: 環境（スタック・テーブル・ユーザープールを環境ごとに分ける）
+  ClaudeApiKeyParamName:
+    Type: String
+    AllowedPattern: "^/[A-Za-z0-9_./-]+$"
+    Description: Claude API キーを入れた SSM パラメーター（SecureString）の名前。値は手で入れる（INF-04）
+  CallbackUrls:
+    Type: CommaDelimitedList
+    Default: "onakalog://auth/callback"
+    Description: サインイン後の戻り先（アプリの URL スキーム。Expo の設定に合わせて直す）
+  LogoutUrls:
+    Type: CommaDelimitedList
+    Default: "onakalog://auth/signout"
+    Description: サインアウト後の戻り先
+
+Conditions:
+  IsProd: !Equals [!Ref Env, prod]
+  IsDev: !Equals [!Ref Env, dev]
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Architectures: [arm64]
+
+Resources:
+  # ---- 保存先（ADR-0008・ADR-0013。キーは apps/api の repository/dynamodb.py と同じ） ----
+  MealsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: !If [IsProd, Retain, Delete]
+    UpdateReplacePolicy: !If [IsProd, Retain, Delete]
+    Properties:
+      TableName: !Sub onaka-log-${Env}
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+      DeletionProtectionEnabled: !If [IsProd, true, false]
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: !If [IsProd, true, false]
+
+  # ---- 認証（ADR-0006・ADR-0017。Google・Apple の連携はあとで足す） ----
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    DeletionPolicy: !If [IsProd, Retain, Delete]
+    UpdateReplacePolicy: !If [IsProd, Retain, Delete]
+    Properties:
+      UserPoolName: !Sub onaka-log-${Env}
+      UserPoolTier: LITE
+      DeletionProtection: !If [IsProd, ACTIVE, INACTIVE]
+      # 自分で登録はさせない。Google・Apple を足すまでは、管理者が作ったユーザーだけ使える
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true
+      UsernameAttributes: [email]
+      AutoVerifiedAttributes: [email]
+      MfaConfiguration: "OFF"
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 12
+          RequireLowercase: true
+          RequireUppercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+          TemporaryPasswordValidityDays: 7
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+
+  UserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      UserPoolId: !Ref UserPool
+      # 接頭辞は世界で一意。アカウント ID を付けて重ならないようにする
+      Domain: !Sub onaka-log-${Env}-${AWS::AccountId}
+      ManagedLoginVersion: 1
+
+  AppClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref UserPool
+      ClientName: !Sub onaka-log-app-${Env}
+      GenerateSecret: false  # モバイルアプリは秘密を持てない。PKCE を使う
+      SupportedIdentityProviders: [COGNITO]
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows: [code]
+      AllowedOAuthScopes: [openid, email, profile]
+      CallbackURLs: !Ref CallbackUrls
+      LogoutURLs: !Ref LogoutUrls
+      # dev だけ、CLI でトークンを取って API を試せるようにパスワード認証を許す
+      ExplicitAuthFlows: !If
+        - IsDev
+        - [ALLOW_USER_SRP_AUTH, ALLOW_USER_PASSWORD_AUTH, ALLOW_REFRESH_TOKEN_AUTH]
+        - [ALLOW_USER_SRP_AUTH, ALLOW_REFRESH_TOKEN_AUTH]
+      PreventUserExistenceErrors: ENABLED
+      EnableTokenRevocation: true
+      AccessTokenValidity: 60
+      IdTokenValidity: 60
+      RefreshTokenValidity: 30
+      TokenValidityUnits:
+        AccessToken: minutes
+        IdToken: minutes
+        RefreshToken: days
+
+  # ---- 入口（ADR-0016。JWT を検証してから Lambda に渡す） ----
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: $default
+      DisableExecuteApiEndpoint: false
+      Auth:
+        DefaultAuthorizer: CognitoJwt
+        Authorizers:
+          CognitoJwt:
+            IdentitySource: $request.header.Authorization
+            JwtConfiguration:
+              issuer: !Sub https://cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}
+              audience:
+                - !Ref AppClient
+      # 自分専用の量。暴走や総当たりで費用が膨らまないように低めに抑える
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 10
+        ThrottlingRateLimit: 5
+
+  # ---- API 全体を1つの関数で動かす（ADR-0007） ----
+  ApiFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      LogGroupName: !Sub /aws/lambda/onaka-log-api-${Env}
+      RetentionInDays: 14
+
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub onaka-log-api-${Env}
+      CodeUri: build/api
+      Handler: run.sh
+      MemorySize: 512
+      Timeout: 29  # HTTP API の上限（30秒）より短く
+      Layers:
+        - !Sub arn:aws:lambda:${AWS::Region}:753240598075:layer:LambdaAdapterLayerArm64:30
+      LoggingConfig:
+        LogGroup: !Ref ApiFunctionLogGroup
+      Environment:
+        Variables:
+          AWS_LAMBDA_EXEC_WRAPPER: /opt/bootstrap
+          AWS_LWA_PORT: "8000"
+          ONAKA_REPOSITORY: dynamodb
+          ONAKA_TABLE_NAME: !Ref MealsTable
+          ONAKA_CLAUDE_API_KEY_PARAM: !Ref ClaudeApiKeyParamName
+          ONAKA_CLAUDE_TIMEOUT_S: "25"
+          ONAKA_CONTRACTS_DIR: /var/task/contracts
+          # ONAKA_LOCAL_USER_ID は AWS では設定しない（利用者 ID は JWT からだけ取る）
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MealsTable
+        - Statement:
+            - Effect: Allow
+              Action: ssm:GetParameter
+              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ClaudeApiKeyParamName}
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /v1/{proxy+}
+            Method: ANY
+
+Outputs:
+  ApiUrl:
+    Description: API の URL（アプリの設定に使う）
+    Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/v1
+  UserPoolId:
+    Value: !Ref UserPool
+  AppClientId:
+    Value: !Ref AppClient
+  CognitoDomain:
+    Description: サインイン画面（Hosted UI）のドメイン
+    Value: !Sub https://onaka-log-${Env}-${AWS::AccountId}.auth.${AWS::Region}.amazoncognito.com
+  TableName:
+    Value: !Ref MealsTable
+  FunctionName:
+    Value: !Ref ApiFunction

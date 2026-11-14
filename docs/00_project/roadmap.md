@@ -8,9 +8,9 @@
 | 項目 | 内容 |
 |---|---|
 | 現在のマイルストーン | **M4〜M5**（設計はほぼ完了。テスト先行で実装中: バックエンドは API まで（ローカル・DynamoDB Local で動く）。AWS へのデプロイとアプリは未）。M2 PoC は 2026-11-13 に完了 → [poc-summary.md](../../poc/reports/poc-summary.md) |
-| 次にやること | ① INF-10 の残り（ユーザー: AWS の予算アラート・MFA・IAM） ② SAM テンプレート（`infra/`）と dev へのデプロイ（Cognito・HTTP API・Lambda・DynamoDB・SSM） ③ 実 API のスモーク（`-m live`、TST-05） ④ アプリ（Expo）の土台 ⑤ Dependabot（CIC-08） |
+| 次にやること | ① CLI の認証（`aws configure sso`、ユーザー）と SSM への Claude API キー（ユーザー） ② dev へのデプロイ（了承をもらってから。テンプレートは `infra/` に作成済み） ③ 実 API のスモーク（`-m live`、TST-05） ④ アプリ（Expo）の土台 ⑤ Dependabot（CIC-08） |
 | ブロッカー | なし（技術スタックの主要な決定はそろった） |
-| 最終更新 | 2026-11-13 |
+| 最終更新 | 2026-11-15 |
 
 ## 凡例
 
@@ -221,7 +221,7 @@ flowchart LR
 ## INF: インフラ（M3）
 
 - [x] **INF-01 ★** ホスティング先：AWS、東京リージョン（ap-northeast-1）を基本 — 成果物: [ADR-0007](../adr/0007-backend-aws-serverless.md)
-- [ ] **INF-10 ★** AWS アカウントの準備：アカウント作成は済み。残りは、プランの確認（Free プランなら6か月で閉じられるため Paid への切り替え時期を決める）、AWS Budgets の予算アラート、root ユーザーの MFA、作業用 IAM ユーザー/ロール (WIP)
+- [x] **INF-10 ★** AWS アカウントの準備：root の MFA・AWS Budgets（月7ドル、50%・80%・予測100%）・作業用ユーザー（IAM Identity Center、AdministratorAccess）は 2026-11-15 に完了。プランは Free で、Paid への切り替え時期は未定（Free は6か月で閉じられるので、その前に決める）
 - [x] **INF-02** 環境構成：local（uvicorn＋DynamoDB Local）/ dev / prod。dev と prod は別スタック・別テーブル・別 Cognito — 成果物: [ADR-0014](../adr/0014-iac-aws-sam.md)
 - [x] **INF-03** IaC の方式：AWS SAM（Q-34） — 成果物: [ADR-0014](../adr/0014-iac-aws-sam.md), [比較](../02_design/discussions/iac-comparison.md)
 - [ ] **INF-04** シークレット管理：Claude API キーは SSM Parameter Store の SecureString（手で入れる）、CI は GitHub OIDC と決定。具体的な設定は実装時 (WIP)

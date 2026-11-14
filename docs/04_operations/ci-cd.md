@@ -1,7 +1,7 @@
 # CI/CD
 
 > ステータス: Draft（契約テストとバックエンドのワークフロー。アプリ・デプロイは実装に合わせて足す）
-> 最終更新: 2026-11-14
+> 最終更新: 2026-11-15
 > 関連: CIC-01〜CIC-10, [strategy.md](../03_testing/strategy.md) §6, ADR-0014, ADR-0017
 
 ## 1. 今あるワークフロー
@@ -10,6 +10,7 @@
 |---|---|---|---|
 | [.github/workflows/contract.yml](../../.github/workflows/contract.yml) | `contract` | `main` への push と pull request（下のパスが変わったとき）、手動 | ① `uv sync --locked`（dev・poc グループ） ② `pytest tests/contract poc`（実 API は呼ばない） ③ `tools/trace.py --check`（仕様とテストの対応） |
 | [.github/workflows/api.yml](../../.github/workflows/api.yml) | `api` | `main` への push と pull request（`apps/api/`・`contracts/`・依存の変更）、手動 | ① `uv sync --locked` ② Ruff（lint・整形）③ mypy（domain は strict）④ `pytest apps/api/tests`（DynamoDB Local をサービスコンテナで動かし、保存先のテストを skip させない） |
+| [.github/workflows/infra.yml](../../.github/workflows/infra.yml) | `infra` | `main` への push と pull request（`infra/`・`apps/api/`・`contracts/`・依存の変更）、手動 | ① `sam validate --lint` ② cfn-lint ③ `infra/build.sh`（Lambda に載せるコードが uv.lock どおりに作れるか）。SAM CLI・cfn-lint は版を固定して `uvx` で動かす。AWS の認証情報は使わず、デプロイはしない |
 
 `contract` の対象のパス: `contracts/`・`tests/`・`tools/`・`apps/api/`（trace.py がバックエンドのテストの ID も集めるため）・`poc/`・`docs/01_requirements/`・`docs/02_design/`・`docs/03_testing/`（trace.py が仕様の ID を読むため）・`pyproject.toml`・`uv.lock`・`.python-version`・ワークフロー自身。
 
@@ -27,7 +28,6 @@
 | 時期 | ワークフロー | 中身 |
 |---|---|---|
 | アプリの実装開始時 | `mobile` | TypeScript の型検査・ESLint・Jest。`contracts/api/` の変更でも動かす |
-| インフラを書いたとき | `infra` | `sam validate`・cfn-lint |
 | dev 環境ができたとき | `deploy-dev` | `main` へのマージで dev にデプロイ（OIDC、CIC-05・CIC-09） |
 | 必要になったら | `live`（手動） | 実 API のスモーク（`-m live`）。キーは GitHub の Environment のシークレットに置き、費用の上限を決める（CIC-04） |
 | 早めに | Dependabot | GitHub Actions・uv・npm の依存更新（CIC-08） |
@@ -41,7 +41,13 @@ wsl -e bash -lc "cd /mnt/c/project/onaka-log && UV_LINK_MODE=copy ~/.local/bin/u
 
 - `uv run --group dev` は `apps/api` の中から実行すると失敗する（dev グループはルートの pyproject.toml にある）。CI もローカルもルートから `apps/api` を指して動かす
 
-ワークフローの書き方の検査（actionlint を Docker で）:
+インフラの検査（SAM CLI・cfn-lint は WSL のホームに入れてある。[infra/README.md](../../infra/README.md)）:
+
+```bash
+wsl -e bash -lc "cd /mnt/c/project/onaka-log/infra && SAM_CLI_TELEMETRY=0 ~/.local/bin/sam validate --lint --region ap-northeast-1 && ~/.local/bin/cfn-lint template.yaml"
+```
+
+ワークフローの書き方の検査（actionlint を Docker で。Docker がなければ `~/.local/bin/uvx --from actionlint-py actionlint`）:
 
 ```bash
 wsl -e bash -lc 'cd /mnt/c/project/onaka-log && docker run --rm -v "$PWD:/repo:ro" -w /repo rhysd/actionlint:latest .github/workflows/*.yml'

@@ -30,3 +30,7 @@ work/
 # テストのカバレッジ計測の出力
 .coverage
 htmlcov/
+
+# SAM（infra/build.sh と sam deploy の出力）
+infra/build/
+.aws-sam/

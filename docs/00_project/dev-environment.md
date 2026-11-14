@@ -35,6 +35,13 @@ wsl -e bash -lc "cd /mnt/c/project/onaka-log && UV_LINK_MODE=copy ~/.local/bin/u
 
 - WSL の素の Python 3.10 には venv（ensurepip）がなく、jsonschema も古い（3.2）。プロジェクトでは使わない
 
+## AWS（INF-10 のあと、2026-11-15）
+
+- **AWS CLI v2**: 公式のインストーラーで `~/.local/aws-cli` に入れ、`~/.local/bin/aws` から使う（sudo なし）
+- **SAM CLI・cfn-lint**: `uv tool install aws-sam-cli` / `uv tool install cfn-lint`（`~/.local/bin/sam`・`~/.local/bin/cfn-lint`）。テレメトリーは `SAM_CLI_TELEMETRY=0` で切る
+- **認証**: IAM Identity Center（長期のアクセスキーは作らない）。プロファイル名は `onaka-admin`。作業の前に `aws sso login --profile onaka-admin`
+- `sam build` は使わない（WSL の Python は 3.10 のため）。代わりに `infra/build.sh` で uv から Lambda 用のコードを作る（[infra/README.md](../../infra/README.md)）
+
 ## 未決
 
 - Node.js のバージョン管理ツール（例: mise / nvm）
