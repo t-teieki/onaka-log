@@ -7,8 +7,8 @@
 
 | 項目 | 内容 |
 |---|---|
-| 現在のマイルストーン | **M4〜M5**（設計はほぼ完了。テスト先行で実装中: バックエンドのドメインと、推定・照合の候補の作り方まで）。M2 PoC は 2026-11-13 に完了 → [poc-summary.md](../../poc/reports/poc-summary.md) |
-| 次にやること | ① API テスト（TestClient＋DynamoDB Local）→ ルート・DynamoDB・Claude と OFF の呼び出しの実装 ② INF-10 の残り（ユーザー: AWS の予算アラート・MFA・IAM） ③ SAM テンプレートと dev へのデプロイ ④ Dependabot（CIC-08） |
+| 現在のマイルストーン | **M4〜M5**（設計はほぼ完了。テスト先行で実装中: バックエンドは API まで（ローカル・DynamoDB Local で動く）。AWS へのデプロイとアプリは未）。M2 PoC は 2026-11-13 に完了 → [poc-summary.md](../../poc/reports/poc-summary.md) |
+| 次にやること | ① INF-10 の残り（ユーザー: AWS の予算アラート・MFA・IAM） ② SAM テンプレート（`infra/`）と dev へのデプロイ（Cognito・HTTP API・Lambda・DynamoDB・SSM） ③ 実 API のスモーク（`-m live`、TST-05） ④ アプリ（Expo）の土台 ⑤ Dependabot（CIC-08） |
 | ブロッカー | なし（技術スタックの主要な決定はそろった） |
 | 最終更新 | 2026-11-13 |
 
@@ -147,8 +147,8 @@ flowchart LR
 - [x] **LLM-05** 不確実性の表現：`status`（エラー種別）・`confidence`・`issues`・`assumptions`。PoC で `unreadable` や confidence が実際に使われることを確認 — 成果物: [contracts/llm/](../../contracts/llm/README.md)
 - [ ] **LLM-06** 数値の単位・基準量・丸め規則の統一（kcal, g、小数何桁）
 - [x] **LLM-07** プロンプトのバージョン管理：`prompt.md` の `prompt_version` とスキーマ `$id` のバージョン。推定結果にモデルIDと一緒に記録する — 成果物: [contracts/llm/README.md](../../contracts/llm/README.md)
-- [ ] **LLM-08** モデル・effort の設定外部化（用途ごとに切替可能に）
-- [ ] **LLM-09** タイムアウト・リトライ・レート制限・`refusal` 等の stop_reason ハンドリング方針
+- [x] **LLM-08** モデル・effort の設定外部化：`ONAKA_LABEL_MODEL` / `ONAKA_PHOTO_MODEL` など環境変数（settings.py） — 成果物: [apps/api/src/onaka_api/settings.py](../../apps/api/src/onaka_api/settings.py)
+- [ ] **LLM-09** タイムアウト・リトライ・stop_reason：refusal・max_tokens → 422、接続・タイムアウト・4xx・5xx → 502 は実装済み（リトライは SDK の1回）。レート制限は LLM-10 (WIP)
 - [ ] **LLM-10** コスト制御：ユーザーごと回数制限、画像サイズ上限、キャッシュ
 - [ ] **LLM-11** プロンプトインジェクション対策：画像内・説明文内の指示に従わないルールを v0.1 プロンプトに入れた。出力はスキーマ検証済みのみ採用。PoC で確認 (WIP)
 - [ ] **LLM-12** ログ方針（入出力・トークン数・レイテンシを記録、画像そのものは残すか）
@@ -193,7 +193,7 @@ flowchart LR
 - [x] **AUT-02** 認証方式：Sign in with Apple + Google（メール＋パスワードは作らない） — 成果物: [ADR-0006](../adr/0006-auth-from-day-one.md)
 - [x] **AUT-03** IdP：Amazon Cognito — 成果物: [ADR-0007](../adr/0007-backend-aws-serverless.md)（Expo からの Apple / Google ログイン連携は実装時に検証）
 - [ ] **AUT-04** トークン管理：expo-secure-store に保存と決定。更新・失効の扱いは実装時 (WIP)
-- [ ] **AUT-05** 認可：全データを user_id でスコープ（行レベルセキュリティ等）
+- [x] **AUT-05** 認可：利用者 ID は API Gateway の JWT の `sub` だけを使い、DynamoDB は `PK = USER#<sub>` でしか読まない。ほかの利用者のデータは見えない・消せないことをテスト済み — 成果物: [F-001-auth.md](../01_requirements/features/F-001-auth.md)
 - [ ] **AUT-06** 将来の権限拡張：家族/トレーナーとの共有、管理者ロール
 - [ ] **AUT-07** API 不正利用対策：レート制限、App Attest / Play Integrity
 - [ ] **AUT-08** アカウント削除フロー（ストア要件）
@@ -254,7 +254,7 @@ flowchart LR
 - [x] **TST-03 ★** 契約テスト：例の適合・不適合、Structured Outputs 互換、意味上のルールを検査（pytest、88件） — 成果物: [tests/contract/](../../tests/contract/README.md)
 - [x] **TST-04** Claude API のモック方針：PoC の出力を記録した応答として `apps/api/tests/fixtures/llm/` に置いた（OCR 4件・写真 5件）。失敗（リフューザル・途切れ・違反・429）の再現は呼び出し部分の実装時 — 成果物: [strategy.md](../03_testing/strategy.md) §3-2
 - [ ] **TST-05** 実API スモークテスト：`@pytest.mark.live`、既定では動かさない、1回数円以内と決定。テストは実装時 — 方針: [strategy.md](../03_testing/strategy.md) §3-2 (WIP)
-- [ ] **TST-06** API 契約テスト：API テストで応答を openapi.yaml で検証、パスとメソッドの一覧の一致も検査と決定。テストは実装時 — 方針: [strategy.md](../03_testing/strategy.md) §3-3 (WIP)
+- [x] **TST-06** API 契約テスト：API テストで応答を openapi.yaml で検証し、実装の API の一覧（パスとメソッド）が契約と一致することも確かめる — 成果物: [apps/api/tests/api/](../../apps/api/tests/api/)
 - [ ] **TST-07** LLM 回帰評価：PoC のサンプルとスクリプトを流用、プロンプト・モデル変更時に手動で実行と決定。`tests/eval/` は実装時 — 方針: [strategy.md](../03_testing/strategy.md) §3-2 (WIP)
 - [x] **TST-08** E2E：Maestro（Android エミュレーター）。iOS の E2E は対象外 — 成果物: [ADR-0017](../adr/0017-libraries-and-tooling.md)
 - [x] **TST-09** テストデータ：画像は Git に入れない。単体・API テストはダミー画像と記録した応答、実画像は実 API スモークと回帰評価だけ — 成果物: [strategy.md](../03_testing/strategy.md) §3-4
@@ -299,12 +299,12 @@ flowchart LR
 
 - [ ] **IMP-01** ウォーキングスケルトン（アプリ起動 → API 疎通 → DB 保存 → CI 緑）
 - [x] **IMP-02** ドメイン層（Meal / FoodItem / 倍率・合計・記録日・検証 DM-01〜09）：テスト42件を先に書いて赤を確認 → 実装して緑。行カバレッジ 98% — 成果物: [apps/api/src/onaka_api/domain/](../../apps/api/src/onaka_api/domain/), [tests](../../apps/api/tests/unit/domain/test_meal.py)
-- [ ] **IMP-03** 手入力（食品名と kcal・PFC）による記録（[ADR-0012](../adr/0012-manual-text-input.md)）
-- [ ] **IMP-04** 閲覧（日次合計・一覧）
-- [ ] **IMP-05** 編集・削除
-- [ ] **IMP-06** バーコード照合：OFF の応答から候補を作る部分は実装済み（F-011、テスト先行）。OFF の呼び出し・ルートは未 (WIP)
-- [ ] **IMP-07** 栄養成分表示 OCR：Claude の出力の検証と候補を作る部分は実装済み（F-012）。Claude の呼び出し・ルートは未 (WIP)
-- [ ] **IMP-08** 写真推定：Claude の出力の検証と候補を作る部分は実装済み（F-013）。Claude の呼び出し・ルートは未 (WIP)
+- [ ] **IMP-03** 手入力による記録：バックエンド（保存 API・DM-09）は実装済み。アプリは未 (WIP)
+- [ ] **IMP-04** 閲覧（日次合計・一覧）：バックエンド（`GET /v1/days/{date}`・1件）は実装済み。アプリは未 (WIP)
+- [ ] **IMP-05** 削除（食事・食品）と食品の追加：バックエンドは実装済み（版による同時更新の検出を含む）。アプリ（元に戻す）は未 (WIP)
+- [ ] **IMP-06** バーコード照合：バックエンド（OFF の呼び出し・候補・`GET /v1/products/{code}`）は実装済み。アプリは未 (WIP)
+- [ ] **IMP-07** 栄養成分表示 OCR：バックエンド（Claude の呼び出し・検証・候補・`POST /v1/estimates/label`）は実装済み。実 API での確認とアプリは未 (WIP)
+- [ ] **IMP-08** 写真推定：バックエンド（`POST /v1/estimates/photo`）は実装済み。実 API での確認とアプリは未 (WIP)
 - [ ] **IMP-09** 認証
 - [ ] **IMP-10** 推移表示
 

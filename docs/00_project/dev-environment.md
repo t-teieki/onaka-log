@@ -20,6 +20,7 @@
 | ファイルを保存しても自動リロードされない | Windows 側のアプリから編集した変更は、WSL のファイル監視に届かないことがある | 編集は WSL 側（VS Code の WSL 接続など）から行う。それでも駄目なら監視をポーリングに切り替える |
 | WSL から Android エミュレータに接続しにくい | エミュレータは Windows 側で動き、`adb` の接続先が分かれる | Windows 側の `adb` を使う、またはミラーモードで接続する（M4 で確認） |
 | Docker（DynamoDB Local・SAM local）が遅い | C ドライブ上のファイルをコンテナにマウントすると遅い | 支障が出たら WSL 側へ移す |
+| バックエンドのテストが遅い（2026-11-14 に計測） | FastAPI・anthropic・boto3 などの import が `/mnt/c` 経由で遅い。テスト本体は1件 0.5秒未満 | 152件で、`/mnt/c` では約90秒、Linux のファイルシステム上（Docker）では約6秒。気になってきたらリポジトリを WSL 側（`~/`）へ移す（Q-20） |
 | ファイルの実行権限・改行の差異 | Windows と Linux の違い | `.gitattributes` で LF 固定。Windows 側の Git では `core.autocrlf=false` を推奨 |
 
 ## Python

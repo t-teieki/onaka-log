@@ -78,3 +78,62 @@ def api_schema_errors(component: str, data: Any) -> list[str]:
     registry, uri = _api_registry()
     validator = Draft202012Validator({"$ref": f"{uri}#/components/schemas/{component}"}, registry=registry)
     return [f"{list(e.absolute_path)}: {e.message}" for e in validator.iter_errors(data)]
+
+
+# ---- API テスト用 ----
+
+USER_A = "user-a"
+USER_B = "user-b"
+NOW = "2026-11-13T10:00:00Z"
+
+
+def auth(sub: str = USER_A) -> dict[str, str]:
+    """API Gateway の JWT オーソライザーが検証した要求の文脈（Lambda Web Adapter が渡すヘッダー、F-001-01）。"""
+    return {"x-amzn-request-context": json.dumps({"authorizer": {"jwt": {"claims": {"sub": sub}}}})}
+
+
+def item_inputs(example_name: str) -> list[dict[str, Any]]:
+    """contracts/domain の valid の例から、保存 API の食品の入力を作る。"""
+    return [to_input(i) for i in load_json(DOMAIN_EXAMPLES / "valid" / example_name)["items"]]
+
+
+def meal_id(n: int) -> str:
+    return f"0190f3a2-7c1e-7a01-8b2c-{0xA00 + n:012x}"
+
+
+class FakeEstimator:
+    """Claude の代わり。用途ごとに、返す出力（または投げる例外）を決めておく。"""
+
+    def __init__(self, outputs: dict[str, Any] | None = None, error: Exception | None = None) -> None:
+        self.outputs = outputs or {}
+        self.error = error
+        self.calls: list[tuple[str, dict[str, str]]] = []
+
+    def estimate(self, usecase: str, image: dict[str, str]) -> tuple[dict[str, Any], dict[str, Any]]:
+        self.calls.append((usecase, dict(image)))
+        if self.error:
+            raise self.error
+        fx = self.outputs[usecase]
+        meta = {k: fx["meta"][k] for k in ("model", "prompt_version", "schema_id")}
+        return fx["output"], meta
+
+
+class FakeProducts:
+    """Open Food Facts の代わり。番号 → 応答（なければ None）。"""
+
+    def __init__(self, payloads: dict[str, Any] | None = None, error: Exception | None = None) -> None:
+        self.payloads = payloads or {}
+        self.error = error
+
+    def fetch(self, product_code: str) -> dict[str, Any] | None:
+        if self.error:
+            raise self.error
+        return self.payloads.get(product_code)  # type: ignore[no-any-return]
+
+
+def meal_schema_errors(meal: Any) -> list[str]:
+    """contracts/domain/meal.schema.json での検証エラー（空なら適合）。"""
+    from jsonschema import Draft202012Validator
+
+    schema = load_json(REPO_ROOT / "contracts" / "domain" / "meal.schema.json")
+    return [f"{list(e.absolute_path)}: {e.message}" for e in Draft202012Validator(schema).iter_errors(meal)]

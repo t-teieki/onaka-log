@@ -9,7 +9,7 @@
 | ファイル | 名前 | いつ動く | やること |
 |---|---|---|---|
 | [.github/workflows/contract.yml](../../.github/workflows/contract.yml) | `contract` | `main` への push と pull request（下のパスが変わったとき）、手動 | ① `uv sync --locked`（dev・poc グループ） ② `pytest tests/contract poc`（実 API は呼ばない） ③ `tools/trace.py --check`（仕様とテストの対応） |
-| [.github/workflows/api.yml](../../.github/workflows/api.yml) | `api` | `main` への push と pull request（`apps/api/`・`contracts/`・依存の変更）、手動 | ① `uv sync --locked` ② Ruff（lint・整形）③ mypy（domain は strict）④ `pytest apps/api/tests` |
+| [.github/workflows/api.yml](../../.github/workflows/api.yml) | `api` | `main` への push と pull request（`apps/api/`・`contracts/`・依存の変更）、手動 | ① `uv sync --locked` ② Ruff（lint・整形）③ mypy（domain は strict）④ `pytest apps/api/tests`（DynamoDB Local をサービスコンテナで動かし、保存先のテストを skip させない） |
 
 `contract` の対象のパス: `contracts/`・`tests/`・`tools/`・`apps/api/`（trace.py がバックエンドのテストの ID も集めるため）・`poc/`・`docs/01_requirements/`・`docs/02_design/`・`docs/03_testing/`（trace.py が仕様の ID を読むため）・`pyproject.toml`・`uv.lock`・`.python-version`・ワークフロー自身。
 
@@ -26,7 +26,6 @@
 
 | 時期 | ワークフロー | 中身 |
 |---|---|---|
-| API テストを書いたとき | `api` に追加 | DynamoDB Local をサービスコンテナで動かし、API テストを実行 |
 | アプリの実装開始時 | `mobile` | TypeScript の型検査・ESLint・Jest。`contracts/api/` の変更でも動かす |
 | インフラを書いたとき | `infra` | `sam validate`・cfn-lint |
 | dev 環境ができたとき | `deploy-dev` | `main` へのマージで dev にデプロイ（OIDC、CIC-05・CIC-09） |

@@ -16,7 +16,7 @@
 |---|---|
 | モバイル | Expo Router、TanStack Query、React の state / Context（状態管理ライブラリなし）、openapi-typescript ＋ openapi-fetch（OpenAPI を bundle してから型を生成）、expo-camera（撮影とバーコード）、expo-image-manipulator、expo-secure-store |
 | サインイン（Q-42） | expo-auth-session で Cognito のサインイン画面（Hosted UI / マネージドログイン）を開く（PKCE）。Apple・Google は Cognito 側で連携する |
-| バックエンド | FastAPI ＋ Pydantic v2（モデルは手書き、契約テストで一致を確認）、AWS Lambda Web Adapter、boto3、anthropic、httpx、jsonschema、AWS Lambda Powertools（Logger） |
+| バックエンド | FastAPI、AWS Lambda Web Adapter、boto3、anthropic、httpx、jsonschema、pyyaml、AWS Lambda Powertools（Logger）。**要求の検証は contracts のスキーマ（openapi.yaml・llm の input）を jsonschema で直接使い、Pydantic のモデルは書かない**（2026-11-14 変更、下の「変更履歴」） |
 | テスト・品質 | pytest、FastAPI TestClient ＋ DynamoDB Local、Jest（jest-expo）＋ React Native Testing Library、Maestro（Android エミュレーターで E2E）、Ruff、mypy（`domain/` は strict）、TypeScript strict ＋ ESLint ＋ Prettier、`sam validate` ＋ cfn-lint |
 | 使わない | 端末 DB（ADR-0015）、グラフ（MVP 外）、フォームライブラリ、DI コンテナ、共有パッケージ |
 
@@ -30,6 +30,10 @@
 - **iPhone は Expo Go で見た目を確かめる程度**: App Store の Expo Go が対応する SDK の版に合わせて、Expo の SDK を選ぶ（最新版より1つ古くなることがある）
 - **Expo Go で確かめにくいもの**（Cognito のサインインの戻り先 URL、カメラの細かい挙動）は Android の development build で確かめる
 - 登録するのは、ストア公開を決めたとき、または iPhone 実機でしか確かめられない問題が出たとき（Q-13 の「登録時期」はこれで決定）
+
+## 変更履歴
+
+- 2026-11-14: バックエンドの要求の検証を「Pydantic のモデルを手書き」から「contracts のスキーマを jsonschema で直接使う」に変えた。モデルを手で書くと契約と二重になり、ずれる余地が生まれるため。応答の形は API テストで openapi.yaml に照らして確かめる（TST-06）
 
 ## 理由と影響
 

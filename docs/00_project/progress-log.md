@@ -5,6 +5,36 @@
 
 ---
 
+## 2026-11-14 セッション1（続き23）: API の層（テスト先行の3巡目）
+
+**やったこと**
+- コミット `4ebbca4` を push（CI の結果はユーザーが確認）
+- 詳細仕様: [F-030](../01_requirements/features/F-030-save-meal.md)（保存・食品の追加）、[F-031](../01_requirements/features/F-031-day-summary.md)（1日分・1件）、[F-032](../01_requirements/features/F-032-delete.md)（削除）、[F-001](../01_requirements/features/F-001-auth.md)（利用者 ID の取り方）。F-011・012・013 に API の層の要件（Claude・OFF の呼び出し、413、ログ）を追加
+- 構成: `api/app.py`（FastAPI、`Deps` で保存先・Claude・OFF・時計を差し替え）、`clients/`（Claude・OFF）、`repository/`（DynamoDB・メモリ）、`settings.py`・`main.py`
+- テストを先に書き **赤を確認**（63件が NotImplementedError、DynamoDB の分は skip）→ 実装して緑。入口（main.build_app）も同じ手順
+- 結果: バックエンド 152件合格（DynamoDB Local でも保存先のテストが通る）。Ruff・mypy・trace OK。行カバレッジ 94%（main.py の SSM・本物の Claude クライアントの組み立ては未テスト）
+- CI: `api` ワークフローに DynamoDB Local のサービスコンテナ（ダイジェストで固定）を追加し、DynamoDB のテストを skip させない設定にした。Docker のきれいな環境で両ワークフローのコマンドを確認
+- 実際の入口（`onaka_api.main:app`）を、保存先をメモリにして組み立てられることを確認
+
+**決まったこと**（設計判断）
+- 要求の検証は contracts のスキーマを jsonschema で直接使い、Pydantic のモデルは書かない（ADR-0017 に変更履歴を追記）
+- 利用者 ID は Lambda Web Adapter が渡す `x-amzn-request-context` の `authorizer.jwt.claims.sub`。ローカルだけ `ONAKA_LOCAL_USER_ID`
+- 食事の重複（409）は同じ利用者・同じ記録日の中で調べる（ID はアプリが UUIDv7 で作るので、再送なら記録日も同じ）
+- Claude のキーがないときも起動はでき、推定だけ 502（ローカルで食事の API を試せる）
+
+**注意点・気づき**
+- `/mnt/c` 上でのテストは import が遅く、152件で約90秒（Linux 上なら約6秒）。dev-environment.md に記録。気になってきたらリポジトリを WSL 側へ移す（Q-20）
+- 実際の Claude API・Open Food Facts はまだ一度も呼んでいない（スモークは TST-05）
+
+**次にやること**
+1. INF-10 の残り（ユーザー作業: AWS Budgets・root の MFA・作業用 IAM）
+2. SAM テンプレートと dev へのデプロイ
+3. 実 API のスモーク（`-m live`、数円）
+4. アプリ（Expo）の土台
+5. Dependabot（CIC-08）
+
+---
+
 ## 2026-11-14 セッション1（続き22）: 推定・照合の候補の作り方（テスト先行の2巡目）
 
 **やったこと**

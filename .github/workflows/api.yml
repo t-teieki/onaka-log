@@ -25,7 +25,16 @@ concurrency:
 jobs:
   api:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
+    services:
+      # DynamoDB Local（保存先のテスト用）。イメージはダイジェストで固定する
+      dynamodb:
+        image: amazon/dynamodb-local@sha256:6ada631ec7aa5fc83446855eb17233e3dad184fec47477e8140c6c569cfe0c86
+        ports:
+          - 8000:8000
+    env:
+      ONAKA_TEST_DYNAMODB_ENDPOINT: http://localhost:8000
+      ONAKA_REQUIRE_DYNAMODB: "1"  # DynamoDB のテストを skip せず、つながらなければ失敗にする
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -45,5 +54,5 @@ jobs:
       - name: mypy（domain は strict）
         run: uv run --locked --group dev mypy --config-file apps/api/pyproject.toml apps/api/src
 
-      - name: 単体テスト
+      - name: 単体テスト・API テスト（保存先は DynamoDB Local も使う）
         run: uv run --locked --group dev pytest apps/api/tests -q

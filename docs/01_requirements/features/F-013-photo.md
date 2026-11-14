@@ -19,3 +19,14 @@
 | F-013-06 | 出どころは `method = photo`、`provider = claude`、`estimation` に使ったモデルID・`prompt_version`・出力スキーマの `$id`、`confidence` は品目の `confidence`。`product_code`・列の番号と見出しは null |
 | F-013-07 | 分量の既定は `whole` |
 | F-013-08 | `meal_name`・`assumptions`・`notes` は出力をそのまま応答に入れる |
+
+## Claude の呼び出し（API の層）
+
+| ID | 要件 |
+|---|---|
+| F-013-09 | 要求の本文は `contracts/llm/food-photo-estimate/input.schema.json` で検証する。合わなければ 400 validation_error。ただし画像（`data_base64`）が 5,000,000 文字を超えるときは 413 payload_too_large |
+| F-013-10 | Claude には、`prompt.md` のシステムプロンプト、画像ブロック1つ（テキストは付けない）、出力スキーマ（API が受け付けない数値・文字列の制約を取り除いたもの）を Structured Outputs（`output_config.format`）で渡す。モデルと effort は設定から読む |
+| F-013-11 | 応答の `stop_reason` が `refusal` か `max_tokens`、本文が JSON として読めないときは 422 estimation_failed |
+| F-013-12 | Claude に届かない・タイムアウト・Claude の 4xx（429 を含む）・5xx は 502 upstream_unavailable |
+| F-013-13 | 候補の `source.estimation` には、使ったモデルID・`prompt.md` の `prompt_version`・出力スキーマの `$id` を入れる |
+| F-013-14 | 画像・プロンプト・Claude の出力の中身はログに出さない（ADR-0004）。ログに出すのは用途・モデル・トークン数・応答時間・status・エラー種別 |

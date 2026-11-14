@@ -23,3 +23,10 @@
 | F-011-10 | OFF に届かない・タイムアウト・5xx は 502 upstream_unavailable。OFF の 404 は `not_found`（エラーにしない） |
 
 F-011-09・10 は API の層（ルート・HTTP クライアント）で実装する。
+
+## Open Food Facts の呼び出し（API の層）
+
+| ID | 要件 |
+|---|---|
+| F-011-11 | `GET {OFF の URL}/api/v2/product/{番号}.json` を、`User-Agent: onaka-log/<版>`（個人情報を含めない）で呼ぶ。タイムアウトは設定から読む（既定 5秒） |
+| F-011-12 | 200 なら本文を F-011-01〜08 で変換する。404 は `not_found`（F-011-10） |
