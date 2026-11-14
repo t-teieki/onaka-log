@@ -5,6 +5,31 @@
 
 ---
 
+## 2026-11-14 セッション1（続き21）: バックエンドの土台とドメイン（テスト先行の最初の一巡）
+
+**やったこと**
+- ルートの pyproject.toml を uv のワークスペースにし、`apps/api`（パッケージ名 onaka-api、`src/onaka_api/`）をメンバーに追加。dev グループに onaka-api・ruff・mypy を追加
+- ドメインの関数の形を決めて中身なしで置き（`create_meal` / `add_item` / `remove_item` / `build_item` / `totals_of` / `record_date_of` / `whole_multiplier` / `multiplier_for` / `round1`、エラーの型）、単体テスト42件を先に書いた
+  - 正解は `contracts/domain/examples` の valid の例（作った食事が例と一致すること）。契約テストの参照実装は import しない
+  - DM-01〜09 の境界・違反、版の不一致、再送、最後の1件の削除など
+- **赤を確認**: 42件すべて `NotImplementedError` で失敗（テストの書き間違いによる失敗はなし）
+- **実装して緑**: 42件合格。Decimal で計算して小数第1位で四捨五入、入力の dict は変えない。domain の行カバレッジ 98%
+- Ruff・mypy（domain は strict）を通した。CI に `api` ワークフローを追加し、`contract` の対象に `apps/api/` を追加。actionlint と、Git の対象ファイルだけを入れた Docker で両ワークフローのコマンドを確認（バックエンド 42件・契約 275件・trace OK）
+- roadmap: IMP-02 を完了
+
+**注意点・気づき**
+- バックエンドのテストのヘルパーを `conftest.py` にすると、契約テストと同じセッションで集めたときに `from conftest import` の名前がぶつかった → `apps/api/tests/api_test_helpers.py` にし、pytest の `pythonpath` に追加
+- `uv run --group dev` は `apps/api` の中で実行すると失敗する（dev はルートのグループ）。ルートから `apps/api` を指して実行する
+- 実装の途中で Ruff の整形をテストファイルにもかけた（振る舞いは変えていない）
+
+**次にやること**
+1. 推定・照合のテスト（赤）→ 実装: Claude の出力（PoC の記録した応答）と Open Food Facts の応答から候補（FoodItemDraft）への変換、分量の既定
+2. API テスト（FastAPI TestClient＋DynamoDB Local）→ ルートと DynamoDB の実装
+3. INF-10 の残り（ユーザー作業）
+4. Dependabot（CIC-08）
+
+---
+
 ## 2026-11-14 セッション1（続き20）: CI の土台
 
 **やったこと**
@@ -14,8 +39,9 @@
 - 検証: actionlint（Docker）で問題なし。Git 管理下のファイルだけを uv の公式イメージ（Docker）に入れて同じコマンドを実行し、275件合格・trace の検査 OK（PoC の画像がなくても動く）
 - [ci-cd.md](../04_operations/ci-cd.md) を作成。roadmap: CIC-01 完了、CIC-02 は契約の部分だけ
 
+- 2026-11-14: WSL の git から push（`d7d78ee..b0a475d`）。GitHub 上の `contract` ワークフローの最初の実行が成功した（ユーザーが確認）。Git Bash からは SSH 鍵が通らないので、push は WSL から行う
+
 **次にやること**
-1. push して GitHub 上で `contract` ワークフローが動くことを確認（ユーザー。まだ push していない）
 2. INF-10 の残り（ユーザー作業: AWS Budgets・root の MFA・作業用 IAM）
 3. 最初の機能の詳細仕様（F-xxx-yy）とテスト（赤）→ M4
 4. Dependabot の設定（CIC-08）

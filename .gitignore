@@ -26,3 +26,7 @@ Thumbs.db
 
 # Personal work notes (not tracked)
 work/
+
+# テストのカバレッジ計測の出力
+.coverage
+htmlcov/

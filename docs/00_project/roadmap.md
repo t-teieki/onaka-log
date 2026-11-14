@@ -7,8 +7,8 @@
 
 | 項目 | 内容 |
 |---|---|
-| 現在のマイルストーン | **M3 基本設計**（M2 PoC は 2026-11-13 に完了 → [poc-summary.md](../../poc/reports/poc-summary.md)。M1 の残り DAT-01 を先に進める） |
-| 次にやること | ① push して GitHub で `contract` ワークフローが動くことを確認（ユーザー） ② INF-10 の残り（ユーザー: AWS の予算アラート・MFA・IAM） ③ 最初の機能の詳細仕様（F-xxx-yy）とテスト（赤）→ M4 ④ Dependabot（CIC-08） |
+| 現在のマイルストーン | **M4〜M5**（設計はほぼ完了。テスト先行で実装を始めた: バックエンドのドメインまで）。M2 PoC は 2026-11-13 に完了 → [poc-summary.md](../../poc/reports/poc-summary.md) |
+| 次にやること | ① 推定・照合のテスト（赤）→ 実装（Claude の出力・Open Food Facts の応答から候補へ、IMP-06〜08 の土台） ② API テスト（DynamoDB Local）→ ルートの実装 ③ INF-10 の残り（ユーザー: AWS の予算アラート・MFA・IAM） ④ Dependabot（CIC-08） |
 | ブロッカー | なし（技術スタックの主要な決定はそろった） |
 | 最終更新 | 2026-11-13 |
 
@@ -264,7 +264,7 @@ flowchart LR
 ## CIC: CI/CD（M4〜M6）
 
 - [x] **CIC-01** CI 基盤：GitHub Actions。Action は SHA で固定、権限は最小 — 成果物: [.github/workflows/contract.yml](../../.github/workflows/contract.yml), [ci-cd.md](../04_operations/ci-cd.md)
-- [ ] **CIC-02** PR 時のジョブ：契約テスト・PoC の単体テスト・trace.py --check は `contract` ワークフローで実施（パスフィルタあり）。lint・型・アプリのテスト・ビルドは実装時に足す — 成果物: [ci-cd.md](../04_operations/ci-cd.md) (WIP)
+- [ ] **CIC-02** PR 時のジョブ：`contract`（契約テスト・PoC・trace）と `api`（Ruff・mypy・バックエンドの単体テスト）。アプリのテスト・ビルドは実装時に足す — 成果物: [ci-cd.md](../04_operations/ci-cd.md) (WIP)
 - [ ] **CIC-03** 契約変更時に全関係者（mobile / api / tests）のテストを走らせる仕組み
 - [ ] **CIC-04** LLM 実API テスト・eval の実行タイミング（手動トリガー / 夜間）とコスト上限
 - [ ] **CIC-05** バックエンドの自動デプロイ（main → staging、タグ → prod）とDBマイグレーション
@@ -298,7 +298,7 @@ flowchart LR
 > M3・M4 完了後に、機能仕様（F-xxx）単位でタスク化する。各タスクは「対応テストを先に用意 → 赤を確認 → 実装 → 緑」。
 
 - [ ] **IMP-01** ウォーキングスケルトン（アプリ起動 → API 疎通 → DB 保存 → CI 緑）
-- [ ] **IMP-02** ドメイン層（Meal / FoodItem / 合計計算）
+- [x] **IMP-02** ドメイン層（Meal / FoodItem / 倍率・合計・記録日・検証 DM-01〜09）：テスト42件を先に書いて赤を確認 → 実装して緑。行カバレッジ 98% — 成果物: [apps/api/src/onaka_api/domain/](../../apps/api/src/onaka_api/domain/), [tests](../../apps/api/tests/unit/domain/test_meal.py)
 - [ ] **IMP-03** 手入力（食品名と kcal・PFC）による記録（[ADR-0012](../adr/0012-manual-text-input.md)）
 - [ ] **IMP-04** 閲覧（日次合計・一覧）
 - [ ] **IMP-05** 編集・削除

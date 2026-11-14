@@ -73,7 +73,8 @@ onaka-log/
 │   │   │   ├── estimation/       #       推定・照合（Claude 呼び出し、Open Food Facts、出力の検証、候補への変換）
 │   │   │   ├── repository/       #       DynamoDB の読み書き
 │   │   │   └── settings.py       #       設定（環境ごとのモデルID・テーブル名など。LLM-08）
-│   │   └── tests/                #     単体テスト・API テスト（Claude はモック、DB は DynamoDB Local）
+│   │   └── tests/                #     単体テスト（unit/）・API テスト（Claude はモック、DB は DynamoDB Local）
+│   │       └── api_test_helpers.py #     ヘルパー（conftest.py にしない: 契約テストの conftest と名前がぶつかる）
 │   └── mobile/                   #   スマホアプリ: React Native（Expo）+ TypeScript、npm
 │       ├── package.json / app.json
 │       ├── app/                  #     画面（ルーティング。ライブラリは TEC-03 で決める）

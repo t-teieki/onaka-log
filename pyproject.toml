@@ -8,6 +8,13 @@ dependencies = []
 [tool.uv]
 package = false
 
+# uv のワークスペース（ADR-0002）。apps/api（onaka-api）をメンバーにし、uv.lock は1つ
+[tool.uv.workspace]
+members = ["apps/api"]
+
+[tool.uv.sources]
+onaka-api = { workspace = true }
+
 [dependency-groups]
 dev = [
     "pytest>=8",
@@ -15,11 +22,16 @@ dev = [
     "referencing>=0.35",
     "pyyaml>=6.0.3",
     "openapi-spec-validator>=0.9.0",
+    "onaka-api",
+    "ruff",
+    "mypy",
 ]
 poc = ["anthropic", "pillow", "httpx", "python-dotenv"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "apps/api/tests"]
+# バックエンドのテストのヘルパー（api_test_helpers.py）を import できるようにする
+pythonpath = ["apps/api/tests"]
 markers = [
     "spec(*ids): このテストが確かめる仕様の ID（例: DM-03, F-030-02）。docs/03_testing/traceability.md",
     "live: 実際の Claude API・Open Food Facts を呼ぶ（費用がかかる。-m live のときだけ動かす）",

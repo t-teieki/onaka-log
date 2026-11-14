@@ -1,0 +1,49 @@
+# バックエンド（apps/api）の lint・型・単体テスト（CIC-02・03、docs/04_operations/ci-cd.md）
+name: api
+
+on:
+  push:
+    branches: [main]
+    paths: &paths
+      - "apps/api/**"
+      - "contracts/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".python-version"
+      - ".github/workflows/api.yml"
+  pull_request:
+    paths: *paths
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: api-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+
+      - name: 依存を入れる（uv.lock どおり）
+        run: uv sync --locked --group dev
+
+      # dev グループはルートの pyproject.toml にあるので、ルートから apps/api を指して動かす
+      - name: Ruff（lint と整形の確認。設定は apps/api/pyproject.toml）
+        run: |
+          uv run --locked --group dev ruff check apps/api
+          uv run --locked --group dev ruff format --check apps/api
+
+      - name: mypy（domain は strict）
+        run: uv run --locked --group dev mypy --config-file apps/api/pyproject.toml apps/api/src
+
+      - name: 単体テスト
+        run: uv run --locked --group dev pytest apps/api/tests -q
