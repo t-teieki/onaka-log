@@ -41,7 +41,7 @@
 |---|---|
 | 記録した応答（フィクスチャ） | PoC で得た Claude の出力（JSON、画像は含まない）を `apps/api/tests/fixtures/llm/<用途>/` に置く。単体テストは Claude の呼び出しを差し替えて、これを返す |
 | 失敗の再現 | リフューザル・出力の途切れ（`max_tokens`）・スキーマ違反・意味ルール違反・タイムアウト・429 を、差し替えで再現して 422 / 502 / 429 になることを確かめる |
-| 実 API のスモーク（⑧） | `@pytest.mark.live`。既定では動かさない（`-m live` のときだけ）。1回の実行で数円以内（Haiku 中心、写真は Sonnet を1回）。キーは `.env` |
+| 実 API のスモーク（⑧） | `@pytest.mark.live`。既定では動かさない（`-m live` のときだけ）。1回の実行で数円以内（OCR は Haiku を1回、写真は Sonnet を1回）。**デプロイ済みの dev の API を呼ぶ**（[apps/api/tests/live/test_live_dev.py](../../apps/api/tests/live/test_live_dev.py)）ので、Claude のキーは SSM のものを使い、手元には置かない。要るのは `ONAKA_LIVE_API_URL` と Cognito のトークンのファイル（[infra/README.md](../../infra/README.md)）。実行: `uv run --group dev --group poc pytest apps/api/tests/live -m live -q`（2026-11-15 に3件とも成功） |
 | 回帰評価（⑨） | PoC のサンプル（`poc/samples/`、画像は Git 管理外）と PoC のスクリプトを使う。OCR は4項目の正答、写真は品目数・ばらつき（CV）・PoC の結果との差を見る。プロンプト・モデルを変えるときに実行し、結果を `poc/reports/` か `docs/03_testing/` に残す |
 
 ### 3-3. API（TST-06）

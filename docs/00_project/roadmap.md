@@ -7,8 +7,8 @@
 
 | 項目 | 内容 |
 |---|---|
-| 現在のマイルストーン | **M4〜M5**（設計はほぼ完了。テスト先行で実装中: バックエンドは API まで（ローカル・DynamoDB Local で動く）。AWS へのデプロイとアプリは未）。M2 PoC は 2026-11-13 に完了 → [poc-summary.md](../../poc/reports/poc-summary.md) |
-| 次にやること | ① CLI の認証（`aws configure sso`、ユーザー）と SSM への Claude API キー（ユーザー） ② dev へのデプロイ（了承をもらってから。テンプレートは `infra/` に作成済み） ③ 実 API のスモーク（`-m live`、TST-05） ④ アプリ（Expo）の土台 ⑤ Dependabot（CIC-08） |
+| 現在のマイルストーン | **M4〜M5**（設計はほぼ完了。テスト先行で実装中: バックエンドは API まで（ローカル・DynamoDB Local で動く）。dev（`onaka-log-dev`）に 2026-11-15 デプロイ済み。アプリは未）。M2 PoC は 2026-11-13 に完了 → [poc-summary.md](../../poc/reports/poc-summary.md) |
+| 次にやること | ① アプリ（Expo）の土台（dev の API に接続。dev は保存・取得・削除・推定・照合まで確認済み） ② Dependabot（CIC-08） ③ CI からのデプロイ（GitHub OIDC、CIC-05・CIC-09） |
 | ブロッカー | なし（技術スタックの主要な決定はそろった） |
 | 最終更新 | 2026-11-15 |
 
@@ -224,7 +224,7 @@ flowchart LR
 - [x] **INF-10 ★** AWS アカウントの準備：root の MFA・AWS Budgets（月7ドル、50%・80%・予測100%）・作業用ユーザー（IAM Identity Center、AdministratorAccess）は 2026-11-15 に完了。プランは Free で、Paid への切り替え時期は未定（Free は6か月で閉じられるので、その前に決める）
 - [x] **INF-02** 環境構成：local（uvicorn＋DynamoDB Local）/ dev / prod。dev と prod は別スタック・別テーブル・別 Cognito — 成果物: [ADR-0014](../adr/0014-iac-aws-sam.md)
 - [x] **INF-03** IaC の方式：AWS SAM（Q-34） — 成果物: [ADR-0014](../adr/0014-iac-aws-sam.md), [比較](../02_design/discussions/iac-comparison.md)
-- [ ] **INF-04** シークレット管理：Claude API キーは SSM Parameter Store の SecureString（手で入れる）、CI は GitHub OIDC と決定。具体的な設定は実装時 (WIP)
+- [ ] **INF-04** シークレット管理：Claude API キーは SSM Parameter Store の SecureString（手で入れる）、CI は GitHub OIDC と決定。dev は `/onaka-log/dev/claude-api-key` に入れ、Lambda に `ssm:GetParameter` だけを与えた（2026-11-15）。CI の OIDC は CIC-09 (WIP)
 - [ ] **INF-05** ローカル開発環境（エミュレータ、ローカルDB、モックサーバ）
 - [ ] **INF-06** コスト見積り（無料枠・Claude API）と予算アラート。上限は月1000円（NFR-001、目安は non-functional.md）
 - [ ] **INF-07** 監視・アラート・ログ保管
@@ -253,7 +253,7 @@ flowchart LR
 - [x] **TST-02 ★** トレーサビリティ規約：`@pytest.mark.spec("DM-03")`、対応表と検査は `tools/trace.py`（DM は必須、MVP の F は警告） — 成果物: [traceability.md](../03_testing/traceability.md)
 - [x] **TST-03 ★** 契約テスト：例の適合・不適合、Structured Outputs 互換、意味上のルールを検査（pytest、88件） — 成果物: [tests/contract/](../../tests/contract/README.md)
 - [x] **TST-04** Claude API のモック方針：PoC の出力を記録した応答として `apps/api/tests/fixtures/llm/` に置いた（OCR 4件・写真 5件）。失敗（リフューザル・途切れ・違反・429）の再現は呼び出し部分の実装時 — 成果物: [strategy.md](../03_testing/strategy.md) §3-2
-- [ ] **TST-05** 実API スモークテスト：`@pytest.mark.live`、既定では動かさない、1回数円以内と決定。テストは実装時 — 方針: [strategy.md](../03_testing/strategy.md) §3-2 (WIP)
+- [x] **TST-05** 実API スモークテスト：`@pytest.mark.live`、既定では動かさない、1回数円以内。dev の API に対して OCR・写真・バーコード照合を1回ずつ呼ぶ（2026-11-15 に成功） — 成果物: [test_live_dev.py](../../apps/api/tests/live/test_live_dev.py), [strategy.md](../03_testing/strategy.md) §3-2
 - [x] **TST-06** API 契約テスト：API テストで応答を openapi.yaml で検証し、実装の API の一覧（パスとメソッド）が契約と一致することも確かめる — 成果物: [apps/api/tests/api/](../../apps/api/tests/api/)
 - [ ] **TST-07** LLM 回帰評価：PoC のサンプルとスクリプトを流用、プロンプト・モデル変更時に手動で実行と決定。`tests/eval/` は実装時 — 方針: [strategy.md](../03_testing/strategy.md) §3-2 (WIP)
 - [x] **TST-08** E2E：Maestro（Android エミュレーター）。iOS の E2E は対象外 — 成果物: [ADR-0017](../adr/0017-libraries-and-tooling.md)
