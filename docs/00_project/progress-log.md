@@ -5,6 +5,40 @@
 
 ---
 
+## 2026-11-16 セッション1（続き）: アプリのサインイン（F-001・Google）
+
+**やったこと**
+- ユーザーが iPhone で 手入力 → 日時の変更 → 保存 → ホームに出る、を確認（IMP-01・IMP-03）。ダークモードで iOS のピッカーの数字が見えない問題を直した（`5064d4c`）
+- サインインの仕様: [F-001-auth.md](../01_requirements/features/F-001-auth.md) にアプリ側の要件 F-001-04〜12、画面設計 3-8（当面は「Google でサインイン」だけ）
+- アプリ（テスト先行。赤を確認 → 緑、Jest 88件、tsc・ESLint・Android のバンドルも OK。コミット `97cf976`）
+  - `src/auth/session.ts`: 認可コード → トークン、リフレッシュトークンだけ expo-secure-store、アクセストークンはメモリ。期限の60秒前に更新（同時の更新は1回）、4xx で拒否されたら消してサインイン画面へ、通信の失敗では消さない
+  - `src/auth/auth-gate.tsx`・`src/features/auth/sign-in-screen.tsx`: サインインしていなければサインイン画面だけ。キャンセルは何も出さず、失敗はメッセージ
+  - `src/api/client.ts`: 401 なら1回だけ更新して同じ要求を送り直す（F-001-12）
+  - `src/auth/native.ts`: expo-auth-session（`AuthRequest`、PKCE、`identity_provider=Google`）と expo-secure-store のつなぎ（テストなし。実機で確かめる）
+  - `EXPO_PUBLIC_COGNITO_DOMAIN`・`EXPO_PUBLIC_COGNITO_CLIENT_ID` がなければサインインを使わない（ローカルのバックエンド用）
+- インフラ: [template.yaml](../../infra/template.yaml) に Google の IdP（シークレットは Secrets Manager を `{{resolve:secretsmanager:…}}` で参照）、アプリのクライアントの IdP を dev は COGNITO＋Google・prod は Google だけに。dev の戻り先に `exp://192.168.3.2:8081/--/auth/callback`。sam validate・cfn-lint は OK。**デプロイはまだ**（GoogleClientId が `REPLACE_ME`）
+- ユーザーの作業手順を [infra/README.md](../../infra/README.md) の「Google でサインインの準備」に書いた
+
+**決まったこと**
+- Q-45: Expo Go で確かめるため dev の戻り先に exp:// を足す。Cognito の設定がなければサインインを省く。Google 連携を今回行い、シークレットは Secrets Manager（月 $0.40）
+- 当面のサインイン画面は「Google でサインイン」1つ。Apple は Apple Developer Program に登録してから（ADR-0006・Q-41）
+
+**次にやること**
+1. ユーザー: Google Cloud で OAuth クライアント（ウェブ、リダイレクト URI は `<CognitoDomain>/oauth2/idpresponse`）を作り、シークレットを Secrets Manager の `onaka-log/dev/google-client-secret` に入れる。`aws sso login --profile onaka-admin`
+2. `samconfig.toml` の GoogleClientId を書き、dev にデプロイ（変更セットを見せて了承を得てから）→ `.env.local` に Cognito の設定 → iPhone の Expo Go でサインイン → dev に記録（IMP-09・IMP-01）
+3. 食事の詳細と削除・元に戻す（IMP-04・IMP-05）
+4. 設定画面とサインアウト（トークンの失効、F-001）
+5. Dependabot（CIC-08）、CI からのデプロイ（CIC-05・CIC-09）
+
+**注意点・気づき**
+- AWS の SSO のトークンが切れていた（スタックの出力を読めなかった）。デプロイの前にユーザーが `aws sso login --profile onaka-admin`
+- RNTL 14 の `fireEvent.press` は押した処理が返す Promise を待つ。終わらない Promise を返すとテストが止まるので、`onPress={() => void start()}` にした
+- Expo Go の戻り先は PC の LAN の IP で決まる。IP が変わったら `samconfig.toml` を直してデプロイし直す（Cognito が redirect_mismatch を出す）
+- 開発ビルドで `onakalog://auth/callback` に戻ったときのために `src/app/auth/callback.tsx`（ホームへ送るだけ）を置いた
+- 中継（8010）と Metro（8081）は前のセッションから動いたまま
+
+---
+
 ## 2026-11-16 セッション1: 食べた日時の変更（Q-33・Q-44）
 
 **やったこと**
