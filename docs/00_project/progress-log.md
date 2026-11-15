@@ -5,6 +5,34 @@
 
 ---
 
+## 2026-11-16 セッション1: 食べた日時の変更（Q-33・Q-44）
+
+**やったこと**
+- iPhone からローカルのバックエンドにつなぐ中継（`npm run api:relay`、0.0.0.0:8010 → 127.0.0.1:8000）はコミット済み（`8c4fec5`）。iPhone からつながったことをユーザーが確認
+- 食べた日時の変更をテスト先行で作成（赤15件を確認 → 緑。Jest 66件、tsc・ESLint も OK。コミット `da214c9`）
+  - 手入力の画面の「食べた日時」の行をタップすると OS 標準のピッカー（`src/features/record/eaten-at-field.tsx`）。iOS は日時のホイール＋「キャンセル」「完了」、Android は日付 → 時刻のダイアログ（どちらかで閉じたら変えない）
+  - `timeZoneName="Asia/Tokyo"` で日本時間に固定。上限は今、ピッカーが未来を返しても今に丸める（`clampToNow`）
+  - ホームで過去の日を表示中に記録すると、既定はその日の今の時刻（4:00 より前は翌日の日付にしてその記録日に入れる、`defaultEatenAtFor`）。ホーム → 手入力へ記録日をルートの引数で渡す
+- 仕様: 画面設計 3-5 の表に「食べた日時」の行、ADR-0017 の変更履歴、Q-44 を解決済みに
+
+**決まったこと**
+- 日時の部品は OS 標準のピッカー @react-native-community/datetimepicker 9.2.1（Expo Go 同梱）（Q-44、[ADR-0017](../adr/0017-libraries-and-tooling.md)）
+- 未来の日時は選べない（アプリ側だけ。API は変えない）（Q-44）
+
+**次にやること**
+1. 実機（iPhone＋中継）で 記録する → 手入力 → 日時の変更 → 保存 → ホームに出る、を確認（IMP-01・IMP-03）。ピッカーの見た目（iOS のホイール、Android のダイアログ）もここで確かめる
+2. サインイン（F-001・IMP-09）: Cognito Hosted UI＋expo-auth-session（PKCE）、トークンは expo-secure-store。dev につなぐ
+3. 食事の詳細と削除・元に戻す（IMP-04・IMP-05）
+4. Dependabot（CIC-08）
+5. CI からのデプロイ（GitHub OIDC、CIC-05・CIC-09）
+
+**注意点・気づき**
+- ピッカーのテストは `jest.mock` で受け取った props を記録する偽物に差し替え、`jest.replaceProperty(Platform, 'OS', ...)` で iOS と Android の両方を確かめている。実物の挙動（Android の timeZoneName の効き方など）は実機で未確認
+- `npx expo install` が app.json に config plugin（`@react-native-community/datetimepicker`）を足した。Expo Go では影響なし、development build で効く
+- `da214c9` と引継ぎの更新は push していない
+
+---
+
 ## 2026-11-15 セッション2: エミュレーターで読み込めない原因の調査と、手入力の記録フロー
 
 **やったこと**
