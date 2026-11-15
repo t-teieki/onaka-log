@@ -34,6 +34,7 @@ npx expo start      # 開発サーバー
 | つなぐ先 | 設定 |
 |---|---|
 | ローカルのバックエンド（既定） | WSL で `ONAKA_REPOSITORY=memory ONAKA_LOCAL_USER_ID=local-dev uvicorn onaka_api.main:app --host 0.0.0.0 --port 8000`（[apps/api/README.md](../api/README.md)）。エミュレーターからは `http://10.0.2.2:8000`（既定値） |
+| ローカルのバックエンドを iPhone から | WSL の mirrored モードでは LAN から WSL の :8000 に届かないため、Windows の Node で中継する: `npm run api:relay`（0.0.0.0:8010 → 127.0.0.1:8000。起動時に接続先の候補を表示）。`.env.local` に `EXPO_PUBLIC_API_BASE_URL=http://<PC の LAN の IP>:8010` を書き、`npx expo start -c` で開発サーバーを起動し直す。エミュレーターも同じ接続先で届く。PC の IP が変わったら書き直す |
 | dev（AWS） | `.env.local` に `EXPO_PUBLIC_API_BASE_URL=https://<api-id>.execute-api.ap-northeast-1.amazonaws.com`（`/v1` は付けない）。サインイン（F-001）を作るまではトークンがないため 401 になる |
 
 ## 実機・エミュレーター

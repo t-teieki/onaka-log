@@ -50,7 +50,8 @@
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
     "test": "jest",
-    "gen:api": "npx --yes openapi-typescript@7.13.0 ../../contracts/api/openapi.yaml -o src/api/schema.d.ts"
+    "gen:api": "npx --yes openapi-typescript@7.13.0 ../../contracts/api/openapi.yaml -o src/api/schema.d.ts",
+    "api:relay": "node scripts/api-relay.mjs"
   },
   "private": true,
   "jest": {
