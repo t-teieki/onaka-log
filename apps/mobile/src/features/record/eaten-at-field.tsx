@@ -90,6 +90,9 @@ export function EatenAtField({ value, onChange, now }: Props) {
               <DateTimePicker
                 mode="datetime"
                 display="spinner"
+                // シートの背景は白に固定しているので、ダークモードでも文字を黒にする（白い文字で見えなくなるため）
+                themeVariant="light"
+                textColor="#000"
                 locale="ja-JP"
                 value={step.draft}
                 maximumDate={now()}
