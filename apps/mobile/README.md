@@ -7,7 +7,7 @@
 | 場所 | 中身 |
 |---|---|
 | `src/app/` | 画面のルーティング（Expo Router。1ファイル = 1画面）。中身は `src/features/` に置き、ここは薄くする |
-| `src/features/<機能>/` | 機能ごとの画面・フック（今は `home/`） |
+| `src/features/<機能>/` | 機能ごとの画面・フック（`home/`、`record/`: 入力方式の選択シート・手入力・保存） |
 | `src/api/` | API クライアント（openapi-fetch）。`schema.d.ts` は `contracts/api/openapi.yaml` から生成する（手で直さない） |
 | `src/lib/` | 画面に依存しない計算（記録日 DM-01、表示の形） |
 | `src/config.ts` | 接続先（`EXPO_PUBLIC_API_BASE_URL`） |
@@ -39,4 +39,6 @@ npx expo start      # 開発サーバー
 ## 実機・エミュレーター
 
 - Android エミュレーター: Android Studio の Device Manager で Pixel 8・API 35/36（Google Play 付き）を作る。Expo Go を入れ、開発サーバーの `a` キーか QR で開く
+  - **Android 17（API 37）では**、Expo Go に「ローカルネットワークへのアクセス」（`ACCESS_LOCAL_NETWORK`）の許可がないと `10.0.2.2` への通信が止まり、ホームが読み込み中・「読み込めませんでした」のままになる（2026-11-15）。設定アプリで Expo Go に許可を与えるか、API 35/36 のエミュレーターを使う
+  - バックエンドに届くかは adb のシェルから確かめられる（シェルは許可の制限を受けない）。送信側をすぐ閉じると uvicorn が応答せずに切るので、`adb shell "(printf 'GET /v1/days/2026-11-15 HTTP/1.0\r\n\r\n'; sleep 2) | toybox nc -w 5 10.0.2.2 8000"` のように少し待つ
 - iPhone 13 mini: App Store の Expo Go（SDK 58 対応）で、開発サーバーの QR をカメラで読む。同じ Wi-Fi で、Windows のファイアウォールが 8081 を通すこと。つながらなければ `npx expo start --tunnel`

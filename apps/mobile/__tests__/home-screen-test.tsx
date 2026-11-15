@@ -8,6 +8,7 @@ import threeMeals from '../../../contracts/api/examples/valid/DaySummary-three-m
 import { ApiProvider } from '@/api/api-context';
 import { createApiClient } from '@/api/client';
 import { HomeScreen } from '@/features/home/home-screen';
+import type { RecordMethod } from '@/features/record/method-sheet';
 
 const NOW = new Date('2026-11-13T20:00:00+09:00'); // 記録日 2026-11-13（金）
 
@@ -16,7 +17,7 @@ type Responder = (url: URL) => { status: number; body: unknown };
 const clients: QueryClient[] = [];
 afterEach(() => clients.splice(0).forEach((c) => c.clear()));
 
-async function setup(respond: Responder) {
+async function setup(respond: Responder, onSelectMethod: (method: RecordMethod) => void = () => {}) {
   const requested: string[] = [];
   const fakeFetch = async (input: Request) => {
     const url = new URL(input.url);
@@ -32,7 +33,7 @@ async function setup(respond: Responder) {
       <ApiProvider client={api}>{children}</ApiProvider>
     </QueryClientProvider>
   );
-  await render(<HomeScreen now={() => NOW} />, { wrapper });
+  await render(<HomeScreen now={() => NOW} onSelectMethod={onSelectMethod} />, { wrapper });
   return { requested };
 }
 
@@ -94,10 +95,49 @@ describe('ホーム（F-031）', () => {
     expect(await screen.findByText('まだ記録がありません')).toBeOnTheScreen();
   });
 
-  it('「記録する」ボタンを画面に出す（押した先は次の段階で作る）', async () => {
+  it('「記録する」を押すと入力方式の選択（シート）を開く（F-010、画面設計 3-2）', async () => {
     await setup(() => ({ status: 200, body: emptyDay }));
     await screen.findByText('まだ記録がありません');
-    expect(screen.getByRole('button', { name: '＋ 記録する' })).toBeOnTheScreen();
+    expect(screen.queryByText('入力方法を選ぶ')).toBeNull();
+    await fireEvent.press(screen.getByRole('button', { name: '＋ 記録する' }));
+    expect(await screen.findByText('入力方法を選ぶ')).toBeOnTheScreen();
+    for (const label of ['バーコード', '栄養成分表示', '写真', '手入力']) {
+      expect(screen.getByRole('button', { name: new RegExp(label) })).toBeOnTheScreen();
+    }
+  });
+
+  it('シートで「手入力」を選ぶと手入力へ進み、シートを閉じる', async () => {
+    const selected: RecordMethod[] = [];
+    await setup(() => ({ status: 200, body: emptyDay }), (m) => selected.push(m));
+    await screen.findByText('まだ記録がありません');
+    await fireEvent.press(screen.getByRole('button', { name: '＋ 記録する' }));
+    await fireEvent.press(await screen.findByRole('button', { name: /手入力/ }));
+    expect(selected).toEqual(['manual']);
+    expect(screen.queryByText('入力方法を選ぶ')).toBeNull();
+  });
+
+  it('まだ作っていない方式（バーコード・栄養成分表示・写真）は「準備中」で押せない', async () => {
+    const selected: RecordMethod[] = [];
+    await setup(() => ({ status: 200, body: emptyDay }), (m) => selected.push(m));
+    await screen.findByText('まだ記録がありません');
+    await fireEvent.press(screen.getByRole('button', { name: '＋ 記録する' }));
+    for (const label of ['バーコード', '栄養成分表示', '写真']) {
+      const button = await screen.findByRole('button', { name: new RegExp(label) });
+      expect(button).toBeDisabled();
+      await fireEvent.press(button);
+    }
+    expect(screen.getAllByText('準備中')).toHaveLength(3);
+    expect(selected).toEqual([]);
+  });
+
+  it('シートの「閉じる」で何も選ばずに閉じる', async () => {
+    const selected: RecordMethod[] = [];
+    await setup(() => ({ status: 200, body: emptyDay }), (m) => selected.push(m));
+    await screen.findByText('まだ記録がありません');
+    await fireEvent.press(screen.getByRole('button', { name: '＋ 記録する' }));
+    await fireEvent.press(await screen.findByRole('button', { name: '閉じる' }));
+    expect(screen.queryByText('入力方法を選ぶ')).toBeNull();
+    expect(selected).toEqual([]);
   });
 });
 

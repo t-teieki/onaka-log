@@ -7,18 +7,23 @@ import type { DaySummary, Meal } from '@/api/client';
 import { formatGrams, formatKcal, mealTime, mealTitle } from '@/lib/format';
 import { addDays, canGoNext, formatRecordDate, recordDateOf } from '@/lib/record-date';
 
+import { MethodSheet, type RecordMethod } from '@/features/record/method-sheet';
+
 import { useDay } from './use-day';
 
 type Props = {
   /** 今の時刻（テストで固定する） */
   now?: () => Date;
+  /** 入力方式を選んだとき（画面の移動はルーティング側で行う） */
+  onSelectMethod?: (method: RecordMethod) => void;
 };
 
-export function HomeScreen({ now = () => new Date() }: Props) {
+export function HomeScreen({ now = () => new Date(), onSelectMethod = () => {} }: Props) {
   const [today] = useState(() => recordDateOf(now()));
   const [recordDate, setRecordDate] = useState(today);
   const day = useDay(recordDate);
   const nextEnabled = canGoNext(recordDate, today);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -58,11 +63,19 @@ export function HomeScreen({ now = () => new Date() }: Props) {
       )}
 
       <View style={styles.footer}>
-        {/* 押した先（入力方式の選択、F-010）は次の段階で作る */}
-        <Pressable accessibilityRole="button" style={styles.recordButton}>
+        <Pressable accessibilityRole="button" onPress={() => setSheetOpen(true)} style={styles.recordButton}>
           <Text style={styles.recordText}>＋ 記録する</Text>
         </Pressable>
       </View>
+
+      <MethodSheet
+        visible={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        onSelect={(method) => {
+          setSheetOpen(false);
+          onSelectMethod(method);
+        }}
+      />
     </SafeAreaView>
   );
 }
