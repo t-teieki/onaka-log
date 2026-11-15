@@ -11,6 +11,7 @@
 | `src/api/` | API クライアント（openapi-fetch）。`schema.d.ts` は `contracts/api/openapi.yaml` から生成する（手で直さない） |
 | `src/lib/` | 画面に依存しない計算（記録日 DM-01、表示の形） |
 | `src/config.ts` | 接続先（`EXPO_PUBLIC_API_BASE_URL`） |
+| `src/auth/` | サインイン（F-001）。`session.ts` がトークンの取得・保管・更新、`auth-gate.tsx` がサインイン画面との切り替え、`native.ts` が expo-auth-session・expo-secure-store とのつなぎ |
 | `__tests__/` | 単体テスト（Jest＋React Native Testing Library）。ファイル名は `*-test.ts(x)` |
 
 ## コマンド（**Windows の Node で** `apps/mobile` から。PowerShell）
@@ -35,7 +36,9 @@ npx expo start      # 開発サーバー
 |---|---|
 | ローカルのバックエンド（既定） | WSL で `ONAKA_REPOSITORY=memory ONAKA_LOCAL_USER_ID=local-dev uvicorn onaka_api.main:app --host 0.0.0.0 --port 8000`（[apps/api/README.md](../api/README.md)）。エミュレーターからは `http://10.0.2.2:8000`（既定値） |
 | ローカルのバックエンドを iPhone から | WSL の mirrored モードでは LAN から WSL の :8000 に届かないため、Windows の Node で中継する: `npm run api:relay`（0.0.0.0:8010 → 127.0.0.1:8000。起動時に接続先の候補を表示）。`.env.local` に `EXPO_PUBLIC_API_BASE_URL=http://<PC の LAN の IP>:8010` を書き、`npx expo start -c` で開発サーバーを起動し直す。エミュレーターも同じ接続先で届く。PC の IP が変わったら書き直す |
-| dev（AWS） | `.env.local` に `EXPO_PUBLIC_API_BASE_URL=https://<api-id>.execute-api.ap-northeast-1.amazonaws.com`（`/v1` は付けない）。サインイン（F-001）を作るまではトークンがないため 401 になる |
+| dev（AWS） | `.env.local` に `EXPO_PUBLIC_API_BASE_URL=https://<api-id>.execute-api.ap-northeast-1.amazonaws.com`（`/v1` は付けない）と、サインインのための `EXPO_PUBLIC_COGNITO_DOMAIN`・`EXPO_PUBLIC_COGNITO_CLIENT_ID`（スタックの出力 `CognitoDomain`・`AppClientId`）。準備は [infra/README.md](../../infra/README.md) の「Google でサインインの準備」 |
+
+- `EXPO_PUBLIC_COGNITO_*` がなければサインインを使わず、トークンなしで API を呼ぶ（ローカルのバックエンド用、F-001-04）。ローカルに戻すときは2行を消して `npx expo start -c`
 
 ## 実機・エミュレーター
 

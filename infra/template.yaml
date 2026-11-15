@@ -17,7 +17,19 @@ Parameters:
   CallbackUrls:
     Type: CommaDelimitedList
     Default: "onakalog://auth/callback"
-    Description: サインイン後の戻り先（アプリの URL スキーム。Expo の設定に合わせて直す）
+    Description: >-
+      サインイン後の戻り先。アプリの URL スキーム（開発ビルド）。dev は Expo Go で確かめるため
+      exp://<PC の LAN の IP>:8081/--/auth/callback も足す（samconfig.toml、Q-45）
+  GoogleClientId:
+    Type: String
+    AllowedPattern: '^[0-9A-Za-z.-]+\.apps\.googleusercontent\.com$'
+    Description: Google の OAuth クライアント ID（秘密ではない。Google Cloud で作る、infra/README.md）
+  GoogleClientSecretName:
+    Type: String
+    AllowedPattern: "^[A-Za-z0-9/_+=.@-]+$"
+    Description: >-
+      Google の OAuth クライアントのシークレットを入れた Secrets Manager のシークレットの名前（値は文字列のまま手で入れる、Q-45）。
+      CloudFormation の Cognito の IdP は SSM の SecureString を参照できないため Secrets Manager を使う
   LogoutUrls:
     Type: CommaDelimitedList
     Default: "onakalog://auth/signout"
@@ -91,13 +103,31 @@ Resources:
       Domain: !Sub onaka-log-${Env}-${AWS::AccountId}
       ManagedLoginVersion: 1
 
+  # Google でサインイン（F-001-06）。Apple は Apple Developer Program に登録してから足す（Q-41）
+  GoogleIdentityProvider:
+    Type: AWS::Cognito::UserPoolIdentityProvider
+    Properties:
+      UserPoolId: !Ref UserPool
+      ProviderName: Google
+      ProviderType: Google
+      ProviderDetails:
+        client_id: !Ref GoogleClientId
+        client_secret: !Sub "{{resolve:secretsmanager:${GoogleClientSecretName}}}"
+        authorize_scopes: openid email profile
+      AttributeMapping:
+        email: email
+        email_verified: email_verified
+        username: sub
+
   AppClient:
     Type: AWS::Cognito::UserPoolClient
+    DependsOn: GoogleIdentityProvider
     Properties:
       UserPoolId: !Ref UserPool
       ClientName: !Sub onaka-log-app-${Env}
       GenerateSecret: false  # モバイルアプリは秘密を持てない。PKCE を使う
-      SupportedIdentityProviders: [COGNITO]
+      # メールとパスワードのサインインは作らない（ADR-0006）。dev だけ、テスト用ユーザー（CLI）のために COGNITO も残す
+      SupportedIdentityProviders: !If [IsDev, [COGNITO, Google], [Google]]
       AllowedOAuthFlowsUserPoolClient: true
       AllowedOAuthFlows: [code]
       AllowedOAuthScopes: [openid, email, profile]

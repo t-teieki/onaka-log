@@ -14,7 +14,8 @@ s3_prefix = "onaka-log-dev"
 capabilities = "CAPABILITY_IAM"
 confirm_changeset = true
 fail_on_empty_changeset = false
-parameter_overrides = "Env=dev ClaudeApiKeyParamName=/onaka-log/dev/claude-api-key"
+# GoogleClientId は Google Cloud で作ったら書き換える。CallbackUrls の exp:// は PC の LAN の IP（変わったら書き換えてデプロイし直す、Q-45）
+parameter_overrides = "Env=dev ClaudeApiKeyParamName=/onaka-log/dev/claude-api-key GoogleClientId=REPLACE_ME.apps.googleusercontent.com GoogleClientSecretName=onaka-log/dev/google-client-secret CallbackUrls='onakalog://auth/callback,exp://192.168.3.2:8081/--/auth/callback'"
 tags = "project=onaka-log env=dev"
 
 [prod.deploy.parameters]
@@ -24,5 +25,5 @@ s3_prefix = "onaka-log-prod"
 capabilities = "CAPABILITY_IAM"
 confirm_changeset = true
 fail_on_empty_changeset = false
-parameter_overrides = "Env=prod ClaudeApiKeyParamName=/onaka-log/prod/claude-api-key"
+parameter_overrides = "Env=prod ClaudeApiKeyParamName=/onaka-log/prod/claude-api-key GoogleClientId=REPLACE_ME.apps.googleusercontent.com GoogleClientSecretName=onaka-log/prod/google-client-secret"
 tags = "project=onaka-log env=prod"
