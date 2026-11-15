@@ -5,9 +5,9 @@ import { HomeScreen } from '@/features/home/home-screen';
 export default function Index() {
   return (
     <HomeScreen
-      onSelectMethod={(method) => {
+      onSelectMethod={(method, recordDate) => {
         // バーコード・栄養成分表示・写真はまだない（シートで押せない）
-        if (method === 'manual') router.push('/record/manual');
+        if (method === 'manual') router.push({ pathname: '/record/manual', params: { recordDate } });
       }}
     />
   );

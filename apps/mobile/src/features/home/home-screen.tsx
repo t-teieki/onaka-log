@@ -15,7 +15,8 @@ type Props = {
   /** 今の時刻（テストで固定する） */
   now?: () => Date;
   /** 入力方式を選んだとき（画面の移動はルーティング側で行う） */
-  onSelectMethod?: (method: RecordMethod) => void;
+  /** 入力方式を選んだとき（表示している記録日を渡す。食べた日時の既定に使う） */
+  onSelectMethod?: (method: RecordMethod, recordDate: string) => void;
 };
 
 export function HomeScreen({ now = () => new Date(), onSelectMethod = () => {} }: Props) {
@@ -73,7 +74,7 @@ export function HomeScreen({ now = () => new Date(), onSelectMethod = () => {} }
         onClose={() => setSheetOpen(false)}
         onSelect={(method) => {
           setSheetOpen(false);
-          onSelectMethod(method);
+          onSelectMethod(method, recordDate);
         }}
       />
     </SafeAreaView>

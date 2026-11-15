@@ -2,11 +2,35 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
+import { Platform } from 'react-native';
 
 import manualMeal from '../../../contracts/domain/examples/valid/meal-manual.json';
 import { ApiProvider } from '@/api/api-context';
 import { createApiClient } from '@/api/client';
 import { ManualEntryScreen } from '@/features/record/manual-entry-screen';
+
+// OS 標準の日時ピッカーは描けないので、受け取った props を記録する偽物に差し替える
+type PickerProps = {
+  value: Date;
+  mode?: string;
+  maximumDate?: Date;
+  timeZoneName?: string;
+  onChange: (event: { type: string; nativeEvent: { timestamp: number } }, date?: Date) => void;
+};
+const mockPickers: PickerProps[] = [];
+jest.mock('@react-native-community/datetimepicker', () => {
+  const { View } = jest.requireActual('react-native');
+  return {
+    __esModule: true,
+    default: (props: PickerProps) => {
+      mockPickers.push(props);
+      return <View testID={`picker-${props.mode ?? 'date'}`} />;
+    },
+  };
+});
+const lastPicker = () => mockPickers[mockPickers.length - 1];
+const pick = async (type: 'set' | 'dismissed', date?: Date) =>
+  act(async () => lastPicker().onChange({ type, nativeEvent: { timestamp: date?.getTime() ?? 0 } }, date));
 
 const NOW = new Date('2026-11-13T08:00:00+09:00');
 const MEAL_ID = manualMeal.meal_id;
@@ -16,9 +40,15 @@ type Sent = { method: string; path: string; body: unknown };
 type Responder = () => { status: number; body: unknown } | Promise<{ status: number; body: unknown }>;
 
 const clients: QueryClient[] = [];
-afterEach(() => clients.splice(0).forEach((c) => c.clear()));
+afterEach(() => {
+  clients.splice(0).forEach((c) => c.clear());
+  mockPickers.splice(0);
+});
 
-async function setup(respond: Responder = () => ({ status: 201, body: manualMeal })) {
+async function setup(
+  respond: Responder = () => ({ status: 201, body: manualMeal }),
+  props: { recordDate?: string } = {},
+) {
   const sent: Sent[] = [];
   const fakeFetch = async (input: Request) => {
     const url = new URL(input.url);
@@ -39,7 +69,7 @@ async function setup(respond: Responder = () => ({ status: 201, body: manualMeal
       <ApiProvider client={api}>{children}</ApiProvider>
     </QueryClientProvider>
   );
-  await render(<ManualEntryScreen now={() => NOW} newId={newId} onSaved={onSaved} onClose={onClose} />, { wrapper });
+  await render(<ManualEntryScreen now={() => NOW} newId={newId} onSaved={onSaved} onClose={onClose} {...props} />, { wrapper });
   return { sent, onSaved, onClose, newId, queryClient };
 }
 
@@ -166,5 +196,112 @@ describe('手入力（F-014）', () => {
     await fireEvent.press(screen.getByRole('button', { name: '閉じる' }));
     expect(onClose).toHaveBeenCalled();
     expect(sent).toHaveLength(0);
+  });
+});
+
+describe('食べた日時の変更（Q-33・Q-44、画面設計 3-5）', () => {
+  const sentEatenAt = (sent: Sent[]) => (sent[0].body as { eaten_at: string }).eaten_at;
+
+  async function saveWith(sent: Sent[]) {
+    await fillAll();
+    await fireEvent.press(saveButton());
+    await act(async () => {});
+    return sentEatenAt(sent);
+  }
+
+  it('過去の日を表示中に開いたときは、その日の今の時刻が既定', async () => {
+    await setup(undefined, { recordDate: '2026-11-10' });
+    expect(screen.getByText('11/10 08:00')).toBeOnTheScreen();
+  });
+
+  it('タップするまでピッカーは出さない', async () => {
+    await setup();
+    expect(mockPickers).toHaveLength(0);
+  });
+
+  describe('iOS: 日時のホイールと「完了」', () => {
+    beforeEach(() => jest.replaceProperty(Platform, 'OS', 'ios'));
+
+    it('今の値・上限は今・日本時間でピッカーを開く', async () => {
+      await setup();
+      await fireEvent.press(screen.getByRole('button', { name: /食べた日時/ }));
+      expect(lastPicker().mode).toBe('datetime');
+      expect(lastPicker().value).toEqual(NOW);
+      expect(lastPicker().maximumDate).toEqual(NOW);
+      expect(lastPicker().timeZoneName).toBe('Asia/Tokyo');
+    });
+
+    it('選んで「完了」を押すと日時が変わり、その日時で保存して、その記録日を返す', async () => {
+      const { sent, onSaved } = await setup();
+      await fireEvent.press(screen.getByRole('button', { name: /食べた日時/ }));
+      await pick('set', new Date('2026-11-12T01:30:00+09:00'));
+      await fireEvent.press(screen.getByRole('button', { name: '完了' }));
+      expect(screen.getByText('11/12 01:30')).toBeOnTheScreen();
+      expect(screen.queryByTestId('picker-datetime')).toBeNull();
+      expect(await saveWith(sent)).toBe('2026-11-12T01:30:00+09:00');
+      expect(onSaved).toHaveBeenCalledWith('2026-11-11'); // 4:00 より前は前日の記録（DM-01）
+    });
+
+    it('「キャンセル」なら変えない', async () => {
+      const { sent } = await setup();
+      await fireEvent.press(screen.getByRole('button', { name: /食べた日時/ }));
+      await pick('set', new Date('2026-11-12T01:30:00+09:00'));
+      await fireEvent.press(screen.getByRole('button', { name: 'キャンセル' }));
+      expect(screen.getByText('11/13 08:00')).toBeOnTheScreen();
+      expect(await saveWith(sent)).toBe('2026-11-13T08:00:00+09:00');
+    });
+
+    it('未来を返されたら今に丸める', async () => {
+      const { sent } = await setup();
+      await fireEvent.press(screen.getByRole('button', { name: /食べた日時/ }));
+      await pick('set', new Date('2026-11-13T09:00:00+09:00'));
+      await fireEvent.press(screen.getByRole('button', { name: '完了' }));
+      expect(await saveWith(sent)).toBe('2026-11-13T08:00:00+09:00');
+    });
+  });
+
+  describe('Android: 日付 → 時刻のダイアログ', () => {
+    beforeEach(() => jest.replaceProperty(Platform, 'OS', 'android'));
+
+    it('日付を選ぶと時刻のダイアログに進み、両方選ぶと変わる', async () => {
+      const { sent } = await setup();
+      await fireEvent.press(screen.getByRole('button', { name: /食べた日時/ }));
+      expect(lastPicker().mode).toBe('date');
+      expect(lastPicker().maximumDate).toEqual(NOW);
+      expect(lastPicker().timeZoneName).toBe('Asia/Tokyo');
+      await pick('set', new Date('2026-11-11T08:00:00+09:00'));
+      expect(lastPicker().mode).toBe('time');
+      expect(lastPicker().value).toEqual(new Date('2026-11-11T08:00:00+09:00'));
+      await pick('set', new Date('2026-11-11T19:45:00+09:00'));
+      expect(screen.queryByTestId('picker-time')).toBeNull();
+      expect(screen.getByText('11/11 19:45')).toBeOnTheScreen();
+      expect(await saveWith(sent)).toBe('2026-11-11T19:45:00+09:00');
+    });
+
+    it('日付のダイアログを閉じたら変えない', async () => {
+      await setup();
+      await fireEvent.press(screen.getByRole('button', { name: /食べた日時/ }));
+      await pick('dismissed');
+      expect(screen.queryByTestId('picker-date')).toBeNull();
+      expect(screen.queryByTestId('picker-time')).toBeNull();
+      expect(screen.getByText('11/13 08:00')).toBeOnTheScreen();
+    });
+
+    it('時刻のダイアログを閉じたら、日付も変えない', async () => {
+      await setup();
+      await fireEvent.press(screen.getByRole('button', { name: /食べた日時/ }));
+      await pick('set', new Date('2026-11-11T08:00:00+09:00'));
+      await pick('dismissed');
+      expect(screen.queryByTestId('picker-time')).toBeNull();
+      expect(screen.getByText('11/13 08:00')).toBeOnTheScreen();
+    });
+
+    it('今日の日付で未来の時刻を選んだら今に丸める', async () => {
+      const { sent } = await setup();
+      await fireEvent.press(screen.getByRole('button', { name: /食べた日時/ }));
+      await pick('set', NOW);
+      await pick('set', new Date('2026-11-13T23:00:00+09:00'));
+      expect(await saveWith(sent)).toBe('2026-11-13T08:00:00+09:00');
+    });
   });
 });

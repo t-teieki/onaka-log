@@ -56,3 +56,4 @@
 | Q-40 | ライブラリ・道具（2026-11-14） | 比較資料の推奨の一式（Expo Router、TanStack Query、openapi-typescript＋openapi-fetch、expo-camera、FastAPI＋boto3、Jest＋RNTL、Maestro、Ruff＋mypy など） | [ADR-0017](../adr/0017-libraries-and-tooling.md) |
 | Q-41 | Apple Developer Program の登録時期（2026-11-14） | ストア公開はまだ確定ではないので最低優先。当面は Android エミュレーター中心で開発し、iPhone は Expo Go で確認する | [ADR-0017](../adr/0017-libraries-and-tooling.md) |
 | Q-42 | サインインの実装（2026-11-14） | expo-auth-session で Cognito のサインイン画面を開く（Apple・Google は Cognito 側で連携） | [ADR-0017](../adr/0017-libraries-and-tooling.md) |
+| Q-44 | 食べた日時の選び方（2026-11-16） | OS 標準のピッカー（@react-native-community/datetimepicker、日本時間に固定）。選べるのは今まで（未来は不可。アプリ側だけで制限し、API は変えない） | [screens/README.md](../02_design/screens/README.md) §3-5、[ADR-0017](../adr/0017-libraries-and-tooling.md) |

@@ -13,15 +13,18 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { formatEatenAt, toEatenAt } from '@/lib/eaten-at';
+import { defaultEatenAtFor, toEatenAt } from '@/lib/eaten-at';
 import { uuidv7 } from '@/lib/uuid7';
 
+import { EatenAtField } from './eaten-at-field';
 import { manualItem, NAME_MAX_LENGTH, validateManualForm, type ManualForm } from './manual-input';
 import { useCreateMeal } from './use-create-meal';
 
 type Props = {
   /** 今の時刻（テストで固定する）。食べた日時の既定値になる */
   now?: () => Date;
+  /** ホームで表示していた記録日。過去の日なら食べた日時の既定はその日の今の時刻（画面設計 3-1） */
+  recordDate?: string;
   /** ID を作る（テストで固定する）。食事と食品の ID はこの画面を開いたときに決め、再送でも変えない */
   newId?: () => string;
   /** 保存できたとき（食事の記録日を渡す） */
@@ -38,10 +41,16 @@ const NUTRIENT_FIELDS = [
 
 const EMPTY: ManualForm = { name: '', energy_kcal: '', protein_g: '', fat_g: '', carbohydrate_g: '' };
 
-export function ManualEntryScreen({ now = () => new Date(), newId = () => uuidv7(), onSaved, onClose }: Props) {
+export function ManualEntryScreen({
+  now = () => new Date(),
+  recordDate,
+  newId = () => uuidv7(),
+  onSaved,
+  onClose,
+}: Props) {
   const [ids] = useState(() => ({ meal: newId(), item: newId() }));
-  // 食べた日時の既定は記録した時刻（Q-33）。変更する操作は次の段階で足す
-  const [eatenAt] = useState(() => toEatenAt(now()));
+  // 食べた日時の既定は記録した時刻（Q-33）。行をタップして変えられる（今まで、Q-44）
+  const [eatenAt, setEatenAt] = useState(() => toEatenAt(recordDate ? defaultEatenAtFor(recordDate, now()) : now()));
   const [form, setForm] = useState<ManualForm>(EMPTY);
   const createMeal = useCreateMeal();
 
@@ -71,10 +80,7 @@ export function ManualEntryScreen({ now = () => new Date(), newId = () => uuidv7
 
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-          <View style={styles.row}>
-            <Text style={styles.rowLabel}>食べた日時</Text>
-            <Text style={styles.rowValue}>{formatEatenAt(eatenAt)}</Text>
-          </View>
+          <EatenAtField value={eatenAt} onChange={setEatenAt} now={now} />
 
           <Field label="食品名" error={errors.name}>
             <TextInput
@@ -138,15 +144,6 @@ const styles = StyleSheet.create({
   closeText: { fontSize: 22 },
   headerTitle: { fontSize: 18, fontWeight: '600' },
   body: { padding: 16, gap: 16 },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingBottom: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderColor: '#ddd',
-  },
-  rowLabel: { color: '#555' },
-  rowValue: { fontVariant: ['tabular-nums'] },
   field: { gap: 6 },
   fieldLabel: { fontSize: 14, color: '#333' },
   input: {

@@ -116,6 +116,17 @@ describe('ホーム（F-031）', () => {
     expect(screen.queryByText('入力方法を選ぶ')).toBeNull();
   });
 
+  it('表示している記録日を手入力へ渡す（過去の日なら食べた日時の既定はその日、画面設計 3-1）', async () => {
+    const onSelectMethod = jest.fn();
+    await setup((url) => ({ status: 200, body: { ...emptyDay, record_date: dayOf(url) } }), onSelectMethod);
+    await screen.findByText('まだ記録がありません');
+    await fireEvent.press(screen.getByLabelText('前日'));
+    await screen.findByText('11月12日（木）');
+    await fireEvent.press(screen.getByRole('button', { name: '＋ 記録する' }));
+    await fireEvent.press(await screen.findByRole('button', { name: /手入力/ }));
+    expect(onSelectMethod).toHaveBeenCalledWith('manual', '2026-11-12');
+  });
+
   it('まだ作っていない方式（バーコード・栄養成分表示・写真）は「準備中」で押せない', async () => {
     const selected: RecordMethod[] = [];
     await setup(() => ({ status: 200, body: emptyDay }), (m) => selected.push(m));
