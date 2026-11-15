@@ -7,7 +7,7 @@
 
 | 項目 | 内容 |
 |---|---|
-| 現在のマイルストーン | **M4〜M5**（設計はほぼ完了。テスト先行で実装中: バックエンドは API まで（ローカル・DynamoDB Local で動く）。dev（`onaka-log-dev`）に 2026-11-15 デプロイ済み。アプリは未）。M2 PoC は 2026-11-13 に完了 → [poc-summary.md](../../poc/reports/poc-summary.md) |
+| 現在のマイルストーン | **M4〜M5**（設計はほぼ完了。テスト先行で実装中: バックエンドは API まで完成し、dev（`onaka-log-dev`）に 2026-11-15 デプロイ・実 API で確認済み。アプリは Expo SDK 58 の土台とホーム画面まで（実機・エミュレーターでは未確認））。M2 PoC は 2026-11-13 に完了 → [poc-summary.md](../../poc/reports/poc-summary.md) |
 | 次にやること | ① アプリのサインイン（F-001、Cognito Hosted UI＋expo-auth-session）と、エミュレーター・iPhone での表示確認 ② 記録フロー（入力方式の選択 → 手入力 → 確認 → 保存） ③ Dependabot（CIC-08） ④ CI からのデプロイ（GitHub OIDC、CIC-05・CIC-09） |
 | ブロッカー | なし（技術スタックの主要な決定はそろった） |
 | 最終更新 | 2026-11-15 |
@@ -264,8 +264,8 @@ flowchart LR
 ## CIC: CI/CD（M4〜M6）
 
 - [x] **CIC-01** CI 基盤：GitHub Actions。Action は SHA で固定、権限は最小 — 成果物: [.github/workflows/contract.yml](../../.github/workflows/contract.yml), [ci-cd.md](../04_operations/ci-cd.md)
-- [ ] **CIC-02** PR 時のジョブ：`contract`（契約テスト・PoC・trace）と `api`（Ruff・mypy・バックエンドの単体テスト）。アプリのテスト・ビルドは実装時に足す — 成果物: [ci-cd.md](../04_operations/ci-cd.md) (WIP)
-- [ ] **CIC-03** 契約変更時に全関係者（mobile / api / tests）のテストを走らせる仕組み
+- [x] **CIC-02** PR 時のジョブ：`contract`（契約テスト・PoC・trace）・`api`（Ruff・mypy・単体テスト）・`infra`（sam validate・cfn-lint・ビルド）・`mobile`（型の生成差分・tsc・ESLint・Jest）。アプリのビルド（EAS）は CIC-06 — 成果物: [ci-cd.md](../04_operations/ci-cd.md)
+- [ ] **CIC-03** 契約変更時に全関係者（mobile / api / tests）のテストを走らせる仕組み：各ワークフローの paths に `contracts/` を入れ、`mobile` は生成した API の型に差分がないことを確かめる。PR での運用は未確認 (WIP)
 - [ ] **CIC-04** LLM 実API テスト・eval の実行タイミング（手動トリガー / 夜間）とコスト上限
 - [ ] **CIC-05** バックエンドの自動デプロイ（main → staging、タグ → prod）とDBマイグレーション
 - [ ] **CIC-06** モバイルのビルドと配布（EAS / Codemagic / fastlane、TestFlight / Play 内部テスト）
@@ -297,15 +297,15 @@ flowchart LR
 
 > M3・M4 完了後に、機能仕様（F-xxx）単位でタスク化する。各タスクは「対応テストを先に用意 → 赤を確認 → 実装 → 緑」。
 
-- [ ] **IMP-01** ウォーキングスケルトン（アプリ起動 → API 疎通 → DB 保存 → CI 緑）
+- [ ] **IMP-01** ウォーキングスケルトン（アプリ起動 → API 疎通 → DB 保存 → CI 緑）：API → DB は dev で確認、CI は4つとも緑。アプリを実機・エミュレーターで起動して API につなぐのが残り (WIP)
 - [x] **IMP-02** ドメイン層（Meal / FoodItem / 倍率・合計・記録日・検証 DM-01〜09）：テスト42件を先に書いて赤を確認 → 実装して緑。行カバレッジ 98% — 成果物: [apps/api/src/onaka_api/domain/](../../apps/api/src/onaka_api/domain/), [tests](../../apps/api/tests/unit/domain/test_meal.py)
 - [ ] **IMP-03** 手入力による記録：バックエンド（保存 API・DM-09）は実装済み。アプリは未 (WIP)
 - [ ] **IMP-04** 閲覧（日次合計・一覧）：バックエンド（`GET /v1/days/{date}`・1件）は実装済み。アプリはホーム（日次合計・一覧・日付の移動・空・エラー）をテスト先行で作成（2026-11-15）。食事の詳細は未 (WIP)
 - [ ] **IMP-05** 削除（食事・食品）と食品の追加：バックエンドは実装済み（版による同時更新の検出を含む）。アプリ（元に戻す）は未 (WIP)
 - [ ] **IMP-06** バーコード照合：バックエンド（OFF の呼び出し・候補・`GET /v1/products/{code}`）は実装済み。アプリは未 (WIP)
-- [ ] **IMP-07** 栄養成分表示 OCR：バックエンド（Claude の呼び出し・検証・候補・`POST /v1/estimates/label`）は実装済み。実 API での確認とアプリは未 (WIP)
-- [ ] **IMP-08** 写真推定：バックエンド（`POST /v1/estimates/photo`）は実装済み。実 API での確認とアプリは未 (WIP)
-- [ ] **IMP-09** 認証
+- [ ] **IMP-07** 栄養成分表示 OCR：バックエンド（Claude の呼び出し・検証・候補・`POST /v1/estimates/label`）は実装済み。dev の実 API で確認済み（TST-05）。アプリは未 (WIP)
+- [ ] **IMP-08** 写真推定：バックエンド（`POST /v1/estimates/photo`）は実装済み。dev の実 API で確認済み（TST-05）。アプリは未 (WIP)
+- [ ] **IMP-09** 認証：バックエンド（JWT の sub）と Cognito（dev、Google・Apple の連携なし）は作成済み。アプリのサインインは未 (WIP)
 - [ ] **IMP-10** 推移表示
 
 ## EXT: 拡張バックログ（M7〜、優先度未定）

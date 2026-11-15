@@ -53,7 +53,8 @@
 
 ## 現時点で未決（決まったら更新）
 
-- アプリ（モバイル）のビルドコマンドはまだない。バックエンドは API まで実装済み（ローカルの起動は [apps/api/README.md](apps/api/README.md)）。AWS へのデプロイ（SAM）は未作成
+- アプリのビルド・配布（EAS、CIC-06）と、CI からのデプロイ（GitHub OIDC、CIC-05・CIC-09）はまだない。dev へのデプロイは手元から行う（[infra/README.md](infra/README.md)）
+- アプリのサインイン（F-001）は未作成。Cognito の Google・Apple 連携も未
 
 ## コマンド
 
@@ -63,5 +64,10 @@
   `wsl -e bash -lc "cd /mnt/c/project/onaka-log && UV_LINK_MODE=copy ~/.local/bin/uv run --group dev python tools/trace.py --check"`
 - バックエンドのテスト・lint・型（ルートから。詳細は [apps/api/README.md](apps/api/README.md)）:
   `wsl -e bash -lc "cd /mnt/c/project/onaka-log && UV_LINK_MODE=copy ~/.local/bin/uv run --group dev pytest apps/api/tests -q"`
-- CI（GitHub Actions）: `.github/workflows/contract.yml` が契約テスト・PoC の単体テスト・trace.py --check を、`api.yml` がバックエンドの Ruff・mypy・単体テストを動かす（[ci-cd.md](docs/04_operations/ci-cd.md)）。Action は SHA で固定する
+- 実 API のスモーク（dev を呼ぶ。Claude を2回使い数円。ユーザーの了承を得てから）:
+  `wsl -e bash -lc "cd /mnt/c/project/onaka-log && ONAKA_LIVE_API_URL=<ApiUrl> UV_LINK_MODE=copy ~/.local/bin/uv run --group dev --group poc pytest apps/api/tests/live -m live -q"`
+- アプリ（**Windows の Node で**。PowerShell で `apps/mobile` から。詳細は [apps/mobile/README.md](apps/mobile/README.md)）: `npm test`・`npm run typecheck`・`npm run lint`・`npm run gen:api`（openapi.yaml を変えたら）・`npx expo start`。依存は `npx expo install`
+- インフラ（WSL。[infra/README.md](infra/README.md)）: 検査は `sam validate --lint` と `cfn-lint`。デプロイは `bash infra/build.sh` → `sam deploy --config-env dev --profile onaka-admin`（**変更セットを見せてユーザーの了承を得てから**）。認証が切れたら `aws sso login --profile onaka-admin`（ユーザーがブラウザで承認）
+- CI（GitHub Actions）: `contract.yml`（契約テスト・PoC・trace）・`api.yml`（Ruff・mypy・単体テスト）・`infra.yml`（sam validate・cfn-lint・ビルド）・`mobile.yml`（型の生成差分・tsc・ESLint・Jest）（[ci-cd.md](docs/04_operations/ci-cd.md)）。Action は SHA で固定する
+- push は WSL の Git から（Windows の Git には SSH キーがない）: `wsl -e bash -lc "cd /mnt/c/project/onaka-log && git push origin main"`
 - ファイルは UTF-8（BOM なし）・LF で書く。PowerShell の `Set-Content` / `Out-File` は BOM を付けるので使わない

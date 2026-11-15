@@ -5,6 +5,46 @@
 
 ---
 
+## 2026-11-15 セッション1（続き24）: AWS の準備・dev へのデプロイ・実 API の確認・アプリの土台
+
+**やったこと**
+- INF-10（ユーザー作業）: root の MFA、AWS Budgets（月7ドル、50%・80%・予測100%）、IAM Identity Center の作業用ユーザー（AdministratorAccess）。作業リストは `work/diary/1114/inf-10-aws-setup.md`（Git 管理外）
+- WSL に AWS CLI 2.40・SAM CLI 1.172・cfn-lint 1.60 を sudo なしで入れた。CLI の認証は `aws configure sso`（プロファイル `onaka-admin`、ユーザーが実行）
+- SAM テンプレート [infra/template.yaml](../../infra/template.yaml)（DynamoDB・Cognito・HTTP API の JWT 認可・Lambda＋Lambda Web Adapter（arm64、レイヤー版30）・ロググループ14日）、[samconfig.toml](../../infra/samconfig.toml)、[build.sh](../../infra/build.sh)（uv.lock どおりに Lambda 用のコードを作る）、CI の `infra` ワークフロー（コミット `8f3f302`）
+- ユーザーが Claude API キーを SSM（`/onaka-log/dev/claude-api-key`、SecureString）に入れた。値は Claude が扱っていない
+- dev へ初回デプロイ（ユーザーの了承後。変更セットの10リソースを確認してから実行）。認証なしは 401、Lambda を直接呼んで SSM・DynamoDB まで通ることを確認
+- Cognito にテスト用ユーザー `smoke-test@example.com`（メールは送らない）を作り、ユーザーがパスワードを設定してトークンを `~/.onaka-dev-token` に保存。トークンで保存・取得・削除の通しを確認
+- 実 API のスモーク [apps/api/tests/live/test_live_dev.py](../../apps/api/tests/live/test_live_dev.py)（TST-05）: dev の API に OCR（Haiku）・写真（Sonnet）・バーコード照合を1回ずつ。3件とも成功（コミット `6b6eebd`）
+- アプリの土台 `apps/mobile`（Expo SDK 58・TypeScript strict・Expo Router・TanStack Query・openapi-fetch、Jest＋RNTL、ESLint＋Prettier）。API の型は openapi.yaml から生成。ホーム画面（F-031）をテスト先行で作成（赤を確認 → 緑、19件）。tsc・lint・Android のバンドル作成も OK。CI に `mobile` ワークフロー（コミット `de069cb`）
+- GitHub の CI は `8f3f302`・`6b6eebd` まで成功をユーザーが確認。`de069cb`（mobile の初回）は未確認
+
+**決まったこと**
+- Expo の SDK は 58（ユーザーの iPhone の App Store の Expo Go が SDK 58 に対応していることをユーザーが確認。ADR-0017 の「Expo Go に合わせる」に沿う）
+- アプリの npm・Expo は Windows の Node（22.20）で動かす（WSL から `/mnt/c` への npm install が40分たっても終わらなかったため）。バックエンド・AWS は WSL のまま（[dev-environment.md](dev-environment.md)）
+- `sam build` は使わず、`infra/build.sh` で uv から Lambda 用のコードを作る（WSL の Python が 3.10 のため）
+- 実 API のスモークは手元の Claude キーを使わず、デプロイ済みの dev を呼ぶ（キーは SSM だけに置く）
+- Cognito は Google・Apple の連携なし・管理者が作ったユーザーだけで始める。dev だけパスワード認証（CLI でトークンを取るため）
+- Q-43 を追加（AWS の Free プランから Paid への切り替え時期。今は考えない、とユーザー）
+
+**注意点・気づき**
+- Windows の Git は SSH キーがなく push できない。push は WSL の Git から行う（`wsl -e bash -lc 'cd /mnt/c/project/onaka-log && git push origin main'`）
+- Lambda のコールドスタートは約6秒（import と SSM）。アプリで気になったら対策する
+- `openapi-typescript` は TypeScript 6 と peer がぶつかるので入れず、`npm run gen:api` で版を固定して `npx` で動かす
+- RNTL 14 は `render` が非同期（`await render(...)`）。テストの補助を直した（期待値は変えていない）
+- 記録日・表示の形の小さな関数（`src/lib/`）はテストと同時に書いたため、赤の確認を飛ばした
+- npm の取得がとても遅い日だった（557パッケージで41分）。原因は通信の遅さ
+- `~/.bashrc` に fnm の設定を足すのは自動の権限判定で止められた。必要ならユーザーが足す（dev-environment.md に記載）
+- テスト用ユーザーのトークンは60分で切れる。取り直すコマンドは infra/README.md の手順と同じ（`initiate-auth`）
+
+**次にやること**
+1. アプリを実際に動かす: ローカルのバックエンド＋`npx expo start` でエミュレーター（Pixel 8・API 35/36）と iPhone 13 mini でホームを確認（IMP-01）
+2. サインイン（F-001・IMP-09）: Cognito Hosted UI＋expo-auth-session（PKCE）、トークンは expo-secure-store。dev の API につなぐ
+3. 記録フロー（IMP-03）: 記録する → 入力方式の選択 → 手入力 → 確認 → 保存
+4. Dependabot（CIC-08）
+5. CI からのデプロイ（GitHub OIDC、CIC-05・CIC-09）
+
+---
+
 ## 2026-11-14 セッション1（続き23）: API の層（テスト先行の3巡目）
 
 **やったこと**

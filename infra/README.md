@@ -38,4 +38,6 @@ aws sso login --profile onaka-admin
 - スタック `onaka-log-dev`（と SAM が作った `aws-sam-cli-managed-default` の S3 バケット）。API の URL・ユーザープール ID・クライアント ID は次で見る:
   `aws cloudformation describe-stacks --profile onaka-admin --stack-name onaka-log-dev --query "Stacks[0].Outputs"`
 - 確かめたこと: 認証なし・不正なトークンは API Gateway が 401 を返す。Lambda を直接呼ぶと（JWT の claims を入れたイベント）、SSM のキーの読み取り・DynamoDB の読み取りまで通る。テスト用ユーザー（`smoke-test@example.com`、メールは送らない）のアクセストークンで、1日分の取得 → 食事の保存（201、合計 702 kcal）→ 取得 → 削除（204）→ 取得（空）まで通った。推定（OCR・写真）と照合は実 API のスモーク（`apps/api/tests/live`、TST-05）で確認した
+- テスト用ユーザーのアクセストークンの取り直し（60分で切れる。パスワードは画面・履歴に残さない）:
+  `read -rsp "Password: " PW; echo; (umask 077; aws cognito-idp initiate-auth --profile onaka-admin --client-id <AppClientId> --auth-flow USER_PASSWORD_AUTH --auth-parameters "USERNAME=smoke-test@example.com,PASSWORD=$PW" --query AuthenticationResult.AccessToken --output text > ~/.onaka-dev-token); unset PW`
 - コールドスタートは約6秒（import と SSM の読み取り）。気になったら、メモリを増やす・import を遅らせるなどを検討する
