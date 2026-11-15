@@ -10,6 +10,7 @@
 |---|---|---|---|
 | [.github/workflows/contract.yml](../../.github/workflows/contract.yml) | `contract` | `main` への push と pull request（下のパスが変わったとき）、手動 | ① `uv sync --locked`（dev・poc グループ） ② `pytest tests/contract poc`（実 API は呼ばない） ③ `tools/trace.py --check`（仕様とテストの対応） |
 | [.github/workflows/api.yml](../../.github/workflows/api.yml) | `api` | `main` への push と pull request（`apps/api/`・`contracts/`・依存の変更）、手動 | ① `uv sync --locked` ② Ruff（lint・整形）③ mypy（domain は strict）④ `pytest apps/api/tests`（DynamoDB Local をサービスコンテナで動かし、保存先のテストを skip させない） |
+| [.github/workflows/mobile.yml](../../.github/workflows/mobile.yml) | `mobile` | `main` への push と pull request（`apps/mobile/`・`contracts/api/`・`contracts/domain/` の変更）、手動 | ① `npm ci` ② `npm run gen:api` で作り直した API の型に差分がないこと（契約とのずれを防ぐ、CIC-03） ③ `tsc --noEmit` ④ ESLint＋Prettier ⑤ Jest |
 | [.github/workflows/infra.yml](../../.github/workflows/infra.yml) | `infra` | `main` への push と pull request（`infra/`・`apps/api/`・`contracts/`・依存の変更）、手動 | ① `sam validate --lint` ② cfn-lint ③ `infra/build.sh`（Lambda に載せるコードが uv.lock どおりに作れるか）。SAM CLI・cfn-lint は版を固定して `uvx` で動かす。AWS の認証情報は使わず、デプロイはしない |
 
 `contract` の対象のパス: `contracts/`・`tests/`・`tools/`・`apps/api/`（trace.py がバックエンドのテストの ID も集めるため）・`poc/`・`docs/01_requirements/`・`docs/02_design/`・`docs/03_testing/`（trace.py が仕様の ID を読むため）・`pyproject.toml`・`uv.lock`・`.python-version`・ワークフロー自身。
@@ -27,7 +28,6 @@
 
 | 時期 | ワークフロー | 中身 |
 |---|---|---|
-| アプリの実装開始時 | `mobile` | TypeScript の型検査・ESLint・Jest。`contracts/api/` の変更でも動かす |
 | dev 環境ができたとき | `deploy-dev` | `main` へのマージで dev にデプロイ（OIDC、CIC-05・CIC-09） |
 | 必要になったら | `live`（手動） | 実 API のスモーク（`-m live`）。キーは GitHub の Environment のシークレットに置き、費用の上限を決める（CIC-04） |
 | 早めに | Dependabot | GitHub Actions・uv・npm の依存更新（CIC-08） |

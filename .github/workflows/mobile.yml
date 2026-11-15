@@ -1,0 +1,57 @@
+# アプリ（apps/mobile）の型・lint・単体テスト（CIC-02・03、docs/04_operations/ci-cd.md）
+name: mobile
+
+on:
+  push:
+    branches: [main]
+    paths: &paths
+      - "apps/mobile/**"
+      - "contracts/api/**"
+      - "contracts/domain/**"
+      - ".github/workflows/mobile.yml"
+  pull_request:
+    paths: *paths
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mobile-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: apps/mobile
+
+jobs:
+  mobile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: apps/mobile/.node-version
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
+
+      - name: 依存を入れる（package-lock.json どおり）
+        run: npm ci
+
+      - name: API の型が契約（openapi.yaml）と一致しているか
+        run: |
+          npm run gen:api
+          git diff --exit-code -- src/api/schema.d.ts
+
+      - name: 型検査
+        run: npx tsc --noEmit
+
+      - name: ESLint・Prettier
+        run: npm run lint
+
+      - name: 単体テスト
+        run: npm test -- --ci

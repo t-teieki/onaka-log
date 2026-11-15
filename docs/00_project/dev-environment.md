@@ -7,7 +7,7 @@
 ## 決定事項
 
 - リポジトリは C ドライブ上（`C:\project\onaka-log`、WSL からは `/mnt/c/project/onaka-log`）に置く。下の表の問題が実際に支障になったら、WSL 側（例: `~/projects/onaka-log`）へ移す（Q-20）
-- 開発作業（エディタ・Node・Python・Git）は WSL（Ubuntu）から行う
+- 開発作業（エディタ・Python・Git・AWS）は WSL（Ubuntu）から行う。**アプリ（`apps/mobile`）の npm・Expo だけは Windows の Node で動かす**（2026-11-15。WSL から `/mnt/c` への `npm install` が40分たっても終わらなかったため。開発サーバーがエミュレーターと同じ Windows で動き、iPhone からも同じ Wi-Fi で直接つながる）
 - iOS の動作確認は iPhone 実機（Expo Go）、Android は Windows 上のエミュレータ
 - 改行コードは LF に統一（`.gitattributes`）
 
@@ -42,7 +42,12 @@ wsl -e bash -lc "cd /mnt/c/project/onaka-log && UV_LINK_MODE=copy ~/.local/bin/u
 - **認証**: IAM Identity Center（長期のアクセスキーは作らない）。プロファイル名は `onaka-admin`。作業の前に `aws sso login --profile onaka-admin`
 - `sam build` は使わない（WSL の Python は 3.10 のため）。代わりに `infra/build.sh` で uv から Lambda 用のコードを作る（[infra/README.md](../../infra/README.md)）
 
+## Node.js（2026-11-15）
+
+- アプリは **Windows の Node**（`C:\Program Files
+odejs`、22.20。Expo SDK 58 は 22.13 以上・24.3 以上・26 以上に対応）。`apps/mobile/.node-version` は `22`（CI も同じ版）
+- WSL にも fnm（`~/.local/bin/fnm`）で Node 24 を入れたが、アプリでは使わない（`/mnt/c` が遅いため）。`~/.bashrc` に `eval "$(~/.local/bin/fnm env --use-on-cd)"` を足すと有効になる
+
 ## 未決
 
-- Node.js のバージョン管理ツール（例: mise / nvm）
 - エディタ設定（推奨拡張機能、format on save）

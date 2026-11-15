@@ -8,7 +8,7 @@
 | 項目 | 内容 |
 |---|---|
 | 現在のマイルストーン | **M4〜M5**（設計はほぼ完了。テスト先行で実装中: バックエンドは API まで（ローカル・DynamoDB Local で動く）。dev（`onaka-log-dev`）に 2026-11-15 デプロイ済み。アプリは未）。M2 PoC は 2026-11-13 に完了 → [poc-summary.md](../../poc/reports/poc-summary.md) |
-| 次にやること | ① アプリ（Expo）の土台（dev の API に接続。dev は保存・取得・削除・推定・照合まで確認済み） ② Dependabot（CIC-08） ③ CI からのデプロイ（GitHub OIDC、CIC-05・CIC-09） |
+| 次にやること | ① アプリのサインイン（F-001、Cognito Hosted UI＋expo-auth-session）と、エミュレーター・iPhone での表示確認 ② 記録フロー（入力方式の選択 → 手入力 → 確認 → 保存） ③ Dependabot（CIC-08） ④ CI からのデプロイ（GitHub OIDC、CIC-05・CIC-09） |
 | ブロッカー | なし（技術スタックの主要な決定はそろった） |
 | 最終更新 | 2026-11-15 |
 
@@ -300,7 +300,7 @@ flowchart LR
 - [ ] **IMP-01** ウォーキングスケルトン（アプリ起動 → API 疎通 → DB 保存 → CI 緑）
 - [x] **IMP-02** ドメイン層（Meal / FoodItem / 倍率・合計・記録日・検証 DM-01〜09）：テスト42件を先に書いて赤を確認 → 実装して緑。行カバレッジ 98% — 成果物: [apps/api/src/onaka_api/domain/](../../apps/api/src/onaka_api/domain/), [tests](../../apps/api/tests/unit/domain/test_meal.py)
 - [ ] **IMP-03** 手入力による記録：バックエンド（保存 API・DM-09）は実装済み。アプリは未 (WIP)
-- [ ] **IMP-04** 閲覧（日次合計・一覧）：バックエンド（`GET /v1/days/{date}`・1件）は実装済み。アプリは未 (WIP)
+- [ ] **IMP-04** 閲覧（日次合計・一覧）：バックエンド（`GET /v1/days/{date}`・1件）は実装済み。アプリはホーム（日次合計・一覧・日付の移動・空・エラー）をテスト先行で作成（2026-11-15）。食事の詳細は未 (WIP)
 - [ ] **IMP-05** 削除（食事・食品）と食品の追加：バックエンドは実装済み（版による同時更新の検出を含む）。アプリ（元に戻す）は未 (WIP)
 - [ ] **IMP-06** バーコード照合：バックエンド（OFF の呼び出し・候補・`GET /v1/products/{code}`）は実装済み。アプリは未 (WIP)
 - [ ] **IMP-07** 栄養成分表示 OCR：バックエンド（Claude の呼び出し・検証・候補・`POST /v1/estimates/label`）は実装済み。実 API での確認とアプリは未 (WIP)

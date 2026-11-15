@@ -76,12 +76,14 @@ onaka-log/
 │   │   └── tests/                #     単体テスト（unit/）・API テスト（Claude はモック、DB は DynamoDB Local）
 │   │       └── api_test_helpers.py #     ヘルパー（conftest.py にしない: 契約テストの conftest と名前がぶつかる）
 │   └── mobile/                   #   スマホアプリ: React Native（Expo）+ TypeScript、npm
-│       ├── package.json / app.json
-│       ├── app/                  #     画面（ルーティング。ライブラリは TEC-03 で決める）
+│       ├── package.json / app.json / eslint.config.js
+│       ├── __tests__/            #     単体テスト（Jest＋RNTL、*-test.ts(x)）
 │       └── src/
-│           ├── api/              #       API クライアント（contracts/api/openapi.yaml から生成。TEC-07）
-│           ├── features/         #       機能ごとのコード（記録・一覧・確認画面など）
-│           └── components/       #       共通の部品
+│           ├── app/              #       画面のルーティング（Expo Router）。薄くし、中身は features/ に置く
+│           ├── api/              #       API クライアント。schema.d.ts は contracts/api/openapi.yaml から生成（TEC-07）
+│           ├── features/         #       機能ごとの画面・フック（home/ など）
+│           ├── lib/              #       画面に依存しない計算（記録日・表示の形）
+│           └── components/       #       共通の部品（必要になったら作る）
 │
 ├── infra/                        # IaC（AWS SAM、ADR-0014）
 │   ├── template.yaml             #   Lambda・HTTP API・DynamoDB・Cognito・ロール・ロググループ・予算アラート
