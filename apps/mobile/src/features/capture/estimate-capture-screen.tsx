@@ -1,6 +1,7 @@
 // 撮影と推定（画面設計 3-4）。栄養成分表示（F-012-15〜20）と料理の写真（F-013-15〜20）で共通。
-// 撮って縮小し、推定 API に送って候補を渡す
+// 撮って（写真推定は端末の画像を選んでも、F-013-22）縮小し、推定 API に送って候補を渡す
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import { launchImageLibraryAsync } from 'expo-image-picker';
 import { useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -95,6 +96,8 @@ export function EstimateCaptureScreen({
   // 縮小した画像は、この画面にいる間だけメモリに持つ（「もう一度」で送り直す、F-012-20）。端末には保存しない
   const image = useRef<PreparedImage | null>(null);
   const request = useRef<AbortController | null>(null);
+  // 撮影・選択を始めてから読み取りに入るまでの二度押しを防ぐ
+  const busy = useRef(false);
 
   const send = async (img: PreparedImage) => {
     const controller = new AbortController();
@@ -110,20 +113,39 @@ export function EstimateCaptureScreen({
     setState({ kind: 'dialog', failure: outcome.kind });
   };
 
-  const shoot = async () => {
-    if (state.kind !== 'camera') return;
-    setState({ kind: 'reading' });
+  /** 画像を得て（null なら選ばなかった）、下ごしらえして送る */
+  const start = async (obtain: () => Promise<Picture | null>) => {
+    if (state.kind !== 'camera' || busy.current) return;
+    busy.current = true;
     try {
-      const picture = await camera.current?.takePictureAsync({ shutterSound: false });
-      if (!picture) throw new Error('撮影できなかった');
+      const picture = await obtain();
+      if (!picture) return;
+      setState({ kind: 'reading' });
       image.current = await prepare(picture);
     } catch {
       image.current = null;
       setState({ kind: 'dialog', failure: 'error' });
       return;
+    } finally {
+      busy.current = false;
     }
     await send(image.current);
   };
+
+  const shoot = () =>
+    start(async () => {
+      const picture = await camera.current?.takePictureAsync({ shutterSound: false });
+      if (!picture) throw new Error('撮影できなかった');
+      return picture;
+    });
+
+  // OS の画像の選択（写真の許可は要らない）。元の画像は変えない（F-013-22）
+  const pick = () =>
+    start(async () => {
+      const result = await launchImageLibraryAsync({ mediaTypes: ['images'], quality: 1, exif: false });
+      const asset = result.canceled ? null : result.assets[0];
+      return asset ? { uri: asset.uri, width: asset.width, height: asset.height } : null;
+    });
 
   const cancel = () => {
     request.current?.abort();
@@ -157,6 +179,7 @@ export function EstimateCaptureScreen({
           reason={texts.reason}
           requestPermission={requestPermission}
           onManual={onManual}
+          onPick={kind === 'photo' ? () => void pick() : undefined}
         />
       ) : (
         <>
@@ -165,6 +188,18 @@ export function EstimateCaptureScreen({
             {texts.guide && <Text style={styles.guide}>{texts.guide}</Text>}
           </View>
           <View style={styles.footer}>
+            <View style={styles.side}>
+              {kind === 'photo' && (
+                <Pressable
+                  accessibilityRole="button"
+                  disabled={state.kind !== 'camera'}
+                  onPress={() => void pick()}
+                  style={styles.pick}
+                >
+                  <Text style={styles.pickText}>画像を選ぶ</Text>
+                </Pressable>
+              )}
+            </View>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="撮影する"
@@ -174,6 +209,7 @@ export function EstimateCaptureScreen({
             >
               <View style={styles.shutterInner} />
             </Pressable>
+            <View style={styles.side} />
           </View>
         </>
       )}
@@ -301,7 +337,17 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 8,
   },
-  footer: { alignItems: 'center', paddingVertical: 20, backgroundColor: '#000' },
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+    backgroundColor: '#000',
+  },
+  side: { flex: 1, alignItems: 'flex-start' },
+  pick: { borderWidth: 1, borderColor: '#fff', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10 },
+  pickText: { color: '#fff', fontSize: 14 },
   shutter: {
     width: 72,
     height: 72,

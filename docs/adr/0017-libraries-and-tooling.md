@@ -14,7 +14,7 @@
 
 | 領域 | 採用 |
 |---|---|
-| モバイル | Expo Router、TanStack Query、React の state / Context（状態管理ライブラリなし）、openapi-typescript ＋ openapi-fetch（OpenAPI を bundle してから型を生成）、expo-camera（撮影とバーコード）、expo-image-manipulator、expo-secure-store |
+| モバイル | Expo Router、TanStack Query、React の state / Context（状態管理ライブラリなし）、openapi-typescript ＋ openapi-fetch（OpenAPI を bundle してから型を生成）、expo-camera（撮影とバーコード）、expo-image-picker（写真推定の画像の選択）、expo-image-manipulator、expo-secure-store |
 | サインイン（Q-42） | expo-auth-session で Cognito のサインイン画面（Hosted UI / マネージドログイン）を開く（PKCE）。Apple・Google は Cognito 側で連携する |
 | バックエンド | FastAPI、AWS Lambda Web Adapter、boto3、anthropic、httpx、jsonschema、pyyaml、AWS Lambda Powertools（Logger）。**要求の検証は contracts のスキーマ（openapi.yaml・llm の input）を jsonschema で直接使い、Pydantic のモデルは書かない**（2026-11-14 変更、下の「変更履歴」） |
 | テスト・品質 | pytest、FastAPI TestClient ＋ DynamoDB Local、Jest（jest-expo）＋ React Native Testing Library、Maestro（Android エミュレーターで E2E）、Ruff、mypy（`domain/` は strict）、TypeScript strict ＋ ESLint ＋ Prettier、`sam validate` ＋ cfn-lint |
@@ -37,6 +37,7 @@
 - 2026-11-15: アプリの土台を作成。Expo の SDK は **58**（ユーザーの iPhone の App Store の Expo Go が SDK 58 に対応していることを確認）。アプリの npm・Expo は **Windows の Node** で動かす（WSL から `/mnt/c` への npm install が極端に遅いため。[dev-environment.md](../00_project/dev-environment.md)）。`openapi-typescript` は TypeScript 6 と peer がぶつかるため依存に入れず、版を固定して `npx` で動かす
 - 2026-11-16: 食べた日時の選択に **@react-native-community/datetimepicker** を追加（Q-44。Expo Go に入っている OS 標準のピッカー。`timeZoneName="Asia/Tokyo"` で日本時間に固定する）
 - 2026-11-16: 栄養成分表示の撮影で **expo-file-system** を追加。撮影と縮小で端末のキャッシュにできる一時ファイルをすぐ消すため（ADR-0004）
+- 2026-11-16: 写真推定で端末の画像も選べるよう **expo-image-picker** を追加（F-013-22）。OS の画像の選択（iOS の PHPicker・Android の Photo Picker）を使うので写真の許可は求めない。選んだ画像のアプリのキャッシュにある複製はすぐ消す（ADR-0004）
 
 ## 理由と影響
 

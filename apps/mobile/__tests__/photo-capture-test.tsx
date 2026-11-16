@@ -1,4 +1,4 @@
-// 料理の撮影と推定（画面設計 3-4・4・4-1、F-013-15〜20）。カメラは偽物、画像の下ごしらえは差し替える
+// 料理の撮影と推定（画面設計 3-4・4・4-1、F-013-15〜20・22）。カメラと画像の選択は偽物、画像の下ごしらえは差し替える
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
@@ -25,6 +25,18 @@ jest.mock('expo-camera', () => {
   };
 });
 
+// OS の画像の選択は偽物（選んだ画像か、閉じたか）
+type MockPicked = { canceled: true; assets: null } | { canceled: false; assets: { uri: string; width: number; height: number }[] };
+const mockLaunchLibrary = jest.fn(
+  async (_options?: unknown): Promise<MockPicked> => ({
+    canceled: false,
+    assets: [{ uri: 'file:///cache/ImagePicker/dish.jpg', width: 3000, height: 2000 }],
+  }),
+);
+jest.mock('expo-image-picker', () => ({
+  launchImageLibraryAsync: (options?: unknown) => mockLaunchLibrary(options),
+}));
+
 const IMAGE: PreparedImage = { media_type: 'image/jpeg', data_base64: 'QkFTRTY0' };
 
 type Reply = { status: number; body: unknown };
@@ -34,6 +46,7 @@ const clients: QueryClient[] = [];
 afterEach(() => {
   clients.splice(0).forEach((c) => c.clear());
   mockTakePicture.mockClear();
+  mockLaunchLibrary.mockClear();
   mockPermission = { granted: true, canAskAgain: true, status: 'granted' };
 });
 
@@ -155,5 +168,49 @@ describe('推定できなかったとき（F-013-19・20）', () => {
     await fireEvent.press(screen.getByRole('button', { name: '閉じる' }));
     await shoot();
     expect(screen.getByText('画像が大きすぎます')).toBeOnTheScreen();
+  });
+});
+
+describe('画像を選ぶ（F-013-22）', () => {
+  const pick = () => fireEvent.press(screen.getByRole('button', { name: '画像を選ぶ' }));
+
+  it('[F-013-22] 選んだ画像を撮影したものと同じく下ごしらえして送り、候補を渡す', async () => {
+    const { sent, prepare, onCandidates } = await setup([{ status: 200, body: photoOk }]);
+    await pick();
+    expect(mockLaunchLibrary).toHaveBeenCalledWith(expect.objectContaining({ mediaTypes: ['images'] }));
+    expect(mockTakePicture).not.toHaveBeenCalled();
+    expect(prepare).toHaveBeenCalledWith({ uri: 'file:///cache/ImagePicker/dish.jpg', width: 3000, height: 2000 });
+    expect(sent.map((s) => [s.path, s.body])).toEqual([['/v1/estimates/photo', REQUEST]]);
+    expect(onCandidates).toHaveBeenCalledWith(photoOk.items);
+  });
+
+  it('[F-013-22] 選ばずに閉じたら何も送らず、撮影の画面のまま', async () => {
+    mockLaunchLibrary.mockResolvedValueOnce({ canceled: true, assets: null });
+    const { sent, prepare } = await setup([]);
+    await pick();
+    expect(prepare).not.toHaveBeenCalled();
+    expect(sent).toEqual([]);
+    expect(screen.getByRole('button', { name: '撮影する' })).toBeOnTheScreen();
+    expect(screen.queryByText('うまくいきませんでした')).toBeNull();
+  });
+
+  it('[F-013-22] 選んだ画像でも、失敗したら「もう一度」で同じ画像を送り直す', async () => {
+    const { sent, prepare, onCandidates } = await setup([
+      { status: 502, body: errorBody('upstream_unavailable') },
+      { status: 200, body: photoOk },
+    ]);
+    await pick();
+    await fireEvent.press(screen.getByRole('button', { name: 'もう一度' }));
+    expect(sent.map((s) => s.body)).toEqual([REQUEST, REQUEST]);
+    expect(prepare).toHaveBeenCalledTimes(1);
+    expect(mockLaunchLibrary).toHaveBeenCalledTimes(1);
+    expect(onCandidates).toHaveBeenCalled();
+  });
+
+  it('[F-013-22] カメラの許可がなくても画像を選べる', async () => {
+    mockPermission = { granted: false, canAskAgain: false, status: 'denied' };
+    const { onCandidates } = await setup([{ status: 200, body: photoOk }]);
+    await pick();
+    expect(onCandidates).toHaveBeenCalledWith(photoOk.items);
   });
 });

@@ -34,11 +34,14 @@ export function CameraPermissionView({
   reason,
   requestPermission,
   onManual,
+  onPick,
 }: {
   permission: Permission;
   reason: string;
   requestPermission: () => unknown;
   onManual: () => void;
+  /** 写真推定の「画像を選ぶ」（カメラの許可がなくても使える、F-013-22） */
+  onPick?: () => void;
 }) {
   return (
     <View style={styles.permission}>
@@ -48,6 +51,7 @@ export function CameraPermissionView({
       ) : (
         <ActionButton label="設定を開く" onPress={() => void Linking.openSettings()} primary />
       )}
+      {onPick && <ActionButton label="画像を選ぶ" onPress={onPick} />}
       <ActionButton label="手入力する" onPress={onManual} />
     </View>
   );

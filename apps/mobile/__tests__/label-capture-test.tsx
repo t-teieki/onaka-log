@@ -25,6 +25,11 @@ jest.mock('expo-camera', () => {
   };
 });
 
+const mockLaunchLibrary = jest.fn();
+jest.mock('expo-image-picker', () => ({
+  launchImageLibraryAsync: (options?: unknown) => mockLaunchLibrary(options),
+}));
+
 const IMAGE: PreparedImage = { media_type: 'image/jpeg', data_base64: 'QkFTRTY0' };
 
 type Reply = { status: number; body: unknown };
@@ -75,6 +80,11 @@ describe('栄養成分表示の撮影（F-012-15〜18）', () => {
     await setup([]);
     expect(screen.getByText('栄養成分表示を撮る')).toBeOnTheScreen();
     expect(screen.getByText('正面から・近づけて・表示全体が入るように撮ってください')).toBeOnTheScreen();
+  });
+
+  it('[F-013-22] 栄養成分表示では「画像を選ぶ」を出さない（写真推定だけ）', async () => {
+    await setup([]);
+    expect(screen.queryByRole('button', { name: '画像を選ぶ' })).toBeNull();
   });
 
   it('[F-012-15] カメラの許可がなければ理由と「手入力する」を出す', async () => {

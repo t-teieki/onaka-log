@@ -39,6 +39,7 @@ jest.mock('expo-file-system', () => ({
       mockDeleted.push(this.mockUri);
     }
   },
+  Paths: { cache: { uri: 'file:///cache/' } },
 }));
 
 const PHOTO = 'file:///cache/camera/photo.jpg';
@@ -77,5 +78,10 @@ describe('撮影した画像の下ごしらえ（F-012-16）', () => {
     mockFailSave = true;
     await expect(prepareImage({ uri: PHOTO, width: 4032, height: 3024 })).rejects.toThrow();
     expect(mockDeleted).toEqual([PHOTO]);
+  });
+
+  it('[F-013-22] アプリのキャッシュの外にある画像（選んだ元の画像）は消さない', async () => {
+    await prepareImage({ uri: 'file:///storage/emulated/0/DCIM/dish.jpg', width: 4032, height: 3024 });
+    expect(mockDeleted).toEqual(['file:///cache/manipulated.jpg']);
   });
 });

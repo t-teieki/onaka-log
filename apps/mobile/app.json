@@ -42,6 +42,14 @@
           "microphonePermission": false,
           "recordAudioAndroid": false
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "料理の画像から栄養を推定するために写真を使います",
+          "cameraPermission": "バーコードや栄養成分表示を読み取るためにカメラを使います",
+          "microphonePermission": false
+        }
       ]
     ],
     "experiments": {
