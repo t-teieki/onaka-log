@@ -7,9 +7,9 @@
 
 | 項目 | 内容 |
 |---|---|
-| 現在のマイルストーン | **M4〜M5**（設計はほぼ完了。テスト先行で実装中: バックエンドは API まで完成し、dev（`onaka-log-dev`）にデプロイ・実 API で確認済み。アプリはホーム・手入力の記録（日時の変更を含む）を iPhone で通して確認済み（2026-11-16）。サインイン（Google）はテスト緑・未デプロイ）。M2 PoC は 2026-11-13 に完了 → [poc-summary.md](../../poc/reports/poc-summary.md) |
-| 次にやること | ① Google でサインインの準備（ユーザー: Google Cloud の OAuth クライアント・Secrets Manager、[infra/README.md](../../infra/README.md)）→ `samconfig.toml` の GoogleClientId を書いて dev にデプロイ（変更セットの了承後）→ iPhone の Expo Go でサインインして dev に記録（IMP-09） ② 食事の詳細と削除・元に戻す（IMP-04・IMP-05） ③ 設定画面とサインアウト（F-001） ④ Dependabot（CIC-08） ⑤ CI からのデプロイ（GitHub OIDC、CIC-05・CIC-09） |
-| ブロッカー | dev へのサインインの確認は、ユーザーの Google Cloud の作業と AWS SSO のログイン（期限切れ）待ち。エミュレーター（Android 17）は Expo Go のローカルネットワークの許可待ち（iPhone で代用できている） |
+| 現在のマイルストーン | **M4〜M5**（設計はほぼ完了。テスト先行で実装中: バックエンドは API まで完成し、dev（`onaka-log-dev`）にデプロイ・実 API で確認済み。アプリはホーム・手入力の記録（日時の変更を含む）と Google でのサインインを、iPhone の Expo Go から dev につないで通して確認済み（2026-11-16））。M2 PoC は 2026-11-13 に完了 → [poc-summary.md](../../poc/reports/poc-summary.md) |
+| 次にやること | ① 食事の詳細と削除・元に戻す（IMP-04・IMP-05） ② 設定画面とサインアウト（トークンの失効、F-001・IMP-09） ③ Dependabot（CIC-08） ④ CI からのデプロイ（GitHub OIDC、CIC-05・CIC-09） |
+| ブロッカー | なし（エミュレーター（Android 17）は Expo Go のローカルネットワークの許可待ちだが、iPhone で代用できている） |
 | 最終更新 | 2026-11-16 |
 
 ## 凡例
@@ -297,7 +297,7 @@ flowchart LR
 
 > M3・M4 完了後に、機能仕様（F-xxx）単位でタスク化する。各タスクは「対応テストを先に用意 → 赤を確認 → 実装 → 緑」。
 
-- [ ] **IMP-01** ウォーキングスケルトン（アプリ起動 → API 疎通 → DB 保存 → CI 緑）：API → DB は dev で確認、CI は4つとも緑。アプリはエミュレーター（Android 17）と iPhone で起動を確認（2026-11-15）。iPhone からはローカルのバックエンドへ中継（`npm run api:relay`）でつながり、手入力 → 保存 → ホームに出るまでをユーザーが確認（2026-11-16）。残りはエミュレーター（Expo Go のローカルネットワークの許可待ち）と、サインインして dev につなぐ確認 (WIP)
+- [ ] **IMP-01** ウォーキングスケルトン（アプリ起動 → API 疎通 → DB 保存 → CI 緑）：API → DB は dev で確認、CI は4つとも緑。アプリはエミュレーター（Android 17）と iPhone で起動を確認（2026-11-15）。iPhone からはローカルのバックエンドへ中継（`npm run api:relay`）でつながり、手入力 → 保存 → ホームに出るまでをユーザーが確認（2026-11-16）。iPhone の Expo Go で Google でサインインし、dev に記録してホームに出るまでをユーザーが確認（2026-11-16）。残りはエミュレーターでの確認 (WIP)
 - [x] **IMP-02** ドメイン層（Meal / FoodItem / 倍率・合計・記録日・検証 DM-01〜09）：テスト42件を先に書いて赤を確認 → 実装して緑。行カバレッジ 98% — 成果物: [apps/api/src/onaka_api/domain/](../../apps/api/src/onaka_api/domain/), [tests](../../apps/api/tests/unit/domain/test_meal.py)
 - [ ] **IMP-03** 手入力による記録：バックエンド（保存 API・DM-09）は実装済み。アプリは入力方式の選択シート（F-010、他の3方式は「準備中」）と手入力の画面・保存（UUIDv7・再送・409 の扱い）をテスト先行で作成（2026-11-15）。食べた日時の変更（OS 標準のピッカー・日本時間固定・今まで、Q-44。過去の日を表示中はその日の今の時刻が既定）もテスト先行で作成（2026-11-16、Jest 66件）。iPhone で保存してホームに出ることをユーザーが確認（2026-11-16）。追加モード（食事の詳細から）は IMP-04 と一緒に (WIP)
 - [ ] **IMP-04** 閲覧（日次合計・一覧）：バックエンド（`GET /v1/days/{date}`・1件）は実装済み。アプリはホーム（日次合計・一覧・日付の移動・空・エラー）をテスト先行で作成（2026-11-15）。食事の詳細は未 (WIP)
@@ -305,7 +305,7 @@ flowchart LR
 - [ ] **IMP-06** バーコード照合：バックエンド（OFF の呼び出し・候補・`GET /v1/products/{code}`）は実装済み。アプリは未 (WIP)
 - [ ] **IMP-07** 栄養成分表示 OCR：バックエンド（Claude の呼び出し・検証・候補・`POST /v1/estimates/label`）は実装済み。dev の実 API で確認済み（TST-05）。アプリは未 (WIP)
 - [ ] **IMP-08** 写真推定：バックエンド（`POST /v1/estimates/photo`）は実装済み。dev の実 API で確認済み（TST-05）。アプリは未 (WIP)
-- [ ] **IMP-09** 認証：バックエンド（JWT の sub）と Cognito（dev、Google・Apple の連携なし）は作成済み。アプリのサインイン（Google、F-001-04〜12）をテスト先行で作成し、テンプレートに Google の IdP と Expo Go の戻り先を追加（2026-11-16）。Google Cloud の準備・デプロイ・実機の確認と、サインアウト（設定画面）が残り (WIP)
+- [ ] **IMP-09** 認証：バックエンド（JWT の sub）と Cognito（dev、Google・Apple の連携なし）は作成済み。アプリのサインイン（Google、F-001-04〜12）をテスト先行で作成し、テンプレートに Google の IdP と Expo Go の戻り先を追加（2026-11-16）。Google Cloud の OAuth クライアントと Secrets Manager を用意して dev にデプロイし、iPhone の Expo Go でサインインできることをユーザーが確認（2026-11-16）。サインアウト（設定画面）と Apple の連携が残り (WIP)
 - [ ] **IMP-10** 推移表示
 
 ## EXT: 拡張バックログ（M7〜、優先度未定）

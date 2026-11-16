@@ -54,7 +54,7 @@
 ## 現時点で未決（決まったら更新）
 
 - アプリのビルド・配布（EAS、CIC-06）と、CI からのデプロイ（GitHub OIDC、CIC-05・CIC-09）はまだない。dev へのデプロイは手元から行う（[infra/README.md](infra/README.md)）
-- アプリのサインイン（F-001、Google）は作成済みだが dev に未デプロイ（Google Cloud の OAuth クライアントと Secrets Manager の準備待ち、[infra/README.md](infra/README.md)）。Apple 連携とサインアウトは未
+- アプリのサインイン（F-001）は Google だけ dev で動く（Expo Go の戻り先は PC の LAN の IP 固定、`infra/samconfig.toml`）。Apple 連携とサインアウトは未
 
 ## コマンド
 

@@ -5,6 +5,31 @@
 
 ---
 
+## 2026-11-16 セッション1（続き2）: Google でサインインを dev にデプロイし、iPhone で確認
+
+**やったこと**
+- ユーザーが Google Cloud の OAuth クライアントを作り、シークレットを Secrets Manager（`onaka-log/dev/google-client-secret`）に入れた。`samconfig.toml` の dev の GoogleClientId を書いた（`afc26f8`）
+- AWS SSO のログインは WSL のブラウザ連携が失敗したため `aws sso login --profile onaka-admin --use-device-code` で行った
+- 変更セットをユーザーが了承し、dev にデプロイ（UPDATE_COMPLETE）。Cognito の authorize が accounts.google.com へ転送されることを確認
+- `apps/mobile/.env.local`（Git 管理外）を dev（ApiUrl・CognitoDomain・AppClientId）に切り替え
+- ユーザーが iPhone の Expo Go で Google でサインイン → 手入力で記録 → ホームに出る、までを確認（IMP-09・IMP-01）
+
+**決まったこと**
+- なし（前のエントリの Q-45 のとおり）
+
+**次にやること**
+1. 食事の詳細と削除・元に戻す（IMP-04・IMP-05）
+2. 設定画面とサインアウト（トークンの失効、F-001・IMP-09）
+3. Dependabot（CIC-08）、CI からのデプロイ（CIC-05・CIC-09）
+
+**注意点・気づき**
+- dev の出力: ApiUrl `https://6uskqnj4xi.execute-api.ap-northeast-1.amazonaws.com/v1`、CognitoDomain `https://onaka-log-dev-443217924828.auth.ap-northeast-1.amazoncognito.com`、AppClientId `21lbar56adps0lfjetil257pvp`
+- `.env.local` の `EXPO_PUBLIC_API_BASE_URL` は `/v1` を付けない形で書く。ローカルのバックエンドに戻すときは、コメントにした行に戻し、Cognito の2行を消す（サインインを省く）
+- `.env.local` を変えたら Metro を `npx expo start -c` で起動し直す
+- WSL の `aws sso login` は既定のブラウザ連携（127.0.0.1 への戻り）が届かない。`--use-device-code` を使う
+
+---
+
 ## 2026-11-16 セッション1（続き）: アプリのサインイン（F-001・Google）
 
 **やったこと**
