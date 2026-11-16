@@ -20,9 +20,16 @@ type Props = {
   onSelectMethod?: (method: RecordMethod, recordDate: string) => void;
   /** 食事の行をタップしたとき（F-031-07） */
   onOpenMeal?: (recordDate: string, mealId: string) => void;
+  /** 右上の「設定」（F-001-13） */
+  onOpenSettings?: () => void;
 };
 
-export function HomeScreen({ now = () => new Date(), onSelectMethod = () => {}, onOpenMeal = () => {} }: Props) {
+export function HomeScreen({
+  now = () => new Date(),
+  onSelectMethod = () => {},
+  onOpenMeal = () => {},
+  onOpenSettings = () => {},
+}: Props) {
   const [today] = useState(() => recordDateOf(now()));
   const [recordDate, setRecordDate] = useState(today);
   const day = useDay(recordDate);
@@ -33,24 +40,35 @@ export function HomeScreen({ now = () => new Date(), onSelectMethod = () => {}, 
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.header}>
+        <View style={styles.side} />
+        <View style={styles.dateNav}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="前日"
+            onPress={() => setRecordDate(addDays(recordDate, -1))}
+            style={styles.navButton}
+          >
+            <Text style={styles.navText}>◀</Text>
+          </Pressable>
+          <Text style={styles.date}>{formatRecordDate(recordDate)}</Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="翌日"
+            disabled={!nextEnabled}
+            accessibilityState={{ disabled: !nextEnabled }}
+            onPress={() => setRecordDate(addDays(recordDate, 1))}
+            style={styles.navButton}
+          >
+            <Text style={[styles.navText, !nextEnabled && styles.disabled]}>▶</Text>
+          </Pressable>
+        </View>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="前日"
-          onPress={() => setRecordDate(addDays(recordDate, -1))}
-          style={styles.navButton}
+          accessibilityLabel="設定"
+          onPress={onOpenSettings}
+          style={[styles.side, styles.navButton]}
         >
-          <Text style={styles.navText}>◀</Text>
-        </Pressable>
-        <Text style={styles.date}>{formatRecordDate(recordDate)}</Text>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="翌日"
-          disabled={!nextEnabled}
-          accessibilityState={{ disabled: !nextEnabled }}
-          onPress={() => setRecordDate(addDays(recordDate, 1))}
-          style={styles.navButton}
-        >
-          <Text style={[styles.navText, !nextEnabled && styles.disabled]}>▶</Text>
+          <Text style={styles.navText}>⚙</Text>
         </Pressable>
       </View>
 
@@ -122,6 +140,8 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#fff' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 8 },
   navButton: { padding: 12 },
+  side: { width: 48, alignItems: 'center' },
+  dateNav: { flexDirection: 'row', alignItems: 'center' },
   navText: { fontSize: 18 },
   disabled: { color: '#c0c0c0' },
   date: { fontSize: 18, fontWeight: '600' },

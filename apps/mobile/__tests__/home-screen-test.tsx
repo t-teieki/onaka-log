@@ -222,3 +222,27 @@ describe('ホームから食事の詳細へ・削除を待っている間（F-03
     expect(screen.getByText('898 kcal')).toBeOnTheScreen();
   });
 });
+
+describe('ホームから設定へ（F-001-13）', () => {
+  it('[F-001-13] 右上の「設定」で設定画面を開く', async () => {
+    const api = createApiClient({
+      baseUrl: 'https://api.test',
+      getToken: async () => 'token-1',
+      fetch: async () =>
+        new Response(JSON.stringify(emptyDay), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    });
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } });
+    clients.push(queryClient);
+    const onOpenSettings = jest.fn();
+    await render(
+      <QueryClientProvider client={queryClient}>
+        <ApiProvider client={api}>
+          <HomeScreen now={() => NOW} onOpenSettings={onOpenSettings} />
+        </ApiProvider>
+      </QueryClientProvider>,
+    );
+    await screen.findByText('まだ記録がありません');
+    await fireEvent.press(screen.getByLabelText('設定'));
+    expect(onOpenSettings).toHaveBeenCalled();
+  });
+});

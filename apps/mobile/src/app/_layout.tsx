@@ -9,6 +9,7 @@ import { AuthGate } from '@/auth/auth-gate';
 import { cognitoConfig } from '@/auth/cognito';
 import { secureStorage, signInWithGoogle } from '@/auth/native';
 import { AuthSession } from '@/auth/session';
+import { SignOutProvider } from '@/auth/sign-out-context';
 import { apiBaseUrl } from '@/config';
 import { DeleteQueueRoot } from '@/features/delete/delete-context';
 
@@ -34,6 +35,8 @@ export default function RootLayout() {
   }, [session, queryClient]);
 
   const signIn = async () => (config && session ? signInWithGoogle(config, session) : ('error' as const));
+  // サインアウト（F-001-14）。サインアウトすると AuthGate がサインイン画面に切り替え、読んだデータは上で消す
+  const [signOut] = useState(() => (session ? () => session.signOut() : null));
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -41,9 +44,11 @@ export default function RootLayout() {
         <StatusBar style="auto" />
         <AuthGate session={session} signIn={signIn}>
           {/* 削除の「元に戻す」のバーは画面をまたいで1本（F-032-08） */}
-          <DeleteQueueRoot>
-            <Stack screenOptions={{ headerShown: false }} />
-          </DeleteQueueRoot>
+          <SignOutProvider signOut={signOut}>
+            <DeleteQueueRoot>
+              <Stack screenOptions={{ headerShown: false }} />
+            </DeleteQueueRoot>
+          </SignOutProvider>
         </AuthGate>
       </ApiProvider>
     </QueryClientProvider>

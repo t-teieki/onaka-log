@@ -12,6 +12,7 @@ export default function Index() {
       onOpenMeal={(recordDate, mealId) =>
         router.push({ pathname: '/meals/[recordDate]/[mealId]', params: { recordDate, mealId } })
       }
+      onOpenSettings={() => router.push('/settings')}
     />
   );
 }

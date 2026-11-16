@@ -172,3 +172,33 @@ describe('AuthSession', () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 });
+
+describe('サインアウト（F-001-14・15）', () => {
+  it('[F-001-14] リフレッシュトークンを /oauth2/revoke で失効させ、端末のトークンを消す', async () => {
+    const { session, storage, calls } = setup({ stored: 'refresh-0', replies: [{ status: 200, body: {} }] });
+    await session.restore();
+    await session.signOut();
+    expect(calls).toEqual([{ url: 'https://onaka.auth.test/oauth2/revoke', body: { token: 'refresh-0', client_id: 'client-1' } }]);
+    expect(storage.data[REFRESH_TOKEN_KEY]).toBeUndefined();
+    expect(session.status).toBe('signedOut');
+    expect(await session.getAccessToken()).toBeNull();
+  });
+
+  it('[F-001-15] 失効の要求が失敗しても（通信の失敗・拒否）、端末のトークンは消す', async () => {
+    for (const reply of [new Error('offline'), { status: 400, body: { error: 'unsupported_token_type' } }]) {
+      const { session, storage } = setup({ stored: 'refresh-0', replies: [reply] });
+      await session.restore();
+      await session.signOut();
+      expect(storage.data[REFRESH_TOKEN_KEY]).toBeUndefined();
+      expect(session.status).toBe('signedOut');
+    }
+  });
+
+  it('[F-001-14] サインインしていなければ通信しない', async () => {
+    const { session, fetch } = setup();
+    await session.restore();
+    await session.signOut();
+    expect(fetch).not.toHaveBeenCalled();
+    expect(session.status).toBe('signedOut');
+  });
+});

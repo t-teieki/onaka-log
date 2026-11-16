@@ -1,5 +1,5 @@
 // サインインのセッション（F-001-05〜12）。リフレッシュトークンだけを安全な保管場所に置き、アクセストークンはメモリに持つ
-import { tokenEndpoint, type CognitoConfig } from './cognito';
+import { revokeEndpoint, tokenEndpoint, type CognitoConfig } from './cognito';
 
 export type AuthStatus = 'loading' | 'signedOut' | 'signedIn';
 
@@ -95,7 +95,27 @@ export class AuthSession {
     return this.refreshing;
   }
 
-  /** 端末の中のサインインを消す（サーバー側の失効は設定画面のサインアウトで足す） */
+  /**
+   * サインアウト（F-001-14・15）。リフレッシュトークンを Cognito で失効させてから端末のトークンを消す。
+   * 失効の要求が失敗しても端末からは消す（アクセストークンは最長60分で切れる）
+   */
+  async signOut(): Promise<void> {
+    const token = this.refreshToken;
+    if (token) {
+      try {
+        await this.fetch(revokeEndpoint(this.config), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({ token, client_id: this.config.clientId }).toString(),
+        });
+      } catch {
+        // オフラインなど。サインアウトは続ける
+      }
+    }
+    await this.signOutLocally();
+  }
+
+  /** 端末の中のサインインを消す（更新が拒否されたとき、F-001-11） */
   async signOutLocally(): Promise<void> {
     this.refreshToken = null;
     this.access = null;

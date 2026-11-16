@@ -8,7 +8,7 @@
 | 項目 | 内容 |
 |---|---|
 | 現在のマイルストーン | **M4〜M5**（設計はほぼ完了。テスト先行で実装中: バックエンドは API まで完成し、dev（`onaka-log-dev`）にデプロイ・実 API で確認済み。アプリはホーム・手入力の記録（日時の変更を含む）・Google でのサインイン・食事の詳細と削除（元に戻す）・食品の追加を、iPhone の Expo Go から dev につないで通して確認済み（2026-11-16））。M2 PoC は 2026-11-13 に完了 → [poc-summary.md](../../poc/reports/poc-summary.md) |
-| 次にやること | ① 設定画面とサインアウト（トークンの失効、F-001・IMP-09） ② バーコード照合のアプリ（IMP-06） ③ Dependabot（CIC-08） ④ CI からのデプロイ（GitHub OIDC、CIC-05・CIC-09） |
+| 次にやること | ① 起動直後の読み込みの遅さ（Lambda のコールドスタートの初期化 5〜6.5秒。Anthropic SDK と SSM の読み込みを推定の初回まで遅らせる・メモリを上げる。デプロイは変更セットの了承後） ② バーコード照合のアプリ（IMP-06） ③ Dependabot（CIC-08） ④ CI からのデプロイ（GitHub OIDC、CIC-05・CIC-09） |
 | ブロッカー | なし（エミュレーター（Android 17）は Expo Go のローカルネットワークの許可待ちだが、iPhone で代用できている） |
 | 最終更新 | 2026-11-16 |
 
@@ -305,7 +305,7 @@ flowchart LR
 - [ ] **IMP-06** バーコード照合：バックエンド（OFF の呼び出し・候補・`GET /v1/products/{code}`）は実装済み。アプリは未 (WIP)
 - [ ] **IMP-07** 栄養成分表示 OCR：バックエンド（Claude の呼び出し・検証・候補・`POST /v1/estimates/label`）は実装済み。dev の実 API で確認済み（TST-05）。アプリは未 (WIP)
 - [ ] **IMP-08** 写真推定：バックエンド（`POST /v1/estimates/photo`）は実装済み。dev の実 API で確認済み（TST-05）。アプリは未 (WIP)
-- [ ] **IMP-09** 認証：バックエンド（JWT の sub）と Cognito（dev、Google・Apple の連携なし）は作成済み。アプリのサインイン（Google、F-001-04〜12）をテスト先行で作成し、テンプレートに Google の IdP と Expo Go の戻り先を追加（2026-11-16）。Google Cloud の OAuth クライアントと Secrets Manager を用意して dev にデプロイし、iPhone の Expo Go でサインインできることをユーザーが確認（2026-11-16）。サインアウト（設定画面）と Apple の連携が残り (WIP)
+- [ ] **IMP-09** 認証：バックエンド（JWT の sub）と Cognito（dev、Google・Apple の連携なし）は作成済み。アプリのサインイン（Google、F-001-04〜12）をテスト先行で作成し、テンプレートに Google の IdP と Expo Go の戻り先を追加（2026-11-16）。Google Cloud の OAuth クライアントと Secrets Manager を用意して dev にデプロイし、iPhone の Expo Go でサインインできることをユーザーが確認（2026-11-16）。設定画面とサインアウト（`/oauth2/revoke` で失効、F-001-13〜16）をテスト先行で作成し、iPhone で確認（2026-11-16）。Apple の連携が残り (WIP)
 - [ ] **IMP-10** 推移表示
 
 ## EXT: 拡張バックログ（M7〜、優先度未定）

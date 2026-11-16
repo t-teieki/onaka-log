@@ -23,3 +23,8 @@ export function authorizationEndpoint(config: CognitoConfig): string {
 export function tokenEndpoint(config: CognitoConfig): string {
   return `${config.domain}/oauth2/token`;
 }
+
+/** リフレッシュトークンの失効（サインアウト、F-001-14） */
+export function revokeEndpoint(config: CognitoConfig): string {
+  return `${config.domain}/oauth2/revoke`;
+}
