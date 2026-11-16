@@ -7,6 +7,8 @@ import type { DaySummary, Meal } from '@/api/client';
 import { formatGrams, formatKcal, mealTime, mealTitle } from '@/lib/format';
 import { addDays, canGoNext, formatRecordDate, recordDateOf } from '@/lib/record-date';
 
+import { useDeleteQueueState } from '@/features/delete/delete-context';
+import { visibleDay } from '@/features/delete/pending-view';
 import { MethodSheet, type RecordMethod } from '@/features/record/method-sheet';
 
 import { useDay } from './use-day';
@@ -14,15 +16,17 @@ import { useDay } from './use-day';
 type Props = {
   /** 今の時刻（テストで固定する） */
   now?: () => Date;
-  /** 入力方式を選んだとき（画面の移動はルーティング側で行う） */
-  /** 入力方式を選んだとき（表示している記録日を渡す。食べた日時の既定に使う） */
+  /** 入力方式を選んだとき（表示している記録日を渡す。食べた日時の既定に使う。画面の移動はルーティング側で行う） */
   onSelectMethod?: (method: RecordMethod, recordDate: string) => void;
+  /** 食事の行をタップしたとき（F-031-07） */
+  onOpenMeal?: (recordDate: string, mealId: string) => void;
 };
 
-export function HomeScreen({ now = () => new Date(), onSelectMethod = () => {} }: Props) {
+export function HomeScreen({ now = () => new Date(), onSelectMethod = () => {}, onOpenMeal = () => {} }: Props) {
   const [today] = useState(() => recordDateOf(now()));
   const [recordDate, setRecordDate] = useState(today);
   const day = useDay(recordDate);
+  const { hidden } = useDeleteQueueState();
   const nextEnabled = canGoNext(recordDate, today);
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -60,7 +64,7 @@ export function HomeScreen({ now = () => new Date(), onSelectMethod = () => {} }
           </Pressable>
         </View>
       ) : (
-        <DayBody day={day.data} />
+        <DayBody day={visibleDay(day.data, hidden)} onOpenMeal={(mealId) => onOpenMeal(recordDate, mealId)} />
       )}
 
       <View style={styles.footer}>
@@ -81,7 +85,7 @@ export function HomeScreen({ now = () => new Date(), onSelectMethod = () => {} }
   );
 }
 
-function DayBody({ day }: { day: DaySummary }) {
+function DayBody({ day, onOpenMeal }: { day: DaySummary; onOpenMeal: (mealId: string) => void }) {
   const { totals } = day;
   return (
     <>
@@ -95,22 +99,22 @@ function DayBody({ day }: { day: DaySummary }) {
       <FlatList
         data={day.meals}
         keyExtractor={(m) => m.meal_id}
-        renderItem={({ item }) => <MealRow meal={item} />}
+        renderItem={({ item }) => <MealRow meal={item} onPress={() => onOpenMeal(item.meal_id)} />}
         ListEmptyComponent={<Text style={[styles.message, styles.empty]}>まだ記録がありません</Text>}
       />
     </>
   );
 }
 
-function MealRow({ meal }: { meal: Meal }) {
+function MealRow({ meal, onPress }: { meal: Meal; onPress: () => void }) {
   return (
-    <View testID="meal-row" style={styles.row}>
+    <Pressable testID="meal-row" accessibilityRole="button" onPress={onPress} style={styles.row}>
       <Text style={styles.time}>{mealTime(meal.eaten_at)}</Text>
       <Text style={styles.title} numberOfLines={1}>
         {mealTitle(meal.items.map((i) => i.name))}
       </Text>
       <Text style={styles.rowKcal}>{formatKcal(meal.totals.energy_kcal)}</Text>
-    </View>
+    </Pressable>
   );
 }
 

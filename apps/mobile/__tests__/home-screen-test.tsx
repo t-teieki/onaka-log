@@ -1,12 +1,14 @@
 // ホーム（画面設計 3-1、F-031）。応答は contracts/api/examples の DaySummary をそのまま使う
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
 
 import emptyDay from '../../../contracts/api/examples/valid/DaySummary-empty.json';
 import threeMeals from '../../../contracts/api/examples/valid/DaySummary-three-meals.json';
 import { ApiProvider } from '@/api/api-context';
 import { createApiClient } from '@/api/client';
+import { DeleteQueueProvider } from '@/features/delete/delete-context';
+import { DeleteQueue } from '@/features/delete/delete-queue';
 import { HomeScreen } from '@/features/home/home-screen';
 import type { RecordMethod } from '@/features/record/method-sheet';
 
@@ -179,5 +181,44 @@ describe('API クライアント', () => {
     });
     await api.GET('/v1/days/{record_date}', { params: { path: { record_date: '2026-11-13' } } });
     expect(auth).toBeNull();
+  });
+});
+
+describe('ホームから食事の詳細へ・削除を待っている間（F-031・F-032）', () => {
+  async function renderHome(onOpenMeal: (recordDate: string, mealId: string) => void, queue?: DeleteQueue) {
+    const api = createApiClient({
+      baseUrl: 'https://api.test',
+      getToken: async () => 'token-1',
+      fetch: async () =>
+        new Response(JSON.stringify(threeMeals), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    });
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } });
+    clients.push(queryClient);
+    const home = <HomeScreen now={() => NOW} onOpenMeal={onOpenMeal} />;
+    await render(
+      <QueryClientProvider client={queryClient}>
+        <ApiProvider client={api}>{queue ? <DeleteQueueProvider queue={queue}>{home}</DeleteQueueProvider> : home}</ApiProvider>
+      </QueryClientProvider>,
+    );
+  }
+
+  it('[F-031-07] 食事の行をタップすると、記録日と食事 ID を渡して詳細を開く', async () => {
+    const onOpenMeal = jest.fn();
+    await renderHome(onOpenMeal);
+    await screen.findByText('898 kcal');
+    await fireEvent.press(screen.getAllByTestId('meal-row')[1]!);
+    expect(onOpenMeal).toHaveBeenCalledWith('2026-11-13', threeMeals.meals[1]!.meal_id);
+  });
+
+  it('[F-032-09] 削除を待っている食事は出さず、日次合計もそれを除く', async () => {
+    const queue = new DeleteQueue({ send: async () => 'ok' });
+    await renderHome(() => {}, queue);
+    await screen.findByText('898 kcal');
+    await act(async () => queue.remove({ kind: 'meal', recordDate: '2026-11-13', mealId: threeMeals.meals[0]!.meal_id }));
+    expect(screen.getByText('541 kcal')).toBeOnTheScreen();
+    expect(screen.getAllByTestId('meal-row')).toHaveLength(2);
+    expect(screen.queryByText('一部不明')).not.toBeOnTheScreen();
+    await act(async () => queue.undo());
+    expect(screen.getByText('898 kcal')).toBeOnTheScreen();
   });
 });

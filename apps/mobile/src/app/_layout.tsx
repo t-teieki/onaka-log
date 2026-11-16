@@ -10,6 +10,7 @@ import { cognitoConfig } from '@/auth/cognito';
 import { secureStorage, signInWithGoogle } from '@/auth/native';
 import { AuthSession } from '@/auth/session';
 import { apiBaseUrl } from '@/config';
+import { DeleteQueueRoot } from '@/features/delete/delete-context';
 
 export default function RootLayout() {
   const [queryClient] = useState(() => new QueryClient());
@@ -39,7 +40,10 @@ export default function RootLayout() {
       <ApiProvider client={api}>
         <StatusBar style="auto" />
         <AuthGate session={session} signIn={signIn}>
-          <Stack screenOptions={{ headerShown: false }} />
+          {/* 削除の「元に戻す」のバーは画面をまたいで1本（F-032-08） */}
+          <DeleteQueueRoot>
+            <Stack screenOptions={{ headerShown: false }} />
+          </DeleteQueueRoot>
         </AuthGate>
       </ApiProvider>
     </QueryClientProvider>
