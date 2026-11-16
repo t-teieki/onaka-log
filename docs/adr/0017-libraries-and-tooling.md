@@ -36,6 +36,7 @@
 - 2026-11-14: バックエンドの要求の検証を「Pydantic のモデルを手書き」から「contracts のスキーマを jsonschema で直接使う」に変えた。モデルを手で書くと契約と二重になり、ずれる余地が生まれるため。応答の形は API テストで openapi.yaml に照らして確かめる（TST-06）
 - 2026-11-15: アプリの土台を作成。Expo の SDK は **58**（ユーザーの iPhone の App Store の Expo Go が SDK 58 に対応していることを確認）。アプリの npm・Expo は **Windows の Node** で動かす（WSL から `/mnt/c` への npm install が極端に遅いため。[dev-environment.md](../00_project/dev-environment.md)）。`openapi-typescript` は TypeScript 6 と peer がぶつかるため依存に入れず、版を固定して `npx` で動かす
 - 2026-11-16: 食べた日時の選択に **@react-native-community/datetimepicker** を追加（Q-44。Expo Go に入っている OS 標準のピッカー。`timeZoneName="Asia/Tokyo"` で日本時間に固定する）
+- 2026-11-16: 栄養成分表示の撮影で **expo-file-system** を追加。撮影と縮小で端末のキャッシュにできる一時ファイルをすぐ消すため（ADR-0004）
 
 ## 理由と影響
 

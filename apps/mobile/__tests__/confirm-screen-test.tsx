@@ -4,6 +4,7 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
 
 import threeMeals from '../../../contracts/api/examples/valid/DaySummary-three-meals.json';
+import twoColumns from '../../../contracts/api/examples/valid/LabelEstimateResponse-ok-two-columns.json';
 import found from '../../../contracts/api/examples/valid/ProductLookupResponse-found.json';
 import { ApiProvider } from '@/api/api-context';
 import { createApiClient, type Meal } from '@/api/client';
@@ -29,9 +30,17 @@ afterEach(() => clients.splice(0).forEach((c) => c.clear()));
 
 async function setup({
   draft = DRAFT,
+  columns,
   addTo,
   status = 201,
-}: { draft?: FoodItemDraft; addTo?: { recordDate: string; mealId: string }; status?: number } = {}) {
+  onTakeLabel,
+}: {
+  draft?: FoodItemDraft;
+  columns?: FoodItemDraft[];
+  addTo?: { recordDate: string; mealId: string };
+  status?: number;
+  onTakeLabel?: () => void;
+} = {}) {
   const sent: Sent[] = [];
   const fakeFetch = async (input: Request) => {
     const url = new URL(input.url);
@@ -52,7 +61,16 @@ async function setup({
     </QueryClientProvider>
   );
   await render(
-    <ConfirmScreen drafts={[draft]} addTo={addTo} now={() => NOW} newId={newId} onSaved={onSaved} onClose={() => {}} />,
+    <ConfirmScreen
+      drafts={columns ? undefined : [draft]}
+      columns={columns}
+      addTo={addTo}
+      now={() => NOW}
+      newId={newId}
+      onSaved={onSaved}
+      onClose={() => {}}
+      onTakeLabel={onTakeLabel}
+    />,
     { wrapper },
   );
   return { sent, onSaved };
@@ -170,9 +188,53 @@ describe('確認・修正の画面（F-020）', () => {
     expect(onSaved).not.toHaveBeenCalled();
   });
 
-  it('[F-020-06] バーコードの候補には「栄養成分表示を撮る」を出す（OCR を作るまでは準備中）', async () => {
-    await setup();
-    expect(screen.getByRole('button', { name: /栄養成分表示を撮る/ })).toBeDisabled();
-    expect(screen.getByText('準備中')).toBeOnTheScreen();
+  it('[F-020-06] バーコードの候補には「栄養成分表示を撮る」を出し、押すと撮影へ', async () => {
+    const onTakeLabel = jest.fn();
+    await setup({ onTakeLabel });
+    await fireEvent.press(screen.getByRole('button', { name: '栄養成分表示を撮る' }));
+    expect(onTakeLabel).toHaveBeenCalled();
+  });
+
+  it('[F-020-06] バーコード以外の候補には「栄養成分表示を撮る」を出さない', async () => {
+    await setup({ columns: twoColumns.candidates as FoodItemDraft[] });
+    expect(screen.queryByRole('button', { name: '栄養成分表示を撮る' })).toBeNull();
+  });
+});
+
+describe('栄養成分表示の列の選択（F-020-07）', () => {
+  const columns = twoColumns.candidates as FoodItemDraft[]; // シュガー・チョコ、どちらも 1個当たり・4個入り
+
+  it('[F-020-07] 列のボタンを出し、先頭の列を選んだ状態で開く（個数売りは1個）', async () => {
+    await setup({ columns });
+    expect(screen.getByRole('button', { name: 'シュガー' })).toBeSelected();
+    expect(screen.getByRole('button', { name: 'チョコ' })).not.toBeSelected();
+    expect(screen.getByLabelText('食品名')).toHaveDisplayValue('ドーナツ（シュガー）');
+    expect(screen.getByText('栄養成分表示')).toBeOnTheScreen();
+    expect(screen.getByText('1個当たり・内容量 4個')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: '1個' })).toBeSelected();
+    expect(screen.getByText('250 kcal')).toBeOnTheScreen();
+    expect(screen.getAllByLabelText('食品名')).toHaveLength(1);
+  });
+
+  it('[F-020-07] 列を変えると名前・値・分量をその列に合わせ、その列で保存する', async () => {
+    const { sent } = await setup({ columns });
+    await fireEvent.press(screen.getByRole('button', { name: '2個' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'チョコ' }));
+    expect(screen.getByRole('button', { name: 'チョコ' })).toBeSelected();
+    expect(screen.getByLabelText('食品名')).toHaveDisplayValue('ドーナツ（チョコ）');
+    expect(screen.getByRole('button', { name: '1個' })).toBeSelected();
+    expect(screen.getByText('289 kcal')).toBeOnTheScreen();
+    await fireEvent.press(saveButton());
+    const body = sent[0]!.body as { items: { name: string; source: { column_index: number } }[] };
+    expect(body.items).toHaveLength(1);
+    expect(body.items[0]).toMatchObject({ name: 'ドーナツ（チョコ）', source: { column_index: 1 } });
+  });
+
+  it('[F-020-07] 見出しがなければ「1列目」「2列目」', async () => {
+    await setup({
+      columns: columns.map((c) => ({ ...c, source: { ...c.source, column_heading: null } })),
+    });
+    expect(screen.getByRole('button', { name: '1列目' })).toBeSelected();
+    expect(screen.getByRole('button', { name: '2列目' })).toBeOnTheScreen();
   });
 });

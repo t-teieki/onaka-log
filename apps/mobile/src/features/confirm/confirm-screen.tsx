@@ -25,7 +25,10 @@ import { uuidv7 } from '@/lib/uuid7';
 export type FoodItemDraft = components['schemas']['FoodItemDraft'];
 
 type Props = {
-  drafts: FoodItemDraft[];
+  /** 品目ごとの候補（1件ずつカードにする。バーコード・写真推定） */
+  drafts?: FoodItemDraft[];
+  /** 列ごとの候補（どれか1つを選ぶ。栄養成分表示の複数列、F-020-07） */
+  columns?: FoodItemDraft[];
   /** ホームで表示していた記録日（食べた日時の既定に使う） */
   recordDate?: string;
   addTo?: AddTarget;
@@ -33,56 +36,77 @@ type Props = {
   newId?: () => string;
   onSaved: (recordDate: string) => void;
   onClose: () => void;
+  /** バーコードの候補のときの「栄養成分表示を撮る」（F-020-06） */
+  onTakeLabel?: () => void;
 };
 
-type Edit = { itemId: string; name: string; portion: PortionInput };
+/** カード1枚の状態。options は選べる候補（列）。品目ごとのカードは1件だけ */
+type Card = { itemId: string; options: FoodItemDraft[]; selected: number; name: string; portion: PortionInput };
 
 const NUTRIENTS = ['energy_kcal', 'protein_g', 'fat_g', 'carbohydrate_g'] as const;
 
 export function ConfirmScreen({
   drafts,
+  columns,
   recordDate,
   addTo,
   now = () => new Date(),
   newId = () => uuidv7(),
   onSaved,
   onClose,
+  onTakeLabel,
 }: Props) {
   // 食事・食品の ID は開いたときに決め、再送でも変えない（F-020-05）
   const [mealId] = useState(() => (addTo ? '' : newId()));
-  const [edits, setEdits] = useState<Edit[]>(() =>
-    drafts.map((d) => ({ itemId: newId(), name: d.name, portion: d.default_portion })),
-  );
+  const [cards, setCards] = useState<Card[]>(() => {
+    const groups = columns && columns.length > 0 ? [columns] : (drafts ?? []).map((d) => [d]);
+    // 先頭の列を選んだ状態で開く（Q-37）
+    return groups.map((options) => ({
+      itemId: newId(),
+      options,
+      selected: 0,
+      name: options[0]!.name,
+      portion: options[0]!.default_portion,
+    }));
+  });
   const [eatenAt, setEatenAt] = useState(() => toEatenAt(recordDate ? defaultEatenAtFor(recordDate, now()) : now()));
   const createMeal = useCreateMeal();
   const addItem = useAddMealItem(addTo);
   const saving = createMeal.isPending || addItem.isPending;
 
-  const previews = drafts.map((d, i) => previewNutrients(d.reference, edits[i]!.portion));
+  const chosen = cards.map((c) => c.options[c.selected]!);
+  const previews = cards.map((c, i) => previewNutrients(chosen[i]!.reference, c.portion));
   const totalKcal = round1(previews.reduce((sum, p) => sum + (p.energy_kcal ?? 0), 0));
   const incomplete = previews.some((p) => NUTRIENTS.some((n) => p[n] === null));
-  const namesOk = edits.every((e) => e.name.trim().length > 0 && e.name.trim().length <= NAME_MAX_LENGTH);
+  const namesOk = cards.every((c) => c.name.trim().length > 0 && c.name.trim().length <= NAME_MAX_LENGTH);
+  const canSave = cards.length > 0 && namesOk && !saving;
   const saveError = saveErrorMessage(addTo ? addItem.error : createMeal.error);
 
-  const update = (i: number, patch: Partial<Edit>) =>
-    setEdits((all) => all.map((e, j) => (j === i ? { ...e, ...patch } : e)));
+  const update = (i: number, patch: Partial<Card>) =>
+    setCards((all) => all.map((c, j) => (j === i ? { ...c, ...patch } : c)));
+
+  // 列を変えたら、名前・分量もその列の候補に合わせる（F-020-07）
+  const selectColumn = (i: number, index: number) => {
+    const option = cards[i]!.options[index]!;
+    update(i, { selected: index, name: option.name, portion: option.default_portion });
+  };
 
   const save = () => {
-    if (!namesOk || saving) return;
-    const items: FoodItemInput[] = drafts.map((d, i) => ({
-      item_id: edits[i]!.itemId,
-      name: edits[i]!.name.trim(),
-      source: d.source,
-      reference: d.reference,
-      estimate_detail: d.estimate_detail,
-      portion: edits[i]!.portion,
+    if (!canSave) return;
+    const items: FoodItemInput[] = cards.map((c, i) => ({
+      item_id: c.itemId,
+      name: c.name.trim(),
+      source: chosen[i]!.source,
+      reference: chosen[i]!.reference,
+      estimate_detail: chosen[i]!.estimate_detail,
+      portion: c.portion,
     }));
     const done = { onSuccess: (date: string) => onSaved(date) };
     if (addTo) addItem.mutate(items[0]!, done);
     else createMeal.mutate({ meal_id: mealId, eaten_at: eatenAt, items }, done);
   };
 
-  const fromBarcode = drafts.some((d) => d.source.method === 'barcode');
+  const fromBarcode = chosen.some((d) => d.source.method === 'barcode');
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -97,13 +121,13 @@ export function ConfirmScreen({
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
         {/* 追加モードは食事の日時のまま（F-020-04） */}
         {!addTo && <EatenAtField value={eatenAt} onChange={setEatenAt} now={now} />}
-        {drafts.map((draft, i) => (
+        {cards.map((card, i) => (
           <FoodCard
-            key={edits[i]!.itemId}
-            draft={draft}
-            edit={edits[i]!}
+            key={card.itemId}
+            card={card}
             preview={previews[i]!}
             onChange={(patch) => update(i, patch)}
+            onSelectColumn={(index) => selectColumn(i, index)}
           />
         ))}
       </ScrollView>
@@ -113,26 +137,20 @@ export function ConfirmScreen({
           <Text style={styles.total}>{`合計 ${formatKcal(totalKcal)} kcal`}</Text>
           {incomplete && <Text style={styles.incomplete}>一部不明</Text>}
         </View>
-        {fromBarcode && (
-          // 登録ミス対策（ADR-0009）。OCR（IMP-07）を作るまでは押せない（F-020-06）
-          <Pressable
-            accessibilityRole="button"
-            disabled
-            accessibilityState={{ disabled: true }}
-            style={styles.ocrButton}
-          >
+        {fromBarcode && onTakeLabel && (
+          // 登録ミス対策（ADR-0009、F-020-06）
+          <Pressable accessibilityRole="button" onPress={onTakeLabel} style={styles.ocrButton}>
             <Text style={styles.ocrText}>栄養成分表示を撮る</Text>
-            <Text style={styles.badge}>準備中</Text>
           </Pressable>
         )}
         {saveError && <Text style={styles.error}>{saveError}</Text>}
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={addTo ? '食事に追加' : '保存する'}
-          disabled={!namesOk || saving}
-          accessibilityState={{ disabled: !namesOk || saving }}
+          disabled={!canSave}
+          accessibilityState={{ disabled: !canSave }}
           onPress={save}
-          style={[styles.saveButton, (!namesOk || saving) && styles.saveDisabled]}
+          style={[styles.saveButton, !canSave && styles.saveDisabled]}
         >
           {saving ? (
             <ActivityIndicator color="#fff" />
@@ -175,23 +193,48 @@ function basisLine(reference: Reference): string {
 
 const grams = (g: number | null) => (g === null ? '—' : `${formatGrams(g)}g`);
 
+/** 列のボタンの名前: 見出し、なければ「1列目」「2列目」 */
+const columnLabel = (d: FoodItemDraft, i: number) => d.source.column_heading ?? `${i + 1}列目`;
+
 function FoodCard({
-  draft,
-  edit,
+  card,
   preview,
   onChange,
+  onSelectColumn,
 }: {
-  draft: FoodItemDraft;
-  edit: Edit;
+  card: Card;
   preview: Nutrients;
-  onChange: (patch: Partial<Edit>) => void;
+  onChange: (patch: Partial<Card>) => void;
+  onSelectColumn: (index: number) => void;
 }) {
+  const draft = card.options[card.selected]!;
   return (
     <View style={styles.card}>
+      {card.options.length > 1 && (
+        // 違う列で記録しないよう、カードの上の方に目立つように置く（Q-37）
+        <View style={styles.columns}>
+          {card.options.map((option, index) => {
+            const selected = index === card.selected;
+            const label = columnLabel(option, index);
+            return (
+              <Pressable
+                key={label}
+                accessibilityRole="button"
+                accessibilityLabel={label}
+                accessibilityState={{ selected }}
+                onPress={() => onSelectColumn(index)}
+                style={[styles.column, selected && styles.columnSelected]}
+              >
+                <Text style={[styles.columnText, selected && styles.choiceTextSelected]}>{label}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      )}
       <View style={styles.nameRow}>
         <TextInput
           accessibilityLabel="食品名"
-          value={edit.name}
+          value={card.name}
           onChangeText={(name) => onChange({ name })}
           maxLength={NAME_MAX_LENGTH}
           style={styles.nameInput}
@@ -203,7 +246,7 @@ function FoodCard({
 
       <View style={styles.choices}>
         {portionChoices(draft.reference).map((choice) => {
-          const selected = samePortion(choice.portion, edit.portion);
+          const selected = samePortion(choice.portion, card.portion);
           return (
             <Pressable
               key={choice.label}
@@ -249,6 +292,10 @@ const styles = StyleSheet.create({
   pencil: { color: '#64748b' },
   meta: { color: '#555', fontSize: 13 },
   choices: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 6 },
+  columns: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 6 },
+  column: { borderWidth: 2, borderColor: '#f59e0b', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8 },
+  columnSelected: { backgroundColor: '#f59e0b' },
+  columnText: { fontSize: 15, fontWeight: '600', color: '#92400e' },
   choice: { borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 },
   choiceSelected: { backgroundColor: '#2563eb', borderColor: '#2563eb' },
   choiceText: { fontSize: 15, color: '#1f2937' },
@@ -265,11 +312,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#2563eb',
     borderRadius: 12,
     paddingVertical: 12,
   },
-  ocrText: { color: '#9ca3af', fontSize: 15 },
+  ocrText: { color: '#2563eb', fontSize: 15, fontWeight: '600' },
   badge: { fontSize: 12, color: '#6b7280', backgroundColor: '#f3f4f6', paddingHorizontal: 6, borderRadius: 4 },
   error: { color: '#dc2626', fontSize: 13 },
   saveButton: { backgroundColor: '#2563eb', borderRadius: 12, paddingVertical: 16, alignItems: 'center' },

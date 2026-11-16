@@ -5,6 +5,34 @@
 
 ---
 
+## 2026-11-16 セッション1（続き7）: 栄養成分表示 OCR のアプリ（IMP-07）
+
+**やったこと**
+- 仕様: [F-012-label-ocr.md](../01_requirements/features/F-012-label-ocr.md) にアプリ側の要件 F-012-15〜20、[F-020-confirm.md](../01_requirements/features/F-020-confirm.md) に列の選択 F-020-07。F-011-17・F-020-06 と画面設計 3-3 の「栄養成分表示を撮る」を撮影へ進むように変更。ADR-0017 の変更履歴に expo-file-system
+- アプリ（テスト先行。赤を確認 → 緑。Jest 185件、tsc・ESLint・Android のバンドルも OK）
+  - `expo-image-manipulator`・`expo-file-system` を追加（`npx expo install`）
+  - `src/features/label/prepare-image.ts`: 長辺 1024px の JPEG（品質 0.8）にして base64。撮影と縮小の一時ファイルはすぐ消す（ADR-0004）
+  - `src/features/label/label-capture-screen.tsx`: 撮影・読み取り中（キャンセル）・失敗ごとのダイアログ。「もう一度」は同じ画像を送り直す（画像はこの画面にいる間だけメモリに持つ）
+  - `src/features/capture/capture-parts.tsx`: カメラの許可・ダイアログ・ボタンを撮影の画面で共通にした（バーコードも使う）
+  - 確認画面: `columns`（列ごとの候補をボタンで切り替え。先頭を選んだ状態、切り替えると名前・分量を戻す）と `onTakeLabel`
+  - `/record/label` を追加。ホーム・詳細の追加・バーコード（見つからない／確認画面）から開く。入力方法のシートで「栄養成分表示」を押せるようにした
+- ユーザーが iPhone（dev）で確認。IMP-07 を完了にした
+
+**決まったこと**
+- 通信エラーの「もう一度」は撮り直さず、同じ画像を送り直す
+
+**次にやること**
+1. 写真推定のアプリ（IMP-08）: 撮影・縮小は IMP-07 の部品（prepare-image・capture-parts）を使い、`POST /v1/estimates/photo` の品目ごとの候補を確認画面の `drafts` に渡す
+2. 起動直後の読み込みの遅さ（Lambda のコールドスタート）
+3. Dependabot（CIC-08）、CI からのデプロイ（CIC-05・CIC-09）
+
+**注意点・気づき**
+- `jest.mock` の工場の中で TypeScript のパラメータプロパティ（`constructor(private readonly uri: string)`）を使うと、外の変数を参照したと見なされて読み込めない。普通のフィールドに書く
+- ESLint（react-hooks/refs）は、描画中に ref を読む関数を普通の関数に渡すとエラーにする。ダイアログはコンポーネントにして props で渡す
+- OCR は1回ごとに Claude を使う（数円）
+
+---
+
 ## 2026-11-16 セッション1（続き6）: バーコード照合のアプリ（IMP-06）
 
 **やったこと**

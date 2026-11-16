@@ -58,13 +58,17 @@ async function setup(replies: (Reply | Promise<Reply>)[]) {
   const onFound = jest.fn();
   const onManual = jest.fn();
   const onBack = jest.fn();
+  const onTakeLabel = jest.fn();
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>
       <ApiProvider client={api}>{children}</ApiProvider>
     </QueryClientProvider>
   );
-  await render(<BarcodeScanScreen onFound={onFound} onManual={onManual} onBack={onBack} />, { wrapper });
-  return { requested, onFound, onManual, onBack };
+  await render(
+    <BarcodeScanScreen onFound={onFound} onManual={onManual} onBack={onBack} onTakeLabel={onTakeLabel} />,
+    { wrapper },
+  );
+  return { requested, onFound, onManual, onBack, onTakeLabel };
 }
 
 const errorBody = (code: string) => ({ error: { code, message: code } });
@@ -115,13 +119,13 @@ describe('読み取りと照合（F-011-15〜18）', () => {
     expect(onFound).toHaveBeenCalledTimes(1);
   });
 
-  it('[F-011-17] 見つからなければ理由と、手入力・入力方法の選択に戻るを出す。OCR は準備中', async () => {
-    const { onManual, onBack, onFound } = await setup([{ status: 200, body: notFound }]);
+  it('[F-011-17] 見つからなければ理由と、栄養成分表示を撮る・手入力・入力方法の選択に戻るを出す', async () => {
+    const { onManual, onBack, onFound, onTakeLabel } = await setup([{ status: 200, body: notFound }]);
     await scan();
     expect(screen.getByText('商品が見つかりません')).toBeOnTheScreen();
     expect(screen.getByText('栄養成分表示を撮ると記録できます')).toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: /栄養成分表示を撮る/ })).toBeDisabled();
-    expect(screen.getByText('準備中')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: '栄養成分表示を撮る' }));
+    expect(onTakeLabel).toHaveBeenCalled();
     await fireEvent.press(screen.getByRole('button', { name: '手入力する' }));
     expect(onManual).toHaveBeenCalled();
     await fireEvent.press(screen.getByRole('button', { name: '入力方法の選択に戻る' }));

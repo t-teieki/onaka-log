@@ -10,6 +10,8 @@ export default function BarcodeRecord() {
   const { recordDate, mealId } = useLocalSearchParams<{ recordDate?: string; mealId?: string }>();
   const addTo = recordDate && mealId ? { recordDate, mealId } : undefined;
   const [draft, setDraft] = useState<FoodItemDraft | null>(null);
+  // 見つからない・登録ミスのときは栄養成分表示の撮影へ（同じ記録日・追加先のまま、F-011-17・F-020-06）
+  const takeLabel = () => router.replace({ pathname: '/record/label', params: { recordDate, mealId } });
 
   if (draft) {
     return (
@@ -19,6 +21,7 @@ export default function BarcodeRecord() {
         addTo={addTo}
         onSaved={() => router.back()}
         onClose={() => router.back()}
+        onTakeLabel={takeLabel}
       />
     );
   }
@@ -27,6 +30,7 @@ export default function BarcodeRecord() {
       onFound={setDraft}
       // 見つからない・カメラが使えないときは手入力へ（同じ記録日・追加先のまま）
       onManual={() => router.replace({ pathname: '/record/manual', params: { recordDate, mealId } })}
+      onTakeLabel={takeLabel}
       onBack={() => router.back()}
     />
   );
