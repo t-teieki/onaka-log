@@ -6,8 +6,10 @@ AWS:     環境変数 ONAKA_TABLE_NAME・ONAKA_CLAUDE_API_KEY_PARAM などを SA
 
 from __future__ import annotations
 
+import logging
 import os
-from collections.abc import Mapping
+import threading
+from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
 from typing import Any
 
@@ -21,12 +23,44 @@ from onaka_api.repository import MealRepository
 from onaka_api.repository.memory import InMemoryMealRepository
 from onaka_api.settings import Settings
 
+log = logging.getLogger(__name__)
+
+Estimate = tuple[dict[str, Any], dict[str, Any]]
+
 
 class _NoClaude:
     """Claude の API キーがないときの代わり（起動はでき、推定だけ 502 にする）。"""
 
-    def estimate(self, usecase: str, image: Mapping[str, str]) -> tuple[dict[str, Any], dict[str, Any]]:
+    def estimate(self, usecase: str, image: Mapping[str, str]) -> Estimate:
         raise UpstreamUnavailable("Claude の API キーが設定されていない")
+
+
+class LazyClaude:
+    """Claude の API キーの読み取り（SSM）と SDK の import を推定の初回まで遅らせる（ADR-0007、コールドスタート）。
+
+    一覧・保存・照合しか呼ばれないコンテナでは読まない。読めたら作った推定器を使い回し、
+    読めなかったら（SSM に届かないなど）502 にして、次の推定で読み直す。
+    """
+
+    def __init__(self, load_key: Callable[[], str | None], make: Callable[[str], Any]) -> None:
+        self._load_key = load_key
+        self._make = make
+        self._estimator: Any = None
+        self._lock = threading.Lock()
+
+    def _get(self) -> Any:
+        with self._lock:
+            if self._estimator is None:
+                try:
+                    key = self._load_key()
+                except Exception as e:
+                    log.warning("Claude の API キーを読めない: %s", type(e).__name__)
+                    raise UpstreamUnavailable("Claude の API キーを読めない") from e
+                self._estimator = self._make(key) if key else _NoClaude()
+            return self._estimator
+
+    def estimate(self, usecase: str, image: Mapping[str, str]) -> Estimate:
+        return self._get().estimate(usecase, image)  # type: ignore[no-any-return]
 
 
 def _now() -> str:
@@ -46,26 +80,39 @@ def _repository(settings: Settings) -> MealRepository:
     raise ValueError(f"repository の値が不明: {settings.repository}（dynamodb / memory）")
 
 
-def build_app(settings: Settings, *, anthropic_api_key: str | None) -> FastAPI:
-    """設定から依存を作り、アプリを組み立てる。Claude のキーがなければ推定は 502 にする（起動はできる）。"""
+def _claude_estimator(settings: Settings, api_key: str) -> Any:
+    """Claude の推定器を作る。SDK はここで初めて import する（重いので起動時には読まない）。"""
+    import anthropic
+
+    from onaka_api.clients.claude import ClaudeEstimator
+
+    client = anthropic.Anthropic(api_key=api_key, timeout=settings.claude_timeout_s, max_retries=1)
+    return ClaudeEstimator(
+        client,
+        models={
+            "nutrition-label-ocr": (settings.label_model, settings.label_effort),
+            "food-photo-estimate": (settings.photo_model, settings.photo_effort),
+        },
+        max_tokens=settings.claude_max_tokens,
+    )
+
+
+def build_app(
+    settings: Settings,
+    *,
+    anthropic_api_key: str | None = None,
+    load_api_key: Callable[[], str | None] | None = None,
+) -> FastAPI:
+    """設定から依存を作り、アプリを組み立てる。Claude のキーがなければ推定は 502 にする（起動はできる）。
+
+    キーは値（anthropic_api_key）か、推定の初回に呼ぶ読み取り（load_api_key、SSM など）で渡す。
+    どちらの場合も SDK の import は推定の初回まで遅らせる。
+    """
     repo = _repository(settings)
-    estimator: Any
-    if anthropic_api_key:
-        import anthropic
-
-        from onaka_api.clients.claude import ClaudeEstimator
-
-        client = anthropic.Anthropic(api_key=anthropic_api_key, timeout=settings.claude_timeout_s, max_retries=1)
-        estimator = ClaudeEstimator(
-            client,
-            models={
-                "nutrition-label-ocr": (settings.label_model, settings.label_effort),
-                "food-photo-estimate": (settings.photo_model, settings.photo_effort),
-            },
-            max_tokens=settings.claude_max_tokens,
-        )
-    else:
-        estimator = _NoClaude()
+    estimator = LazyClaude(
+        load_api_key if load_api_key is not None else lambda: anthropic_api_key,
+        lambda key: _claude_estimator(settings, key),
+    )
     products = OffClient(httpx.Client(), base_url=settings.off_base_url, timeout_s=settings.off_timeout_s)
     deps = Deps(repo=repo, estimator=estimator, products=products, now=_now, local_user_id=settings.local_user_id)
     return create_app(deps)
@@ -87,7 +134,7 @@ def _api_key(settings: Settings) -> str | None:
 
 def _app() -> FastAPI:
     settings = Settings.from_env()
-    return build_app(settings, anthropic_api_key=_api_key(settings))
+    return build_app(settings, load_api_key=lambda: _api_key(settings))
 
 
 def __getattr__(name: str) -> Any:

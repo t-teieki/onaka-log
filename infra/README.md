@@ -52,4 +52,4 @@ aws sso login --profile onaka-admin
 - 確かめたこと: 認証なし・不正なトークンは API Gateway が 401 を返す。Lambda を直接呼ぶと（JWT の claims を入れたイベント）、SSM のキーの読み取り・DynamoDB の読み取りまで通る。テスト用ユーザー（`smoke-test@example.com`、メールは送らない）のアクセストークンで、1日分の取得 → 食事の保存（201、合計 702 kcal）→ 取得 → 削除（204）→ 取得（空）まで通った。推定（OCR・写真）と照合は実 API のスモーク（`apps/api/tests/live`、TST-05）で確認した
 - テスト用ユーザーのアクセストークンの取り直し（60分で切れる。パスワードは画面・履歴に残さない）:
   `read -rsp "Password: " PW; echo; (umask 077; aws cognito-idp initiate-auth --profile onaka-admin --client-id <AppClientId> --auth-flow USER_PASSWORD_AUTH --auth-parameters "USERNAME=smoke-test@example.com,PASSWORD=$PW" --query AuthenticationResult.AccessToken --output text > ~/.onaka-dev-token); unset PW`
-- コールドスタートは約6秒（import と SSM の読み取り）。気になったら、メモリを増やす・import を遅らせるなどを検討する
+- コールドスタートは約6秒（import と SSM の読み取り）だったので、2026-11-16 に Anthropic SDK と SSM を推定の初回まで遅らせ、メモリを 1024MB にした（ADR-0007）。推定の初回だけ、その分（数秒）遅くなる

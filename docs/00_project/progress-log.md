@@ -5,6 +5,28 @@
 
 ---
 
+## 2026-11-16 セッション1（続き10）: 起動直後の読み込みの遅さ（Lambda のコールドスタート）
+
+**やったこと**
+- `apps/api/src/onaka_api/main.py`: `LazyClaude` を足し、Claude の API キーの読み取り（SSM）と Anthropic SDK の import を推定の初回まで遅らせた（読めたら使い回し、読めなければ 502 にして次の推定で読み直す）。`build_app` は `load_api_key`（推定の初回に呼ぶ読み取り）も受け取る
+- テスト先行（4件の赤を確認 → 緑）: 起動時にキーを読まない・初回に1回だけ読む・失敗したら読み直す・起動時に anthropic を import しない（別プロセスで確認）。バックエンド 151件、ruff・mypy、sam validate・cfn-lint も OK
+- `infra/template.yaml`: Lambda のメモリを 512MB → 1024MB
+- 変更セット（ApiFunction・HttpApi の Modify、置き換えなし）をユーザーに見せ、了承を得て dev にデプロイ
+- ユーザーが iPhone でアプリを開き直し、CloudWatch で確認: **Init Duration 2.7 秒**（前は 5.1〜6.5 秒）、一覧の処理 187 ms
+
+**決まったこと**
+- [ADR-0007](../adr/0007-backend-aws-serverless.md) の「コールドスタート」に対策と理由を追記。推定の初回だけ、SDK とキーの読み込みの分（数秒）遅くなるのは許容する
+
+**次にやること**
+1. Dependabot（CIC-08）、CI からのデプロイ（CIC-05・CIC-09）
+2. MVP の残り: エミュレーターでの確認（IMP-01）、Apple でサインイン（IMP-09、Apple Developer Program が要る）、アプリのビルドと配布（CIC-06）
+
+**注意点・気づき**
+- まだ 2.7 秒残る。さらに縮めるなら、jsonschema の検証器の組み立て（openapi.yaml の読み込み）を遅らせる、boto3 を軽くする、などを測ってから検討する
+- 手元（/mnt/c）での import 時間は Lambda より大きく出るので、比べるのは CloudWatch の REPORT の Init Duration で
+
+---
+
 ## 2026-11-16 セッション1（続き9）: 写真推定で端末の画像も選べるように（IMP-08 の追加）
 
 **やったこと**

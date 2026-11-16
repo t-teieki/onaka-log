@@ -183,7 +183,7 @@ Resources:
       FunctionName: !Sub onaka-log-api-${Env}
       CodeUri: build/api
       Handler: run.sh
-      MemorySize: 512
+      MemorySize: 1024  # CPU もメモリに比例する。512 ではコールドスタートが 5〜6.5 秒だった（ADR-0007）
       Timeout: 29  # HTTP API の上限（30秒）より短く
       Layers:
         - !Sub arn:aws:lambda:${AWS::Region}:753240598075:layer:LambdaAdapterLayerArm64:30
