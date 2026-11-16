@@ -40,6 +40,15 @@ npx expo start      # 開発サーバー
 
 - `EXPO_PUBLIC_COGNITO_*` がなければサインインを使わず、トークンなしで API を呼ぶ（ローカルのバックエンド用、F-001-04）。ローカルに戻すときは2行を消して `npx expo start -c`
 
+## 外から使う（EAS Update、ADR-0018）
+
+- Expo のプロジェクト `@t-teieki/onaka-log`、チャンネル `main`。iPhone の Expo Go で `exp://u.expo.dev/41aaa9c3-a98e-4e77-aafb-d50e0a0e5a5c?channel-name=main` を開く（QR にするか Safari に入れる）。PC を点けておかなくてよい
+- 公開（`apps/mobile` で。先に `npx eas-cli@27.10.0 login`）:
+  `npx eas-cli@27.10.0 update --branch main --message "<内容>" --platform ios --environment development --non-interactive`
+- 接続先は手元の `.env.local` ではなく EAS の環境変数 development が使われる。変えたら `npx eas-cli@27.10.0 env:push development --path .env.local --force`
+- `EXPO_PUBLIC_*` はコードで `process.env.EXPO_PUBLIC_X` とそのまま書く（引数経由で読むと公開版では値が入らない）
+- 新しい版は Expo Go でアプリを開き直したときに読み込まれる（反映に2回かかることがある）。公開版のサインインは開発サーバーの版とは別
+
 ## 実機・エミュレーター
 
 - Android エミュレーター: Android Studio の Device Manager で Pixel 8・API 35/36（Google Play 付き）を作る。Expo Go を入れ、開発サーバーの `a` キーか QR で開く

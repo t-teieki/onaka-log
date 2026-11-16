@@ -53,3 +53,4 @@ aws sso login --profile onaka-admin
 - テスト用ユーザーのアクセストークンの取り直し（60分で切れる。パスワードは画面・履歴に残さない）:
   `read -rsp "Password: " PW; echo; (umask 077; aws cognito-idp initiate-auth --profile onaka-admin --client-id <AppClientId> --auth-flow USER_PASSWORD_AUTH --auth-parameters "USERNAME=smoke-test@example.com,PASSWORD=$PW" --query AuthenticationResult.AccessToken --output text > ~/.onaka-dev-token); unset PW`
 - コールドスタートは約6秒（import と SSM の読み取り）だったので、2026-11-16 に Anthropic SDK と SSM を推定の初回まで遅らせ、メモリを 1024MB にした（ADR-0007）。推定の初回だけ、その分（数秒）遅くなる
+- API Gateway のアクセスログ（`/aws/apigateway/onaka-log-api-<Env>`、14日）: Lambda に届く前に断られた要求（認証・スロットリング）の理由が `authorizerError` に出る。トークンや本文は残さない

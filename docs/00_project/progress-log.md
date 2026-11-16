@@ -5,6 +5,32 @@
 
 ---
 
+## 2026-11-16 セッション1（続き11）: 外から使えるように（EAS Update を Expo Go で開く、CIC-06）
+
+**やったこと**
+- Expo のアカウント（ユーザーが作成・ログイン）で `eas init`（`@t-teieki/onaka-log`）。app.json に projectId・owner・`runtimeVersion: {policy: sdkVersion}`・`updates.url`。`eas init` が書き足した解決済みの設定（カメラの許可・ルーター）は戻した
+- チャンネル `main` を作り、iOS に公開。接続先の `EXPO_PUBLIC_*` は EAS の環境変数 development に `env:push`
+- Cognito の dev に EAS Update の戻り先の候補（`exp://u.expo.dev/<projectId>/--/auth/callback` とクエリ付き2つ）を足してデプロイ（了承済み）
+- 公開版で読み込めなかったので、API Gateway のアクセスログを dev に追加（1回目は書式に `$context.requestId` がなくロールバック、直して再デプロイ。了承済み）。ログに `missing: token not provided`
+- 原因: `cognitoConfig()` が引数経由（`env.EXPO_PUBLIC_*`）で読んでいて、公開時に値が埋め込まれず、公開版は「サインインなし」のモードでトークンなしに API を呼んでいた。`process.env.EXPO_PUBLIC_*` をそのまま読むよう直し、書き方を固定するテストを足した（赤 → 緑、Jest 207件）。公開し直した
+- ユーザーが iPhone のモバイル通信でサインイン・記録できることを確認
+
+**決まったこと**
+- [ADR-0018](../adr/0018-eas-update-with-expo-go.md): 当面の配布は EAS Update を Expo Go で開く。TestFlight などは Apple Developer Program に登録してから
+
+**次にやること**
+1. Dependabot（CIC-08）、CI からのデプロイ（CIC-05・CIC-09）。EAS Update の公開も CI に載せるか検討
+2. MVP の残り: エミュレーターでの確認（IMP-01）、Apple でサインイン（IMP-09）、EAS Build・TestFlight（CIC-06）
+3. Cognito に登録した戻り先の候補のうち、実際に使われている1つを確かめて残りを消す（今は3つとも登録）
+
+**注意点・気づき**
+- `eas update` を `--non-interactive` で動かすには `--environment` が要り、そのときは EAS の環境変数が使われる（手元の `.env.local` は使われない）
+- `--platform` は1つしか指定できない（ios と android は別々に公開する。今は ios だけ）
+- API Gateway のアクセスログの書式には `$context.requestId` か `$context.extendedRequestId` が必須
+- `sam deploy --no-execute-changeset` が10分近くかかることがある（バックグラウンドで動かす）
+
+---
+
 ## 2026-11-16 セッション1（続き10）: 起動直後の読み込みの遅さ（Lambda のコールドスタート）
 
 **やったこと**

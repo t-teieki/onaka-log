@@ -8,8 +8,15 @@ export type CognitoConfig = {
 
 type Env = Record<string, string | undefined>;
 
+// EXPO_PUBLIC_* は「process.env.EXPO_PUBLIC_X」とそのまま書いた所だけがビルド時に値へ置き換わる。
+// 引数経由で読むと公開版（EAS Update）では undefined になるので、ここで読んでおく
+const PUBLIC_ENV: Env = {
+  EXPO_PUBLIC_COGNITO_DOMAIN: process.env.EXPO_PUBLIC_COGNITO_DOMAIN,
+  EXPO_PUBLIC_COGNITO_CLIENT_ID: process.env.EXPO_PUBLIC_COGNITO_CLIENT_ID,
+};
+
 /** 設定がなければ null（サインインを使わず、トークンなしで API を呼ぶ。F-001-04） */
-export function cognitoConfig(env: Env = process.env): CognitoConfig | null {
+export function cognitoConfig(env: Env = PUBLIC_ENV): CognitoConfig | null {
   const domain = env.EXPO_PUBLIC_COGNITO_DOMAIN?.trim().replace(/\/+$/, '');
   const clientId = env.EXPO_PUBLIC_COGNITO_CLIENT_ID?.trim();
   if (!domain || !clientId) return null;

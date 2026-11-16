@@ -55,6 +55,18 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "41aaa9c3-a98e-4e77-aafb-d50e0a0e5a5c"
+      }
+    },
+    "owner": "t-teieki",
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/41aaa9c3-a98e-4e77-aafb-d50e0a0e5a5c"
     }
   }
 }

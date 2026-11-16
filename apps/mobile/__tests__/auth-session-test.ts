@@ -61,6 +61,17 @@ describe('cognitoConfig', () => {
       cognitoConfig({ EXPO_PUBLIC_COGNITO_DOMAIN: 'https://onaka.auth.test/', EXPO_PUBLIC_COGNITO_CLIENT_ID: 'client-1' }),
     ).toEqual(CONFIG);
   });
+
+  it('[F-001-04] 公開版（EAS Update）にも値が入るよう、process.env.EXPO_PUBLIC_* をそのままの形で読む', () => {
+    // EXPO_PUBLIC_* は「process.env.EXPO_PUBLIC_X」と書いた所だけがビルド時に値へ置き換わる。
+    // 引数経由（env.EXPO_PUBLIC_X）だと公開版では undefined になり、トークンなしで API を呼んでいた（2026-11-16）
+    const fs = jest.requireActual<{ readFileSync: (file: string, encoding: 'utf8') => string }>('fs');
+    const path = jest.requireActual<{ join: (...parts: string[]) => string; dirname: (p: string) => string }>('path');
+    const testDir = path.dirname(expect.getState().testPath ?? '');
+    const source = fs.readFileSync(path.join(testDir, '../src/auth/cognito.ts'), 'utf8');
+    expect(source).toContain('process.env.EXPO_PUBLIC_COGNITO_DOMAIN');
+    expect(source).toContain('process.env.EXPO_PUBLIC_COGNITO_CLIENT_ID');
+  });
 });
 
 describe('AuthSession', () => {

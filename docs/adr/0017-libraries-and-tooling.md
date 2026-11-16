@@ -45,3 +45,4 @@
 - iOS 実機での確認が遅れるため、iOS 固有の問題（Sign in with Apple の画面、カメラの権限の文言、キーボードなど）は登録後にまとめて確かめる。その分の手戻りは許容する
 - Sign in with Apple は App Store の審査で必要になる（Google でのサインインを提供する場合）。Cognito での連携は Android と Web の範囲で先に作り、iOS での確認は登録後に行う
 - 見直す条件: expo-auth-session で Apple・Google の連携がうまく動かない場合は Amplify の Auth を検討する。expo-camera のバーコード読み取りが遅い場合は react-native-vision-camera を検討する
+- 2026-11-16: 外から使うため EAS Update で公開する（[ADR-0018](0018-eas-update-with-expo-go.md)）。`eas update` が **expo-updates** を足した（Expo Go では使われない）。eas-cli は `npx eas-cli@27.10.0` で版を固定して動かす

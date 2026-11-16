@@ -8,7 +8,7 @@
 | 項目 | 内容 |
 |---|---|
 | 現在のマイルストーン | **M4〜M5**（設計はほぼ完了。テスト先行で実装中: バックエンドは API まで完成し、dev（`onaka-log-dev`）にデプロイ・実 API で確認済み。アプリはホーム・手入力の記録（日時の変更を含む）・Google でのサインイン・食事の詳細と削除（元に戻す）・食品の追加・4つの入力方式（バーコード・栄養成分表示・写真・手入力）を、iPhone の Expo Go から dev につないで通して確認済み（2026-11-16））。M2 PoC は 2026-11-13 に完了 → [poc-summary.md](../../poc/reports/poc-summary.md) |
-| 次にやること | ① Dependabot（CIC-08）、CI からのデプロイ（CIC-05・CIC-09） ② MVP の残り（エミュレーターでの確認 IMP-01、Apple でサインイン IMP-09、アプリのビルドと配布 CIC-06）。起動直後の遅さは 2026-11-16 に対策済み（Init 5〜6.5 秒 → 2.7 秒、ADR-0007） |
+| 次にやること | ① Dependabot（CIC-08）、CI からのデプロイ（CIC-05・CIC-09） ② MVP の残り（エミュレーターでの確認 IMP-01、Apple でサインイン IMP-09、EAS Build・TestFlight CIC-06）。外から使うのは EAS Update で対応済み（ADR-0018）。起動直後の遅さは 2026-11-16 に対策済み（Init 5〜6.5 秒 → 2.7 秒、ADR-0007） |
 | ブロッカー | なし（エミュレーター（Android 17）は Expo Go のローカルネットワークの許可待ちだが、iPhone で代用できている） |
 | 最終更新 | 2026-11-16 |
 
@@ -268,7 +268,7 @@ flowchart LR
 - [ ] **CIC-03** 契約変更時に全関係者（mobile / api / tests）のテストを走らせる仕組み：各ワークフローの paths に `contracts/` を入れ、`mobile` は生成した API の型に差分がないことを確かめる。PR での運用は未確認 (WIP)
 - [ ] **CIC-04** LLM 実API テスト・eval の実行タイミング（手動トリガー / 夜間）とコスト上限
 - [ ] **CIC-05** バックエンドの自動デプロイ（main → staging、タグ → prod）とDBマイグレーション
-- [ ] **CIC-06** モバイルのビルドと配布（EAS / Codemagic / fastlane、TestFlight / Play 内部テスト）
+- [ ] **CIC-06** モバイルのビルドと配布（EAS / Codemagic / fastlane、TestFlight / Play 内部テスト）：当面は EAS Update を Expo Go で開いて外からも使う（[ADR-0018](../adr/0018-eas-update-with-expo-go.md)）。iOS に公開し、モバイル通信でサインイン・記録できることをユーザーが確認（2026-11-16）。手元から公開している。EAS Build・TestFlight は Apple Developer Program に登録してから (WIP)
 - [ ] **CIC-07** バージョニング・リリースノート自動化
 - [ ] **CIC-08** 依存更新（Dependabot / Renovate）・セキュリティスキャン
 - [ ] **CIC-09** シークレットの CI 受け渡し（OIDC 推奨）

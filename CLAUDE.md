@@ -53,7 +53,7 @@
 
 ## 現時点で未決（決まったら更新）
 
-- アプリのビルド・配布（EAS、CIC-06）と、CI からのデプロイ（GitHub OIDC、CIC-05・CIC-09）はまだない。dev へのデプロイは手元から行う（[infra/README.md](infra/README.md)）
+- アプリは EAS Update（チャンネル main）に手元から公開し、iPhone の Expo Go で開けば外からも使える（[ADR-0018](docs/adr/0018-eas-update-with-expo-go.md)、手順は [apps/mobile/README.md](apps/mobile/README.md)）。EAS Build・TestFlight（CIC-06）と、CI からのデプロイ（GitHub OIDC、CIC-05・CIC-09）はまだない。dev へのデプロイは手元から行う（[infra/README.md](infra/README.md)）
 - アプリのサインイン（F-001）は Google だけ dev で動く（Expo Go の戻り先は PC の LAN の IP 固定、`infra/samconfig.toml`）。サインアウト（失効を含む）は作成済み。Apple 連携は未
 
 ## コマンド

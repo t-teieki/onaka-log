@@ -167,6 +167,21 @@ Resources:
       DefaultRouteSettings:
         ThrottlingBurstLimit: 10
         ThrottlingRateLimit: 5
+      # Lambda に届く前に断られた要求（認証・スロットリング）の理由を見るため。トークンや本文は出さない（ADR-0004）
+      AccessLogSettings:
+        DestinationArn: !GetAtt HttpApiAccessLogGroup.Arn
+        Format: >-
+          {"requestId":"$context.requestId","requestTime":"$context.requestTime","routeKey":"$context.routeKey","status":"$context.status",
+          "authorizerError":"$context.authorizer.error","errorMessage":"$context.error.message",
+          "integrationStatus":"$context.integrationStatus","responseLatency":"$context.responseLatency"}
+
+  HttpApiAccessLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      LogGroupName: !Sub /aws/apigateway/onaka-log-api-${Env}
+      RetentionInDays: 14
 
   # ---- API 全体を1つの関数で動かす（ADR-0007） ----
   ApiFunctionLogGroup:

@@ -14,8 +14,8 @@ s3_prefix = "onaka-log-dev"
 capabilities = "CAPABILITY_IAM"
 confirm_changeset = true
 fail_on_empty_changeset = false
-# GoogleClientId は Google Cloud の OAuth クライアント（秘密ではない）。CallbackUrls の exp:// は PC の LAN の IP（変わったら書き換えてデプロイし直す、Q-45）
-parameter_overrides = "Env=dev ClaudeApiKeyParamName=/onaka-log/dev/claude-api-key GoogleClientId=365571765743-6rdt1fb35vstoaucr3hfp20lc1efv1vc.apps.googleusercontent.com GoogleClientSecretName=onaka-log/dev/google-client-secret CallbackUrls='onakalog://auth/callback,exp://192.168.3.2:8081/--/auth/callback'"
+# GoogleClientId は Google Cloud の OAuth クライアント（秘密ではない）。CallbackUrls の exp:// は PC の LAN の IP（変わったら書き換えてデプロイし直す、Q-45）。exp://u.expo.dev/... は EAS Update を Expo Go で開いたとき（外から使う、CIC-06）
+parameter_overrides = "Env=dev ClaudeApiKeyParamName=/onaka-log/dev/claude-api-key GoogleClientId=365571765743-6rdt1fb35vstoaucr3hfp20lc1efv1vc.apps.googleusercontent.com GoogleClientSecretName=onaka-log/dev/google-client-secret CallbackUrls='onakalog://auth/callback,exp://192.168.3.2:8081/--/auth/callback,exp://u.expo.dev/41aaa9c3-a98e-4e77-aafb-d50e0a0e5a5c/--/auth/callback,exp://u.expo.dev/41aaa9c3-a98e-4e77-aafb-d50e0a0e5a5c/--/auth/callback?channel-name=main,exp://u.expo.dev/41aaa9c3-a98e-4e77-aafb-d50e0a0e5a5c/--/auth/callback?channel-name=main&runtime-version=exposdk%3A58.0.0'"
 tags = "project=onaka-log env=dev"
 
 [prod.deploy.parameters]
