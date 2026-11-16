@@ -8,7 +8,7 @@ import unreadable from '../../../contracts/api/examples/valid/LabelEstimateRespo
 import { ApiProvider } from '@/api/api-context';
 import { createApiClient } from '@/api/client';
 import { LabelCaptureScreen } from '@/features/label/label-capture-screen';
-import type { PreparedImage } from '@/features/label/prepare-image';
+import type { PreparedImage } from '@/features/capture/prepare-image';
 
 const PICTURE = { uri: 'file:///cache/photo.jpg', width: 4032, height: 3024 };
 const mockTakePicture = jest.fn(async (_options?: unknown) => PICTURE);

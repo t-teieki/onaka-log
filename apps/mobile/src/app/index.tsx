@@ -6,7 +6,7 @@ export default function Index() {
   return (
     <HomeScreen
       onSelectMethod={(method, recordDate) => {
-        // 写真はまだない（シートで押せない、IMP-08）
+        if (method === 'photo') router.push({ pathname: '/record/photo', params: { recordDate } });
         if (method === 'manual') router.push({ pathname: '/record/manual', params: { recordDate } });
         if (method === 'barcode') router.push({ pathname: '/record/barcode', params: { recordDate } });
         if (method === 'label') router.push({ pathname: '/record/label', params: { recordDate } });

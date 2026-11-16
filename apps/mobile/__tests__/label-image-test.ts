@@ -1,5 +1,5 @@
 // 撮影した画像の下ごしらえ（F-012-16、ADR-0004・ADR-0010）: 長辺 1024px の JPEG にし、端末の一時ファイルは消す
-import { prepareImage } from '@/features/label/prepare-image';
+import { prepareImage } from '@/features/capture/prepare-image';
 
 const mockResize = jest.fn();
 const mockSave = jest.fn();

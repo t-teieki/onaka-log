@@ -1,4 +1,4 @@
-// 確認・修正（画面設計 3-5、F-020-01〜06）: 照合・推定の候補を表示し、名前と分量を決めて保存する。
+// 確認・修正（画面設計 3-5、F-020-01〜08）: 照合・推定の候補を表示し、名前と分量を決めて保存する。
 // addTo があれば追加モード（既存の食事に足す、F-030-08〜12）。手入力は manual-entry-screen（入力モード）
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -25,7 +25,7 @@ import { uuidv7 } from '@/lib/uuid7';
 export type FoodItemDraft = components['schemas']['FoodItemDraft'];
 
 type Props = {
-  /** 品目ごとの候補（1件ずつカードにする。バーコード・写真推定） */
+  /** 品目ごとの候補（1件ずつカードにする。バーコード・写真推定。写真は × で外せる） */
   drafts?: FoodItemDraft[];
   /** 列ごとの候補（どれか1つを選ぶ。栄養成分表示の複数列、F-020-07） */
   columns?: FoodItemDraft[];
@@ -102,11 +102,13 @@ export function ConfirmScreen({
       portion: c.portion,
     }));
     const done = { onSuccess: (date: string) => onSaved(date) };
-    if (addTo) addItem.mutate(items[0]!, done);
+    if (addTo) addItem.mutate(items, done);
     else createMeal.mutate({ meal_id: mealId, eaten_at: eatenAt, items }, done);
   };
 
   const fromBarcode = chosen.some((d) => d.source.method === 'barcode');
+  const fromPhoto = chosen.some((d) => d.source.method === 'photo');
+  const remove = (i: number) => setCards((all) => all.filter((_, j) => j !== i));
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -119,6 +121,7 @@ export function ConfirmScreen({
       </View>
 
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+        {fromPhoto && <Text style={styles.notice}>写真からの推定（目安）です</Text>}
         {/* 追加モードは食事の日時のまま（F-020-04） */}
         {!addTo && <EatenAtField value={eatenAt} onChange={setEatenAt} now={now} />}
         {cards.map((card, i) => (
@@ -128,6 +131,7 @@ export function ConfirmScreen({
             preview={previews[i]!}
             onChange={(patch) => update(i, patch)}
             onSelectColumn={(index) => selectColumn(i, index)}
+            onRemove={fromPhoto ? () => remove(i) : undefined}
           />
         ))}
       </ScrollView>
@@ -201,11 +205,14 @@ function FoodCard({
   preview,
   onChange,
   onSelectColumn,
+  onRemove,
 }: {
   card: Card;
   preview: Nutrients;
   onChange: (patch: Partial<Card>) => void;
   onSelectColumn: (index: number) => void;
+  /** 写真推定の品目を外す（F-020-08） */
+  onRemove?: () => void;
 }) {
   const draft = card.options[card.selected]!;
   return (
@@ -240,8 +247,22 @@ function FoodCard({
           style={styles.nameInput}
         />
         <Text style={styles.pencil}>✎</Text>
+        {onRemove && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`${draft.name}を外す`}
+            onPress={onRemove}
+            hitSlop={8}
+            style={styles.remove}
+          >
+            <Text style={styles.removeText}>×</Text>
+          </Pressable>
+        )}
       </View>
-      <Text style={styles.meta}>{SOURCE_LABELS[draft.source.method]}</Text>
+      <View style={styles.metaRow}>
+        <Text style={styles.meta}>{SOURCE_LABELS[draft.source.method]}</Text>
+        {draft.source.confidence === 'low' && <Text style={styles.rough}>目安</Text>}
+      </View>
       <Text style={styles.meta}>{basisLine(draft.reference)}</Text>
 
       <View style={styles.choices}>
@@ -281,6 +302,11 @@ const styles = StyleSheet.create({
   body: { padding: 16, gap: 16 },
   card: { borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 12, padding: 14, gap: 6 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  notice: { color: '#92400e', backgroundColor: '#fef3c7', borderRadius: 8, padding: 10, textAlign: 'center' },
+  remove: { paddingHorizontal: 6 },
+  removeText: { fontSize: 20, color: '#6b7280' },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  rough: { fontSize: 12, color: '#92400e', backgroundColor: '#fef3c7', paddingHorizontal: 6, borderRadius: 4 },
   nameInput: {
     flex: 1,
     fontSize: 17,

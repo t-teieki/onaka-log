@@ -3,11 +3,11 @@ import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
 export type RecordMethod = 'barcode' | 'label' | 'photo' | 'manual';
 
-const METHODS: { method: RecordMethod; label: string; ready: boolean }[] = [
-  { method: 'barcode', label: 'バーコード', ready: true },
-  { method: 'label', label: '栄養成分表示', ready: true },
-  { method: 'photo', label: '写真', ready: false },
-  { method: 'manual', label: '手入力', ready: true },
+const METHODS: { method: RecordMethod; label: string }[] = [
+  { method: 'barcode', label: 'バーコード' },
+  { method: 'label', label: '栄養成分表示' },
+  { method: 'photo', label: '写真' },
+  { method: 'manual', label: '手入力' },
 ];
 
 type Props = {
@@ -22,17 +22,9 @@ export function MethodSheet({ visible, onSelect, onClose }: Props) {
       <Pressable style={styles.backdrop} onPress={onClose} accessible={false} />
       <View style={styles.sheet}>
         <Text style={styles.title}>入力方法を選ぶ</Text>
-        {METHODS.map(({ method, label, ready }) => (
-          <Pressable
-            key={method}
-            accessibilityRole="button"
-            disabled={!ready}
-            onPress={() => onSelect(method)}
-            style={[styles.option, !ready && styles.optionDisabled]}
-          >
-            <Text style={[styles.optionText, !ready && styles.disabledText]}>{label}</Text>
-            {/* まだ作っていない方式（IMP-08） */}
-            {!ready && <Text style={styles.badge}>準備中</Text>}
+        {METHODS.map(({ method, label }) => (
+          <Pressable key={method} accessibilityRole="button" onPress={() => onSelect(method)} style={styles.option}>
+            <Text style={styles.optionText}>{label}</Text>
           </Pressable>
         ))}
         <Pressable accessibilityRole="button" onPress={onClose} style={styles.close}>
@@ -63,10 +55,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: '#f1f5f9',
   },
-  optionDisabled: { backgroundColor: '#f8fafc' },
   optionText: { fontSize: 16 },
-  disabledText: { color: '#94a3b8' },
-  badge: { fontSize: 12, color: '#94a3b8' },
   close: { paddingVertical: 14, alignItems: 'center' },
   closeText: { fontSize: 16, color: '#2563eb' },
 });

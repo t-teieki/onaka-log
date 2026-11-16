@@ -7,7 +7,7 @@
 | 場所 | 中身 |
 |---|---|
 | `src/app/` | 画面のルーティング（Expo Router。1ファイル = 1画面）。中身は `src/features/` に置き、ここは薄くする |
-| `src/features/<機能>/` | 機能ごとの画面・フック（`home/`、`record/`: 入力方式の選択シート・手入力・保存、`meal/`: 食事の詳細と食品の追加、`delete/`: 削除と「元に戻す」の待ち合わせとバー、`settings/`: 設定とサインアウト、`barcode/`: バーコードの読み取りと照合、`label/`: 栄養成分表示の撮影と読み取り・画像の縮小、`capture/`: 撮影の画面で共通の部品（カメラの許可・ダイアログ）、`confirm/`: 確認・修正の画面） |
+| `src/features/<機能>/` | 機能ごとの画面・フック（`home/`、`record/`: 入力方式の選択シート・手入力・保存、`meal/`: 食事の詳細と食品の追加、`delete/`: 削除と「元に戻す」の待ち合わせとバー、`settings/`: 設定とサインアウト、`barcode/`: バーコードの読み取りと照合、`label/`・`photo/`: 栄養成分表示・料理の撮影、`capture/`: 撮影と推定の画面（両方で共通）・画像の縮小・カメラの許可とダイアログ、`confirm/`: 確認・修正の画面） |
 | `src/api/` | API クライアント（openapi-fetch）。`schema.d.ts` は `contracts/api/openapi.yaml` から生成する（手で直さない） |
 | `src/lib/` | 画面に依存しない計算（記録日 DM-01、表示の形） |
 | `src/config.ts` | 接続先（`EXPO_PUBLIC_API_BASE_URL`） |

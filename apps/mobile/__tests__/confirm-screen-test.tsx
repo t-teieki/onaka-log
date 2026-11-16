@@ -1,10 +1,11 @@
-// 確認・修正の画面（画面設計 3-5、F-020-01〜06）。バーコードの候補（ProductLookupResponse の例）を使う
+// 確認・修正の画面（画面設計 3-5、F-020-01〜08）。バーコード・栄養成分表示・写真の候補（API の例）を使う
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
 
 import threeMeals from '../../../contracts/api/examples/valid/DaySummary-three-meals.json';
 import twoColumns from '../../../contracts/api/examples/valid/LabelEstimateResponse-ok-two-columns.json';
+import photoOk from '../../../contracts/api/examples/valid/PhotoEstimateResponse-ok.json';
 import found from '../../../contracts/api/examples/valid/ProductLookupResponse-found.json';
 import { ApiProvider } from '@/api/api-context';
 import { createApiClient, type Meal } from '@/api/client';
@@ -21,6 +22,7 @@ const DRAFT = found.item as FoodItemDraft; // カップ麺: 100g 当たり 450kc
 const NOW = new Date('2026-11-13T12:30:00+09:00');
 const MEAL_ID = '0190f3a2-7c1e-7a01-8b2c-0000000000b1';
 const ITEM_ID = '0190f3a2-7c1e-7a01-8b2c-0000000000b2';
+const ITEM_IDS = [ITEM_ID, '0190f3a2-7c1e-7a01-8b2c-0000000000b3', '0190f3a2-7c1e-7a01-8b2c-0000000000b4'];
 const MEAL = threeMeals.meals[2] as Meal; // 追加先の食事（版 1）
 
 type Sent = { method: string; path: string; body: unknown };
@@ -30,29 +32,42 @@ afterEach(() => clients.splice(0).forEach((c) => c.clear()));
 
 async function setup({
   draft = DRAFT,
+  drafts = [draft],
   columns,
   addTo,
   status = 201,
+  statuses = [],
   onTakeLabel,
 }: {
   draft?: FoodItemDraft;
+  drafts?: FoodItemDraft[];
   columns?: FoodItemDraft[];
   addTo?: { recordDate: string; mealId: string };
   status?: number;
+  /** POST ごとの応答の status（尽きたら status）。409 は item_already_exists */
+  statuses?: number[];
   onTakeLabel?: () => void;
 } = {}) {
   const sent: Sent[] = [];
+  let version = MEAL.version;
   const fakeFetch = async (input: Request) => {
     const url = new URL(input.url);
     sent.push({ method: input.method, path: url.pathname, body: JSON.parse((await input.text()) || 'null') });
-    const body = addTo ? { ...MEAL, version: 2 } : {};
-    return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+    const json = (body: unknown, code: number) =>
+      new Response(JSON.stringify(body), { status: code, headers: { 'Content-Type': 'application/json' } });
+    if (input.method === 'GET') return json({ ...MEAL, version }, 200);
+    const code = statuses.shift() ?? status;
+    if (code === 409) return json({ error: { code: 'item_already_exists', message: 'exists' } }, 409);
+    if (code >= 300) return json({}, code);
+    if (!addTo) return json({}, code);
+    version += 1;
+    return json({ ...MEAL, version }, code);
   };
   const api = createApiClient({ baseUrl: 'https://api.test', getToken: async () => 'token-1', fetch: fakeFetch });
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   clients.push(queryClient);
   if (addTo) queryClient.setQueryData(mealQueryKey(addTo.recordDate, addTo.mealId), MEAL);
-  const ids = addTo ? [ITEM_ID] : [MEAL_ID, ITEM_ID];
+  const ids = addTo ? [...ITEM_IDS] : [MEAL_ID, ...ITEM_IDS];
   const newId = jest.fn(() => ids.shift() ?? 'extra');
   const onSaved = jest.fn();
   const wrapper = ({ children }: { children: ReactNode }) => (
@@ -62,7 +77,7 @@ async function setup({
   );
   await render(
     <ConfirmScreen
-      drafts={columns ? undefined : [draft]}
+      drafts={columns ? undefined : drafts}
       columns={columns}
       addTo={addTo}
       now={() => NOW}
@@ -236,5 +251,83 @@ describe('栄養成分表示の列の選択（F-020-07）', () => {
     });
     expect(screen.getByRole('button', { name: '1列目' })).toBeSelected();
     expect(screen.getByRole('button', { name: '2列目' })).toBeOnTheScreen();
+  });
+});
+
+describe('写真推定の品目（F-020-08）', () => {
+  const items = photoOk.items as FoodItemDraft[]; // ご飯 302・ハンバーグ 330・味噌汁 70 kcal（どれも medium）
+  const names = () => screen.getAllByLabelText('食品名').map((input) => input.props.value as string);
+
+  it('[F-020-08] 上部に「写真からの推定（目安）です」を出し、品目ごとにカードを出す', async () => {
+    await setup({ drafts: items });
+    expect(screen.getByText('写真からの推定（目安）です')).toBeOnTheScreen();
+    expect(names()).toEqual(['ご飯', 'ハンバーグ（ソース付き）', '豆腐と玉ねぎの味噌汁']);
+    expect(screen.getAllByText('写真（目安）')).toHaveLength(3);
+    expect(screen.getByText('302 kcal')).toBeOnTheScreen();
+    expect(screen.getByText('330 kcal')).toBeOnTheScreen();
+    expect(screen.getByText('70 kcal')).toBeOnTheScreen();
+    expect(screen.getByText('合計 702 kcal')).toBeOnTheScreen();
+    expect(screen.queryByText('目安')).toBeNull();
+  });
+
+  it('[F-020-08] 信頼度が low の品目にだけ「目安」の印を付ける', async () => {
+    const low = { ...items[1]!, source: { ...items[1]!.source, confidence: 'low' as const } };
+    await setup({ drafts: [items[0]!, low, items[2]!] });
+    expect(screen.getAllByText('目安')).toHaveLength(1);
+  });
+
+  it('[F-020-08] × で品目を外すと、合計と保存する品目から除く', async () => {
+    const { sent } = await setup({ drafts: items });
+    await fireEvent.press(screen.getByRole('button', { name: 'ハンバーグ（ソース付き）を外す' }));
+    expect(names()).toEqual(['ご飯', '豆腐と玉ねぎの味噌汁']);
+    expect(screen.getByText('合計 372 kcal')).toBeOnTheScreen();
+    await fireEvent.press(saveButton());
+    const body = sent[0]!.body as { items: { item_id: string; name: string }[] };
+    expect(body.items.map((i) => [i.item_id, i.name])).toEqual([
+      [ITEM_IDS[0], 'ご飯'],
+      [ITEM_IDS[2], '豆腐と玉ねぎの味噌汁'],
+    ]);
+  });
+
+  it('[F-020-08] 品目がすべて外れたら保存できない', async () => {
+    await setup({ drafts: items });
+    for (const name of ['ご飯', 'ハンバーグ（ソース付き）', '豆腐と玉ねぎの味噌汁']) {
+      await fireEvent.press(screen.getByRole('button', { name: `${name}を外す` }));
+    }
+    expect(saveButton()).toBeDisabled();
+  });
+
+  it('[F-020-08] 写真以外の候補には × を出さない', async () => {
+    await setup();
+    expect(screen.queryByRole('button', { name: /を外す$/ })).toBeNull();
+    expect(screen.queryByText('写真からの推定（目安）です')).toBeNull();
+  });
+
+  it('[F-020-05] 追加モードでは品目を1件ずつ順に送り、前の応答の版を使う', async () => {
+    const addTo = { recordDate: MEAL.record_date, mealId: MEAL.meal_id };
+    const { sent, onSaved } = await setup({ drafts: items, addTo, status: 200 });
+    await fireEvent.press(saveButton('食事に追加'));
+    await screen.findByRole('button', { name: '食事に追加' });
+    const posts = sent.filter((s) => s.method === 'POST');
+    expect(posts.map((s) => s.body)).toMatchObject([
+      { expected_version: 1, item: { item_id: ITEM_IDS[0], name: 'ご飯' } },
+      { expected_version: 2, item: { item_id: ITEM_IDS[1], name: 'ハンバーグ（ソース付き）' } },
+      { expected_version: 3, item: { item_id: ITEM_IDS[2], name: '豆腐と玉ねぎの味噌汁' } },
+    ]);
+    expect(onSaved).toHaveBeenCalledTimes(1);
+    expect(onSaved).toHaveBeenCalledWith(MEAL.record_date);
+  });
+
+  it('[F-020-05] 追加の途中で失敗して押し直すと、送り済みの品目は二重にならず残りを送る', async () => {
+    const addTo = { recordDate: MEAL.record_date, mealId: MEAL.meal_id };
+    const { sent, onSaved } = await setup({ drafts: [items[0]!, items[2]!], addTo, statuses: [200, 500, 409, 200] });
+    await fireEvent.press(saveButton('食事に追加'));
+    expect(await screen.findByText('保存できませんでした。もう一度お試しください')).toBeOnTheScreen();
+    expect(onSaved).not.toHaveBeenCalled();
+    await fireEvent.press(saveButton('食事に追加'));
+    await screen.findByRole('button', { name: '食事に追加' });
+    const posted = sent.filter((s) => s.method === 'POST').map((s) => (s.body as { item: { item_id: string } }).item.item_id);
+    expect(posted).toEqual([ITEM_IDS[0], ITEM_IDS[1], ITEM_IDS[0], ITEM_IDS[1]]);
+    expect(onSaved).toHaveBeenCalledTimes(1);
   });
 });
