@@ -1,10 +1,12 @@
 // 食事の詳細（画面設計 3-6、F-031-08〜10）。食品・食事の削除は確認なしで消して「元に戻す」を出す（3-9、F-032-06・10）
+import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { Meal } from '@/api/client';
 import { useDeleteQueue, useDeleteQueueState } from '@/features/delete/delete-context';
 import { visibleMeal } from '@/features/delete/pending-view';
+import { MethodSheet, type RecordMethod } from '@/features/record/method-sheet';
 import { formatGrams, formatKcal, mealTime } from '@/lib/format';
 import { formatRecordDate } from '@/lib/record-date';
 
@@ -17,9 +19,12 @@ type Props = {
   mealId: string;
   /** 前の画面（ホーム）へ戻る。食事ごと消したときも呼ぶ */
   onClose: () => void;
+  /** 「食品を追加」で入力方式を選んだとき（画面の移動はルーティング側、F-030-08） */
+  onAddItem?: (method: RecordMethod) => void;
 };
 
-export function MealDetailScreen({ recordDate, mealId, onClose }: Props) {
+export function MealDetailScreen({ recordDate, mealId, onClose, onAddItem = () => {} }: Props) {
+  const [sheetOpen, setSheetOpen] = useState(false);
   const meal = useMeal(recordDate, mealId);
   const queue = useDeleteQueue();
   const { hidden } = useDeleteQueueState();
@@ -79,12 +84,24 @@ export function MealDetailScreen({ recordDate, mealId, onClose }: Props) {
             ))}
           </ScrollView>
           <View style={styles.footer}>
+            <Pressable accessibilityRole="button" onPress={() => setSheetOpen(true)} style={styles.addItem}>
+              <Text style={styles.addItemText}>＋ 食品を追加</Text>
+            </Pressable>
             <Pressable accessibilityRole="button" onPress={removeMeal} style={styles.deleteMeal}>
               <Text style={styles.deleteMealText}>この食事を削除</Text>
             </Pressable>
           </View>
         </>
       ) : null}
+
+      <MethodSheet
+        visible={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        onSelect={(method) => {
+          setSheetOpen(false);
+          onAddItem(method);
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -191,7 +208,9 @@ const styles = StyleSheet.create({
   message: { color: '#555' },
   retry: { marginTop: 12, padding: 12 },
   retryText: { color: '#2563eb' },
-  footer: { padding: 16 },
+  footer: { padding: 16, gap: 12 },
+  addItem: { backgroundColor: '#2563eb', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  addItemText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   deleteMeal: { borderColor: '#dc2626', borderWidth: 1, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   deleteMealText: { color: '#dc2626', fontSize: 16, fontWeight: '600' },
 });

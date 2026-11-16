@@ -1,4 +1,5 @@
-// 確認・修正の入力モード（手入力、画面設計 3-5、F-014）: 食品名・kcal・P・F・C を入れて保存する
+// 確認・修正の入力モード（手入力、画面設計 3-5、F-014）: 食品名・kcal・P・F・C を入れて保存する。
+// addTo があれば追加モード: 既存の食事に食品を足す（F-030-08〜12、Q-32）
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -13,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AddItemError, useAddMealItem, type AddTarget } from '@/features/meal/use-add-item';
 import { defaultEatenAtFor, toEatenAt } from '@/lib/eaten-at';
 import { uuidv7 } from '@/lib/uuid7';
 
@@ -27,6 +29,8 @@ type Props = {
   recordDate?: string;
   /** ID を作る（テストで固定する）。食事と食品の ID はこの画面を開いたときに決め、再送でも変えない */
   newId?: () => string;
+  /** 追加モードで足す先の食事（食事の詳細の「食品を追加」から、F-030-08） */
+  addTo?: AddTarget;
   /** 保存できたとき（食事の記録日を渡す） */
   onSaved: (recordDate: string) => void;
   onClose: () => void;
@@ -44,24 +48,33 @@ const EMPTY: ManualForm = { name: '', energy_kcal: '', protein_g: '', fat_g: '',
 export function ManualEntryScreen({
   now = () => new Date(),
   recordDate,
+  addTo,
   newId = () => uuidv7(),
   onSaved,
   onClose,
 }: Props) {
-  const [ids] = useState(() => ({ meal: newId(), item: newId() }));
+  // 追加モードでは食事 ID は作らない（食品 ID だけ）
+  const [ids] = useState(() => (addTo ? { meal: '', item: newId() } : { meal: newId(), item: newId() }));
   // 食べた日時の既定は記録した時刻（Q-33）。行をタップして変えられる（今まで、Q-44）
   const [eatenAt, setEatenAt] = useState(() => toEatenAt(recordDate ? defaultEatenAtFor(recordDate, now()) : now()));
   const [form, setForm] = useState<ManualForm>(EMPTY);
   const createMeal = useCreateMeal();
+  const addItem = useAddMealItem(addTo);
+  const saving = createMeal.isPending || addItem.isPending;
 
   const result = validateManualForm(form);
   const errors = result.ok ? {} : result.errors;
-  const saving = createMeal.isPending;
+  const saveError = addTo ? addItemMessage(addItem.error) : createMeal.isError ? SAVE_FAILED : null;
 
   const save = () => {
     if (!result.ok || saving) return;
+    const item = manualItem(ids.item, result.value);
+    if (addTo) {
+      addItem.mutate(item, { onSuccess: (recordDate) => onSaved(recordDate) });
+      return;
+    }
     createMeal.mutate(
-      { meal_id: ids.meal, eaten_at: eatenAt, items: [manualItem(ids.item, result.value)] },
+      { meal_id: ids.meal, eaten_at: eatenAt, items: [item] },
       { onSuccess: (recordDate) => onSaved(recordDate) },
     );
   };
@@ -74,13 +87,14 @@ export function ManualEntryScreen({
         <Pressable accessibilityRole="button" accessibilityLabel="閉じる" onPress={onClose} style={styles.close}>
           <Text style={styles.closeText}>×</Text>
         </Pressable>
-        <Text style={styles.headerTitle}>手入力</Text>
+        <Text style={styles.headerTitle}>{addTo ? '食品を追加' : '手入力'}</Text>
         <View style={styles.close} />
       </View>
 
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-          <EatenAtField value={eatenAt} onChange={setEatenAt} now={now} />
+          {/* 追加モードは食事の日時のまま（F-030-09） */}
+          {!addTo && <EatenAtField value={eatenAt} onChange={setEatenAt} now={now} />}
 
           <Field label="食品名" error={errors.name}>
             <TextInput
@@ -106,7 +120,7 @@ export function ManualEntryScreen({
           ))}
 
           <Text style={styles.note}>5項目すべて入れると保存できます。数値は小数第1位まで。</Text>
-          {createMeal.isError && <Text style={styles.error}>保存できませんでした。もう一度お試しください</Text>}
+          {saveError && <Text style={styles.error}>{saveError}</Text>}
         </ScrollView>
 
         <View style={styles.footer}>
@@ -124,6 +138,17 @@ export function ManualEntryScreen({
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
+}
+
+const SAVE_FAILED = '保存できませんでした。もう一度お試しください';
+
+/** 追加に失敗したときの文言（F-030-12） */
+function addItemMessage(error: Error | null): string | null {
+  if (!error) return null;
+  if (!(error instanceof AddItemError)) return SAVE_FAILED;
+  if (error.reason === 'conflict') return 'ほかの変更と重なりました。もう一度保存してください';
+  if (error.reason === 'not_found') return 'この食事は削除されています';
+  return SAVE_FAILED;
 }
 
 function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {

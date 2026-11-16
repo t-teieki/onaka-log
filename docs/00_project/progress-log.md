@@ -5,6 +5,28 @@
 
 ---
 
+## 2026-11-16 セッション1（続き4）: 食事の詳細から食品を追加（IMP-05、Q-32）
+
+**やったこと**
+- 仕様: [F-030-save-meal.md](../01_requirements/features/F-030-save-meal.md) にアプリ側の要件 F-030-08〜12。画面設計 3-6 は「当面は手入力だけ」
+- アプリ（テスト先行。新しいテスト8件の赤を確認 → 緑。Jest 126件、tsc・ESLint・Android のバンドルも OK）
+  - 詳細に「＋ 食品を追加」→ 入力方式の選択 → 手入力の追加モード（`/record/manual?recordDate=…&mealId=…`）
+  - 追加モード: 見出し「食品を追加」、食べた日時の行なし。`src/features/meal/use-add-item.ts` が手元の版（なければ読む）で `POST …/items`。409 item_already_exists は成功、409 version_conflict は読み直して文言、404 は「この食事は削除されています」
+- ユーザーが iPhone（dev）で確認。IMP-04・IMP-05 を完了にした
+
+**決まったこと**
+- なし（追加に使える方式は当面手入力だけ。ほかの方式は作ったときに同じ追加モードで使う）
+
+**次にやること**
+1. 設定画面とサインアウト（トークンの失効、F-001・IMP-09）
+2. バーコード照合のアプリ（IMP-06）
+3. Dependabot（CIC-08）、CI からのデプロイ（CIC-05・CIC-09）
+
+**注意点・気づき**
+- Jest の「worker process has failed to exit gracefully」の警告は以前から出ている（テストは通り、14秒ほどで終わる）。PowerShell で `Select-Object -First` に流すと終わりを待たずに止まって見えることがある
+
+---
+
 ## 2026-11-16 セッション1（続き3）: 食事の詳細と、削除して「元に戻す」（IMP-04・IMP-05）
 
 **やったこと**

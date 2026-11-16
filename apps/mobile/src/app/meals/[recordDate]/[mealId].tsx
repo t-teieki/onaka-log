@@ -10,6 +10,10 @@ export default function MealDetail() {
       recordDate={recordDate}
       mealId={mealId}
       onClose={() => (router.canGoBack() ? router.back() : router.replace('/'))}
+      onAddItem={(method) => {
+        // バーコード・栄養成分表示・写真はまだない（シートで押せない）
+        if (method === 'manual') router.push({ pathname: '/record/manual', params: { recordDate, mealId } });
+      }}
     />
   );
 }
