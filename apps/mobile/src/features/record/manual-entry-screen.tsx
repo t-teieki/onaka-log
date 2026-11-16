@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AddItemError, useAddMealItem, type AddTarget } from '@/features/meal/use-add-item';
+import { saveErrorMessage, useAddMealItem, type AddTarget } from '@/features/meal/use-add-item';
 import { defaultEatenAtFor, toEatenAt } from '@/lib/eaten-at';
 import { uuidv7 } from '@/lib/uuid7';
 
@@ -64,7 +64,7 @@ export function ManualEntryScreen({
 
   const result = validateManualForm(form);
   const errors = result.ok ? {} : result.errors;
-  const saveError = addTo ? addItemMessage(addItem.error) : createMeal.isError ? SAVE_FAILED : null;
+  const saveError = saveErrorMessage(addTo ? addItem.error : createMeal.error);
 
   const save = () => {
     if (!result.ok || saving) return;
@@ -138,17 +138,6 @@ export function ManualEntryScreen({
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
-}
-
-const SAVE_FAILED = '保存できませんでした。もう一度お試しください';
-
-/** 追加に失敗したときの文言（F-030-12） */
-function addItemMessage(error: Error | null): string | null {
-  if (!error) return null;
-  if (!(error instanceof AddItemError)) return SAVE_FAILED;
-  if (error.reason === 'conflict') return 'ほかの変更と重なりました。もう一度保存してください';
-  if (error.reason === 'not_found') return 'この食事は削除されています';
-  return SAVE_FAILED;
 }
 
 function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {

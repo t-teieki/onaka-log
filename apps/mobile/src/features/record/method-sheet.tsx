@@ -4,7 +4,7 @@ import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 export type RecordMethod = 'barcode' | 'label' | 'photo' | 'manual';
 
 const METHODS: { method: RecordMethod; label: string; ready: boolean }[] = [
-  { method: 'barcode', label: 'バーコード', ready: false },
+  { method: 'barcode', label: 'バーコード', ready: true },
   { method: 'label', label: '栄養成分表示', ready: false },
   { method: 'photo', label: '写真', ready: false },
   { method: 'manual', label: '手入力', ready: true },
@@ -31,7 +31,7 @@ export function MethodSheet({ visible, onSelect, onClose }: Props) {
             style={[styles.option, !ready && styles.optionDisabled]}
           >
             <Text style={[styles.optionText, !ready && styles.disabledText]}>{label}</Text>
-            {/* まだ作っていない方式（IMP-06〜08） */}
+            {/* まだ作っていない方式（IMP-07・08） */}
             {!ready && <Text style={styles.badge}>準備中</Text>}
           </Pressable>
         ))}

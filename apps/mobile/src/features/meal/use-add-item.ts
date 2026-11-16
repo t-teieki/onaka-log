@@ -63,3 +63,14 @@ export function useAddMealItem(target: AddTarget | undefined) {
     },
   });
 }
+
+const SAVE_FAILED = '保存できませんでした。もう一度お試しください';
+
+/** 保存（新しい記録・追加）に失敗したときの文言（F-030-12）。失敗していなければ null */
+export function saveErrorMessage(error: Error | null): string | null {
+  if (!error) return null;
+  if (!(error instanceof AddItemError)) return SAVE_FAILED;
+  if (error.reason === 'conflict') return 'ほかの変更と重なりました。もう一度保存してください';
+  if (error.reason === 'not_found') return 'この食事は削除されています';
+  return SAVE_FAILED;
+}

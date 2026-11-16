@@ -5,6 +5,36 @@
 
 ---
 
+## 2026-11-16 セッション1（続き6）: バーコード照合のアプリ（IMP-06）
+
+**やったこと**
+- 仕様: [F-011-barcode.md](../01_requirements/features/F-011-barcode.md) にアプリ側の要件 F-011-13〜18、新しく [F-020-confirm.md](../01_requirements/features/F-020-confirm.md)（確認・修正の画面 F-020-01〜06）。画面設計 3-3 に「栄養成分表示を撮るは準備中」
+- アプリ（テスト先行。新しいテスト30件の赤を確認 → 緑。Jest 164件、tsc・ESLint・Android のバンドルも OK）
+  - `expo-camera` を追加（`npx expo install`）。app.json にカメラの許可の文言
+  - `src/features/barcode/barcode-scan-screen.tsx`: 許可・JAN の自動読み取り・照合中・見つからない／失敗／429 のダイアログ
+  - `src/features/confirm/confirm-screen.tsx`: 食品カード（名前の修正・出どころ・基準と内容量・分量のワンタップ・値のプレビュー）、合計、保存（新しい記録 / 追加モード）。OCR と写真でも使う前提で候補の配列を受け取る
+  - `src/lib/portion.ts`: 「全部」の倍率・分量の倍率・値のプレビュー（domain-model §2-3、DM-03・04、ROUND_HALF_UP）
+  - `/record/barcode`（読み取り → 確認を1つのルートで切り替え）。ホームと詳細の追加から開く
+  - 保存失敗の文言を `saveErrorMessage`（use-add-item.ts）に寄せ、手入力と確認画面で共通にした
+- ユーザーが iPhone（dev）で確認。IMP-06 を完了にした
+
+**決まったこと**
+- バーコードは食品の追加でも使える
+- 「栄養成分表示を撮る」（見つからないときのダイアログ・確認画面）は OCR を作るまで「準備中」で押せない
+
+**次にやること**
+1. 栄養成分表示 OCR のアプリ（IMP-07）: 撮影（expo-camera）・長辺 1024px に縮小（expo-image-manipulator）・`POST /v1/estimates/label`・列の選択・個数売り・エラーダイアログ。バーコードからの「栄養成分表示を撮る」を有効にする
+2. 写真推定のアプリ（IMP-08）
+3. 起動直後の読み込みの遅さ（Lambda のコールドスタート）
+4. Dependabot（CIC-08）、CI からのデプロイ（CIC-05・CIC-09）
+
+**注意点・気づき**
+- React Native 0.88 では `StyleSheet.absoluteFillObject` がない。`StyleSheet.absoluteFill` を使う
+- 「入力方法の選択に戻る」は前の画面（ホーム・詳細）に戻るだけで、シートは閉じている
+- 新しいパッケージを入れたら Metro を `npx expo start -c` で起動し直す
+
+---
+
 ## 2026-11-16 セッション1（続き5）: 設定画面とサインアウト（F-001・IMP-09）、起動の遅さの調査
 
 **やったこと**

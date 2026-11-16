@@ -129,18 +129,27 @@ describe('ホーム（F-031）', () => {
     expect(onSelectMethod).toHaveBeenCalledWith('manual', '2026-11-12');
   });
 
-  it('まだ作っていない方式（バーコード・栄養成分表示・写真）は「準備中」で押せない', async () => {
+  it('まだ作っていない方式（栄養成分表示・写真）は「準備中」で押せない', async () => {
     const selected: RecordMethod[] = [];
     await setup(() => ({ status: 200, body: emptyDay }), (m) => selected.push(m));
     await screen.findByText('まだ記録がありません');
     await fireEvent.press(screen.getByRole('button', { name: '＋ 記録する' }));
-    for (const label of ['バーコード', '栄養成分表示', '写真']) {
+    for (const label of ['栄養成分表示', '写真']) {
       const button = await screen.findByRole('button', { name: new RegExp(label) });
       expect(button).toBeDisabled();
       await fireEvent.press(button);
     }
-    expect(screen.getAllByText('準備中')).toHaveLength(3);
+    expect(screen.getAllByText('準備中')).toHaveLength(2);
     expect(selected).toEqual([]);
+  });
+
+  it('[F-011-13] シートで「バーコード」を選ぶと、表示している記録日を渡してバーコードへ進む', async () => {
+    const onSelectMethod = jest.fn();
+    await setup(() => ({ status: 200, body: emptyDay }), onSelectMethod);
+    await screen.findByText('まだ記録がありません');
+    await fireEvent.press(screen.getByRole('button', { name: '＋ 記録する' }));
+    await fireEvent.press(await screen.findByRole('button', { name: /バーコード/ }));
+    expect(onSelectMethod).toHaveBeenCalledWith('barcode', '2026-11-13');
   });
 
   it('シートの「閉じる」で何も選ばずに閉じる', async () => {

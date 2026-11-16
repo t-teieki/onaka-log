@@ -11,8 +11,9 @@ export default function MealDetail() {
       mealId={mealId}
       onClose={() => (router.canGoBack() ? router.back() : router.replace('/'))}
       onAddItem={(method) => {
-        // バーコード・栄養成分表示・写真はまだない（シートで押せない）
+        // 栄養成分表示・写真はまだない（シートで押せない）
         if (method === 'manual') router.push({ pathname: '/record/manual', params: { recordDate, mealId } });
+        if (method === 'barcode') router.push({ pathname: '/record/barcode', params: { recordDate, mealId } });
       }}
     />
   );
