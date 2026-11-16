@@ -1,5 +1,7 @@
 # ドキュメント索引
 
+第三者向けの全体像（1枚の HTML、ブラウザで開く）: [project-overview.html](project-overview.html)
+
 ## 読む順番
 
 1. [00_project/roadmap.md](00_project/roadmap.md) — 現在地と全体チェックリスト

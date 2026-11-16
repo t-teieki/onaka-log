@@ -1,0 +1,1016 @@
+<!doctype html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>onaka-log 全体像</title>
+<meta name="description" content="食品のカロリー・PFC を推定・記録するスマホアプリ onaka-log の概要・機能・仕様・設計・技術スタック・インフラ・実装・開発環境のまとめ（第三者向け）">
+<link href="https://cdn.jsdelivr.net/npm/daisyui@5.0.43/daisyui.css" rel="stylesheet" type="text/css">
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.1.11"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js"></script>
+<style>
+  html { scroll-behavior: smooth; }
+  body { background: var(--color-base-200); }
+  section { scroll-margin-top: 5rem; }
+  .prose-ja p, .prose-ja li { line-height: 1.85; }
+  .mermaid-box { background: var(--color-base-100); border: 1px solid var(--color-base-300); border-radius: var(--radius-box); padding: 1rem; overflow-x: auto; }
+  .mermaid-box svg { max-width: 100%; height: auto; margin: 0 auto; display: block; }
+  pre.code { background: var(--color-neutral); color: var(--color-neutral-content); border-radius: var(--radius-field); padding: .9rem 1rem; overflow-x: auto; font-size: .82rem; line-height: 1.6; }
+  .wire { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Noto Sans Mono CJK JP", monospace; font-size: .78rem; line-height: 1.55; white-space: pre; }
+  table.table td, table.table th { vertical-align: top; }
+  .menu a.active { background: var(--color-primary); color: var(--color-primary-content); }
+  main .grid > *, .card-body { min-width: 0; }
+  code.k { overflow-wrap: anywhere; }
+  code.k { font-size: .85em; padding: .05rem .35rem; border-radius: .3rem; background: var(--color-base-200); }
+</style>
+</head>
+<body class="min-h-screen">
+<div class="drawer lg:drawer-open">
+  <input id="nav-drawer" type="checkbox" class="drawer-toggle">
+  <div class="drawer-content flex flex-col">
+
+    <!-- Navbar -->
+    <div class="navbar bg-base-100 border-b border-base-300 sticky top-0 z-30 px-2 sm:px-4">
+      <div class="flex-none lg:hidden">
+        <label for="nav-drawer" class="btn btn-square btn-ghost" aria-label="目次を開く">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="w-6 h-6 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </label>
+      </div>
+      <div class="flex-1 min-w-0">
+        <a href="#overview" class="btn btn-ghost text-lg font-bold px-2">onaka-log</a>
+        <span class="hidden sm:inline text-sm opacity-60 truncate">プロジェクト全体像</span>
+      </div>
+      <div class="flex-none gap-2 flex items-center">
+        <span class="badge badge-outline hidden md:inline-flex">2026-11-16 時点</span>
+        <label class="swap swap-rotate btn btn-ghost btn-circle" aria-label="ライト・ダーク切り替え">
+          <input type="checkbox" id="theme-toggle">
+          <svg class="swap-off w-6 h-6 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5.64,17l-.71.71a1,1,0,0,0,0,1.41,1,1,0,0,0,1.41,0l.71-.71A1,1,0,0,0,5.64,17ZM5,12a1,1,0,0,0-1-1H3a1,1,0,0,0,0,2H4A1,1,0,0,0,5,12Zm7-7a1,1,0,0,0,1-1V3a1,1,0,0,0-2,0V4A1,1,0,0,0,12,5ZM5.64,7.05a1,1,0,0,0,.7.29,1,1,0,0,0,.71-.29,1,1,0,0,0,0-1.41l-.71-.71A1,1,0,0,0,4.93,6.34Zm12,.29a1,1,0,0,0,.7-.29l.71-.71a1,1,0,1,0-1.41-1.41L17,5.64a1,1,0,0,0,0,1.41A1,1,0,0,0,17.66,7.34ZM21,11H20a1,1,0,0,0,0,2h1a1,1,0,0,0,0-2Zm-9,8a1,1,0,0,0-1,1v1a1,1,0,0,0,2,0V20A1,1,0,0,0,12,19ZM18.36,17A1,1,0,0,0,17,18.36l.71.71a1,1,0,0,0,1.41,0,1,1,0,0,0,0-1.41ZM12,6.5A5.5,5.5,0,1,0,17.5,12,5.51,5.51,0,0,0,12,6.5Zm0,9A3.5,3.5,0,1,1,15.5,12,3.5,3.5,0,0,1,12,15.5Z"/></svg>
+          <svg class="swap-on w-6 h-6 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21.64,13a1,1,0,0,0-1.05-.14,8.05,8.05,0,0,1-3.37.73A8.15,8.15,0,0,1,9.08,5.49a8.59,8.59,0,0,1,.25-2A1,1,0,0,0,8,2.36,10.14,10.14,0,1,0,22,14.05,1,1,0,0,0,21.64,13Zm-9.5,6.69A8.14,8.14,0,0,1,7.08,5.22v.27A10.15,10.15,0,0,0,17.22,15.63a9.79,9.79,0,0,0,2.1-.22A8.11,8.11,0,0,1,12.14,19.73Z"/></svg>
+        </label>
+      </div>
+    </div>
+
+    <main class="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-8 space-y-16 prose-ja">
+
+<!-- ============ 1. 概要 ============ -->
+<section id="overview" class="space-y-6">
+  <div class="hero bg-base-100 rounded-box border border-base-300">
+    <div class="hero-content flex-col items-start py-10 px-6 sm:px-10">
+      <div class="flex flex-wrap gap-2">
+        <span class="badge badge-primary">開発中（MVP 実装フェーズ M4〜M5）</span>
+        <span class="badge badge-ghost">iOS / Android</span>
+        <span class="badge badge-ghost">AWS サーバーレス</span>
+        <span class="badge badge-ghost">Claude API</span>
+      </div>
+      <h1 class="text-3xl sm:text-4xl font-bold leading-tight">onaka-log</h1>
+      <p class="text-lg opacity-80 max-w-3xl">食品のカロリーと PFC（タンパク質・脂質・炭水化物）を<strong>読み取りと AI 推定で</strong>記録し、1日の摂取量を確認するスマホアプリ。<br class="hidden sm:inline">「人が入力する手間を極力なくす」ことを最優先に設計しています。</p>
+      <div class="flex flex-wrap gap-2 pt-2">
+        <a href="#features" class="btn btn-primary btn-sm">機能を見る</a>
+        <a href="#design" class="btn btn-outline btn-sm">設計を見る</a>
+        <a href="#connect" class="btn btn-outline btn-sm">実機・エミュレーターから接続</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats grid grid-flow-row grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 w-full bg-base-100 border border-base-300">
+    <div class="stat">
+      <div class="stat-title">入力方式</div>
+      <div class="stat-value text-primary">4</div>
+      <div class="stat-desc">バーコード・成分表示・写真・手入力</div>
+    </div>
+    <div class="stat">
+      <div class="stat-title">API</div>
+      <div class="stat-value">9</div>
+      <div class="stat-desc">REST + OpenAPI 3.1（/v1）</div>
+    </div>
+    <div class="stat">
+      <div class="stat-title">自動テスト</div>
+      <div class="stat-value">約330</div>
+      <div class="stat-desc">契約 88・API 152・アプリ 88</div>
+    </div>
+    <div class="stat">
+      <div class="stat-title">月の運用費（見込み）</div>
+      <div class="stat-value">約200円</div>
+      <div class="stat-desc">上限 1,000円（NFR-001）</div>
+    </div>
+  </div>
+
+  <div class="grid md:grid-cols-3 gap-4">
+    <div class="card bg-base-100 border border-base-300">
+      <div class="card-body">
+        <h3 class="card-title text-base">誰のためのアプリか</h3>
+        <p class="text-sm">直近は開発者本人専用。将来はストアで一般公開できるよう、認証・マルチユーザー前提で作っています（ADR-0003）。</p>
+      </div>
+    </div>
+    <div class="card bg-base-100 border border-base-300">
+      <div class="card-body">
+        <h3 class="card-title text-base">記録の単位</h3>
+        <p class="text-sm"><strong>食事（Meal）1件に食品（FoodItem）N件</strong>。食品ごとの値と食事の合計の両方を持ちます。1日の境界は <strong>4:00</strong>（日本時間）。</p>
+      </div>
+    </div>
+    <div class="card bg-base-100 border border-base-300">
+      <div class="card-body">
+        <h3 class="card-title text-base">プライバシー</h3>
+        <p class="text-sm">撮影画像は推定に使ったら即破棄。端末・サーバー・ログのどこにも残しません（ADR-0004）。Claude API キーはアプリに持たせません。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card bg-base-100 border border-base-300">
+    <div class="card-body">
+      <h3 class="card-title text-base">全体の流れ（ひと目で）</h3>
+      <div class="mermaid-box"><pre class="mermaid">
+flowchart LR
+    U((利用者)) --> APP[Expo アプリ<br>iOS / Android]
+    APP -->|JWT| GW[API Gateway]
+    GW --> L[Lambda<br>FastAPI]
+    L --> DB[(DynamoDB)]
+    L -->|成分表示 OCR / 写真推定| C[Claude API]
+    L -->|バーコード照合| OFF[Open Food Facts]
+    APP -.サインイン.-> COG[Cognito<br>Google / Apple]
+</pre></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2. 機能 ============ -->
+<section id="features" class="space-y-6">
+  <h2 class="text-2xl font-bold border-l-4 border-primary pl-3">機能</h2>
+
+  <h3 class="text-lg font-semibold">4つの入力方式</h3>
+  <div class="grid sm:grid-cols-2 gap-4">
+    <div class="card bg-base-100 border border-base-300">
+      <div class="card-body">
+        <div class="flex items-center justify-between gap-2"><h4 class="card-title text-base">① バーコード照合</h4><span class="badge badge-sm">F-011</span></div>
+        <p class="text-sm">JAN コードを読み、Open Food Facts から商品名・栄養値・内容量を取得。値の出どころを表示し、登録ミスに備えて成分表示 OCR へワンタップで切り替え可能。</p>
+        <div class="flex flex-wrap gap-1"><span class="badge badge-outline badge-sm">Claude 不使用</span><span class="badge badge-outline badge-sm">3タップで記録</span><span class="badge badge-warning badge-sm">条件付き採用</span></div>
+      </div>
+    </div>
+    <div class="card bg-base-100 border border-base-300">
+      <div class="card-body">
+        <div class="flex items-center justify-between gap-2"><h4 class="card-title text-base">② 栄養成分表示 OCR</h4><span class="badge badge-sm">F-012</span></div>
+        <p class="text-sm">パッケージの栄養成分表示を撮影し、Claude <strong>Haiku 5.5</strong>（effort low）で基準量・栄養値・内容量を読み取る。味違いなど複数列があれば全列を返し、利用者が選ぶ。</p>
+        <div class="flex flex-wrap gap-1"><span class="badge badge-outline badge-sm">約0.1円/回</span><span class="badge badge-outline badge-sm">応答 約4秒</span><span class="badge badge-success badge-sm">採用</span></div>
+      </div>
+    </div>
+    <div class="card bg-base-100 border border-base-300">
+      <div class="card-body">
+        <div class="flex items-center justify-between gap-2"><h4 class="card-title text-base">③ 写真からの AI 推定</h4><span class="badge badge-sm">F-013</span></div>
+        <p class="text-sm">料理を撮影し、Claude <strong>Sonnet 5.5</strong>（effort medium）で品目ごとに料理名・量・kcal・PFC を推定。定食なら器ごとに分解。値は「目安」としてそのまま登録。</p>
+        <div class="flex flex-wrap gap-1"><span class="badge badge-outline badge-sm">約1.9円/回</span><span class="badge badge-outline badge-sm">応答 p90 約5秒</span><span class="badge badge-success badge-sm">採用（目安値）</span></div>
+      </div>
+    </div>
+    <div class="card bg-base-100 border border-base-300">
+      <div class="card-body">
+        <div class="flex items-center justify-between gap-2"><h4 class="card-title text-base">④ 手入力</h4><span class="badge badge-sm">F-014</span></div>
+        <p class="text-sm">食品名と kcal・P・F・C の5項目をすべて入力（必須）。①〜③で推定できない・不正確なときの<strong>最後の手段</strong>。換算や分量選択はしない。</p>
+        <div class="flex flex-wrap gap-1"><span class="badge badge-outline badge-sm">Claude 不使用</span><span class="badge badge-info badge-sm">アプリ実装済み</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="text-lg font-semibold">機能一覧（F-xxx）</h3>
+  <div class="overflow-x-auto bg-base-100 rounded-box border border-base-300">
+    <table class="table table-sm">
+      <thead><tr><th>ID</th><th>機能</th><th>区分</th><th>概要</th></tr></thead>
+      <tbody>
+        <tr><td>F-001</td><td>サインイン・サインアウト</td><td><span class="badge badge-primary badge-sm">MVP</span></td><td>Sign in with Apple と Google。記録は利用者ごとに分離</td></tr>
+        <tr><td>F-002</td><td>アカウントと記録の削除</td><td><span class="badge badge-secondary badge-sm">公開前</span></td><td>App Store 審査要件。<code class="k">DELETE /v1/me</code> 予定</td></tr>
+        <tr><td>F-010</td><td>入力方式の選択</td><td><span class="badge badge-primary badge-sm">MVP</span></td><td>ホームの「記録する」で開くシートから4方式を選ぶ</td></tr>
+        <tr><td>F-011〜014</td><td>入力方式 ①〜④</td><td><span class="badge badge-primary badge-sm">MVP</span></td><td>上のカードのとおり</td></tr>
+        <tr><td>F-020</td><td>確認・修正画面</td><td><span class="badge badge-primary badge-sm">MVP</span></td><td>出どころ・基準・内容量不明の表示、列の選択、分量のワンタップ、料理名の修正、食べた日時の変更</td></tr>
+        <tr><td>F-021</td><td>読み取れないときの案内</td><td><span class="badge badge-primary badge-sm">MVP</span></td><td>エラーダイアログ（撮り直す・撮り方の案内・手入力・方式選択に戻る）</td></tr>
+        <tr><td>F-030</td><td>食事への追加・保存</td><td><span class="badge badge-primary badge-sm">MVP</span></td><td>確認した食品で食事を作る。後から同じ食事に食品を足せる</td></tr>
+        <tr><td>F-031</td><td>日次合計と食事一覧</td><td><span class="badge badge-primary badge-sm">MVP</span></td><td>4:00 区切りの1日の kcal・PFC 合計と、食事の時刻順一覧</td></tr>
+        <tr><td>F-032</td><td>食事・食品の削除</td><td><span class="badge badge-primary badge-sm">MVP</span></td><td>確認なしで削除し約5秒「元に戻す」。0件になった食事は自動削除</td></tr>
+        <tr><td>F-040〜043</td><td>推移グラフ・目標値・お気に入り・栄養素拡張</td><td><span class="badge badge-ghost badge-sm">次期</span></td><td>MVP 外</td></tr>
+        <tr><td>F-044〜045</td><td>エクスポート・成分表データでの手入力補助</td><td><span class="badge badge-ghost badge-sm">将来</span></td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div role="alert" class="alert">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-info h-6 w-6 shrink-0"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+    <span><strong>作らないもの:</strong> 撮影画像の保存・表示、メール＋パスワードのログイン、保存後の値の修正（間違えたら削除して記録し直す）、食事区分（朝・昼・夕・間食。時刻で並べる）、オフラインでの記録・閲覧。</span>
+  </div>
+</section>
+
+<!-- ============ 3. 仕様 ============ -->
+<section id="spec" class="space-y-6">
+  <h2 class="text-2xl font-bold border-l-4 border-primary pl-3">仕様</h2>
+
+  <h3 class="text-lg font-semibold">MVP の主要ルール</h3>
+  <div class="overflow-x-auto bg-base-100 rounded-box border border-base-300">
+    <table class="table table-sm">
+      <thead><tr><th class="w-36">区分</th><th>内容</th></tr></thead>
+      <tbody>
+        <tr><td>分量</td><td>人は入力しない。既定は「<strong>全部食べた</strong>」。確認画面のワンタップ（1/4・1/2・3/4・全部）で直せる。「1個当たり」表示で複数個入りなら既定は「<strong>1個</strong>」で個数を選ぶ</td></tr>
+        <tr><td>1日の境界</td><td><strong>4:00</strong>。0:00〜3:59 の食事は前日分。タイムゾーンは日本時間に固定</td></tr>
+        <tr><td>食べた日時</td><td>既定は記録した時刻。確認画面で過去の日時に変更可（未来は不可）。保存後は変えない</td></tr>
+        <tr><td>読み取れない場合</td><td>エラーダイアログ。「撮り直す」と撮り方の案内（正面から・近づけて）、「手入力する」「入力方法の選択に戻る」</td></tr>
+        <tr><td>内容量が不明</td><td>エラーにせず登録する。基準（100g 当たり等）と「内容量：不明」を必ず一緒に保存・表示（ADR-0009）</td></tr>
+        <tr><td>削除</td><td>確認ダイアログなし。約5秒「元に戻す」。アプリが削除 API の送信を遅らせて実現（サーバーは物理削除）</td></tr>
+        <tr><td>認証</td><td>最初から入れる。Sign in with Apple + Google（Apple は Apple Developer Program 登録後）</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="text-lg font-semibold">分量の決め方（方式別）</h3>
+  <div class="overflow-x-auto bg-base-100 rounded-box border border-base-300">
+    <table class="table table-sm">
+      <thead><tr><th>方式</th><th>取れる値</th><th>既定の分量</th></tr></thead>
+      <tbody>
+        <tr><td>バーコード</td><td>100g 当たり／1食当たりの値、内容量</td><td>1包装を全部。内容量で換算 → なければ「1食当たり（推定）」→ それもなければ「100g 当たり・内容量：不明」</td></tr>
+        <tr><td>OCR</td><td>表示の基準量（1袋・100g・1個など）と値、内容量</td><td>1包装を全部。100g 当たりなら読み取った内容量で換算</td></tr>
+        <tr><td>写真推定</td><td>AI が推定した料理名・量・kcal・PFC</td><td>写っている量を全部</td></tr>
+        <tr><td>手入力</td><td>利用者が入力した値</td><td>入力値をそのまま（換算なし）</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="text-lg font-semibold">記録フロー</h3>
+  <div class="mermaid-box"><pre class="mermaid">
+flowchart TD
+    Home[ホーム: 記録する] --> Sheet[入力方式の選択シート]
+    Sheet -->|バーコード / 成分表示 / 写真| Get[読み取り・推定]
+    Sheet -->|手入力| Confirm
+    Get -->|成功| Confirm[確認・修正画面<br>分量・列・日時を変更可]
+    Get -->|失敗| Err[エラーダイアログ<br>撮り方の案内]
+    Err -->|撮り直す| Get
+    Err -->|入力方法の選択に戻る| Sheet
+    Err -->|手入力する| Confirm
+    Confirm --> Save[食事に追加して保存]
+    Save --> Home
+</pre></div>
+
+  <h3 class="text-lg font-semibold">画面</h3>
+  <div class="grid lg:grid-cols-5 gap-6 items-start">
+    <div class="lg:col-span-3 overflow-x-auto bg-base-100 rounded-box border border-base-300">
+      <table class="table table-sm">
+        <thead><tr><th>画面</th><th>機能</th><th>主な API</th></tr></thead>
+        <tbody>
+          <tr><td>サインイン</td><td>F-001</td><td>Cognito（Hosted UI）</td></tr>
+          <tr><td>ホーム（1日の記録）</td><td>F-031</td><td><code class="k">GET /v1/days/{date}</code></td></tr>
+          <tr><td>入力方式の選択（シート）</td><td>F-010</td><td>—</td></tr>
+          <tr><td>バーコード読み取り</td><td>F-011</td><td><code class="k">GET /v1/products/{code}</code></td></tr>
+          <tr><td>撮影（成分表示・料理）</td><td>F-012, F-013</td><td><code class="k">POST /v1/estimates/*</code></td></tr>
+          <tr><td>確認・修正 ★最重要</td><td>F-020, F-014</td><td><code class="k">POST /v1/meals</code></td></tr>
+          <tr><td>食事の詳細</td><td>F-020, F-032</td><td><code class="k">GET / DELETE …/meals/{id}</code></td></tr>
+          <tr><td>設定</td><td>F-001</td><td>—</td></tr>
+        </tbody>
+      </table>
+      <div class="p-4">
+        <p class="font-semibold text-sm mb-2">手数の目標（UIX-12）</p>
+        <ul class="steps steps-vertical sm:steps-horizontal w-full text-xs">
+          <li class="step step-primary">記録する</li>
+          <li class="step step-primary">写真</li>
+          <li class="step step-primary">シャッター</li>
+          <li class="step step-primary">保存</li>
+        </ul>
+        <p class="text-xs opacity-70 mt-2">写真・成分表示は4タップ、バーコードは3タップ（自動で読む）。分量・列を変えるとそれぞれ＋1。</p>
+      </div>
+    </div>
+    <div class="lg:col-span-2 flex justify-center">
+      <div class="w-full max-w-[300px] rounded-[2.5rem] border-[10px] border-neutral bg-neutral shadow-lg">
+        <div class="mx-auto mt-1 mb-1 h-4 w-24 rounded-full bg-neutral"></div>
+        <div class="rounded-[1.8rem] overflow-hidden bg-base-100 text-base-content pb-4">
+          <div class="pt-6 px-4 space-y-3">
+            <div class="flex justify-between items-center text-sm"><span>◀</span><span class="font-semibold">11月13日（木）</span><span>▶ ⚙</span></div>
+            <div class="rounded-box bg-base-200 p-3">
+              <div class="text-2xl font-bold">1,842 <span class="text-sm font-normal">kcal</span></div>
+              <div class="text-xs opacity-80">P 72.4g　F 61.0g　C 228.5g</div>
+            </div>
+            <ul class="text-xs divide-y divide-base-300">
+              <li class="flex justify-between py-2"><span>08:00　職場のお菓子</span><span>150</span></li>
+              <li class="flex justify-between py-2"><span>12:30　カップ麺</span><span>351</span></li>
+              <li class="flex justify-between py-2"><span>19:15　ご飯、ハンバーグ…</span><span>702</span></li>
+            </ul>
+            <div class="pt-16"><button class="btn btn-primary btn-block btn-sm">＋ 記録する</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="text-lg font-semibold">非機能要件</h3>
+  <div class="overflow-x-auto bg-base-100 rounded-box border border-base-300">
+    <table class="table table-sm">
+      <thead><tr><th>ID</th><th>区分</th><th>要件</th></tr></thead>
+      <tbody>
+        <tr><td>NFR-001</td><td>コスト</td><td>運用コストは月1,000円程度まで（Claude API とホスティングの合計）</td></tr>
+        <tr><td>NFR-002</td><td>プライバシー</td><td>撮影画像を端末・サーバー・ログのどこにも保存しない</td></tr>
+        <tr><td>NFR-003</td><td>対応 OS</td><td>iOS・Android の両方（Android はエミュレーターで検証）</td></tr>
+        <tr><td>NFR-004</td><td>セキュリティ</td><td>Claude API キーをアプリに持たせない（バックエンド経由で呼ぶ）</td></tr>
+        <tr><td>NFR-005</td><td>拡張性</td><td>将来のストア公開（マルチユーザー）に作り直しなしで移れる</td></tr>
+        <tr><td>NFR-006</td><td>操作性</td><td>記録時の入力の手間を極力なくす（キーボード入力は最終手段）</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ 4. 設計 ============ -->
+<section id="design" class="space-y-6">
+  <h2 class="text-2xl font-bold border-l-4 border-primary pl-3">設計</h2>
+
+  <h3 class="text-lg font-semibold">全体構成（AWS）</h3>
+  <figure class="bg-white rounded-box border border-base-300 p-4">
+    <img src="02_design/diagrams/architecture.png" alt="onaka-log 全体構成図（AWS 公式アイコン）" class="mx-auto max-w-full h-auto" loading="lazy">
+    <figcaption class="text-xs text-center text-gray-500 mt-2">元のコード: 02_design/diagrams/architecture.py（Python の diagrams で生成）</figcaption>
+  </figure>
+  <div class="overflow-x-auto bg-base-100 rounded-box border border-base-300">
+    <table class="table table-sm">
+      <thead><tr><th>要素</th><th>役割</th></tr></thead>
+      <tbody>
+        <tr><td>Expo アプリ</td><td>画面、カメラ・バーコード読み取り、画像の縮小（長辺 1024px の JPEG）、トークンの安全な保存</td></tr>
+        <tr><td>Cognito</td><td>Apple・Google でのサインイン、JWT の発行</td></tr>
+        <tr><td>API Gateway（HTTP API）</td><td>入口。JWT を検証してから Lambda に渡す。スロットリング（5 req/s、バースト 10）</td></tr>
+        <tr><td>Lambda（FastAPI）</td><td>API 全体を1関数で実行。推定・照合・換算・検証・保存</td></tr>
+        <tr><td>DynamoDB</td><td>食事の保存（1テーブル）</td></tr>
+        <tr><td>SSM Parameter Store</td><td>Claude API キー（SecureString）</td></tr>
+        <tr><td>Claude API</td><td>栄養成分表示の読み取り、写真からの推定</td></tr>
+        <tr><td>Open Food Facts</td><td>バーコード照合。換算規則と利用規約の遵守をまとめるため<strong>バックエンドから</strong>呼ぶ</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="text-lg font-semibold">主要な設計判断</h3>
+  <div class="grid md:grid-cols-3 gap-4">
+    <div class="card bg-base-100 border border-base-300"><div class="card-body p-5">
+      <h4 class="font-semibold">サーバーファースト</h4>
+      <p class="text-sm">記録の正は DynamoDB。アプリは表示用に一時的に持つだけ。端末 DB と同期は作らない（ADR-0015）。</p>
+    </div></div>
+    <div class="card bg-base-100 border border-base-300"><div class="card-body p-5">
+      <h4 class="font-semibold">推定は同期 API・保存は別 API</h4>
+      <p class="text-sm">推定結果は保存せず、利用者が確認画面で直した結果だけを保存する。応答は 4〜5 秒で API Gateway の 30 秒上限に収まる。</p>
+    </div></div>
+    <div class="card bg-base-100 border border-base-300"><div class="card-body p-5">
+      <h4 class="font-semibold">計算はバックエンド</h4>
+      <p class="text-sm">食べた量の値・合計はバックエンドが計算する。アプリから送られた計算値は使わず、ドメインのルールを1か所に集める。</p>
+    </div></div>
+  </div>
+
+  <h3 class="text-lg font-semibold">撮影して推定 → 保存するシーケンス</h3>
+  <div class="mermaid-box"><pre class="mermaid">
+sequenceDiagram
+    participant A as アプリ
+    participant G as API Gateway
+    participant L as Lambda
+    participant C as Claude API
+    participant D as DynamoDB
+    A->>A: 撮影・長辺1024pxに縮小（画像は端末にも残さない）
+    A->>G: POST /v1/estimates/*（画像 base64、JWT）
+    G->>L: 検証済みの利用者IDつきで呼ぶ
+    L->>C: 画像＋プロンプト（Structured Outputs）
+    C-->>L: JSON
+    L->>L: スキーマと意味ルールで検証、画像を破棄
+    L-->>A: 推定結果（status・食品の候補）
+    A->>A: 確認・修正画面（分量・列・個数・日時）
+    A->>G: POST /v1/meals（食品・分量、UUIDv7）
+    G->>L: 検証済みの要求を渡す
+    L->>L: 倍率・食べた量の値・合計を計算、DM-01〜09 を検証
+    L->>D: PutItem（同じIDがないことを条件）
+    L-->>A: 保存した食事
+</pre></div>
+
+  <h3 class="text-lg font-semibold">ドメインモデル</h3>
+  <div class="mermaid-box"><pre class="mermaid">
+classDiagram
+    class User { user_id（Cognito の sub） }
+    class Meal {
+        meal_id（UUIDv7）
+        eaten_at（日本時間）
+        record_date（4:00 区切り）
+        totals : Nutrients
+        totals_incomplete
+        version
+    }
+    class FoodItem {
+        item_id（UUIDv7）
+        name
+        nutrients（食べた量の値）
+        estimate_detail
+    }
+    class Source { method / provider / product_code / estimation / confidence }
+    class Reference { basis（何当たりか） / net_content（内容量） / nutrients（元の値） }
+    class Portion { mode（whole / fraction / pieces） / multiplier }
+    User "1" --> "*" Meal
+    Meal "1" *-- "1..*" FoodItem
+    FoodItem *-- Source
+    FoodItem *-- Reference
+    FoodItem *-- Portion
+</pre></div>
+
+  <div class="grid lg:grid-cols-2 gap-4">
+    <div class="card bg-base-100 border border-base-300"><div class="card-body p-5">
+      <h4 class="font-semibold">値の決まり方</h4>
+      <pre class="code">nutrients = reference.nutrients × portion.multiplier
+            （小数第1位で四捨五入、null は「不明」）</pre>
+      <ul class="list-disc pl-5 text-sm">
+        <li>100g 当たり＋内容量あり → 「全部」の倍率は 内容量 ÷ 100</li>
+        <li>100g 当たり＋内容量不明 → 1（100g 食べたとみなす）</li>
+        <li>1個当たり＋個数あり → 個数（既定は1個を選択）</li>
+        <li>1包装・1食・写真推定・手入力 → 1</li>
+      </ul>
+      <p class="text-xs opacity-70">例: 100g 当たり 450kcal・内容量 76g・全部 → 倍率 0.76 → 342kcal</p>
+    </div></div>
+    <div class="card bg-base-100 border border-base-300"><div class="card-body p-5">
+      <h4 class="font-semibold">ドメインのルール（不変条件）</h4>
+      <ul class="text-sm space-y-1">
+        <li><span class="badge badge-sm">DM-01</span> record_date = eaten_at − 4時間の日付</li>
+        <li><span class="badge badge-sm">DM-02</span> totals は食品の和（null は 0、不明は totals_incomplete に記録）</li>
+        <li><span class="badge badge-sm">DM-03</span> 食べた量の値 = 元の値 × 倍率</li>
+        <li><span class="badge badge-sm">DM-04</span> 倍率は基準と分量の規則どおり</li>
+        <li><span class="badge badge-sm">DM-05</span> 方式と基準の組み合わせ（写真は as_estimated など）</li>
+        <li><span class="badge badge-sm">DM-06</span> 個数指定は 1個当たりのときだけ、手入力は whole だけ</li>
+        <li><span class="badge badge-sm">DM-07</span> 食事内で item_id は重複しない</li>
+        <li><span class="badge badge-sm">DM-08</span> 食事には食品が1件以上（0件なら食事ごと削除）</li>
+        <li><span class="badge badge-sm">DM-09</span> 手入力は kcal・P・F・C すべて必須</li>
+      </ul>
+    </div></div>
+  </div>
+
+  <h3 class="text-lg font-semibold">データモデル（DynamoDB・1テーブル）</h3>
+  <div class="overflow-x-auto bg-base-100 rounded-box border border-base-300">
+    <table class="table table-sm">
+      <thead><tr><th>属性</th><th>例</th><th>説明</th></tr></thead>
+      <tbody>
+        <tr><td><code class="k">PK</code></td><td><code class="k">USER#3f1c…</code></td><td>パーティションキー（Cognito の sub）</td></tr>
+        <tr><td><code class="k">SK</code></td><td><code class="k">MEAL#2026-11-13#12:30:05#0190f3a2-…</code></td><td>記録日＋時刻＋食事ID。1日分を時刻順に Query で取れる</td></tr>
+        <tr><td><code class="k">items</code></td><td>List of Map</td><td>食品は食事の中に埋め込む（1食事は数 KB）</td></tr>
+        <tr><td><code class="k">version</code></td><td>1, 2, …</td><td>食品の追加・削除時の楽観的ロック</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul class="list-disc pl-5 text-sm">
+    <li>ID は <strong>UUIDv7 をアプリで生成</strong>。再送しても同じ ID になり、<code class="k">attribute_not_exists</code> 条件で二重保存を防ぐ</li>
+    <li>利用者 ID はアプリから受け取らず JWT の <code class="k">sub</code> だけを使う。他人のデータは読めない・消せないことをテスト済み</li>
+    <li>削除は物理削除。更新履歴は持たない。GSI は MVP では作らない</li>
+  </ul>
+
+  <h3 class="text-lg font-semibold">API（REST + OpenAPI 3.1）</h3>
+  <div class="overflow-x-auto bg-base-100 rounded-box border border-base-300">
+    <table class="table table-sm">
+      <thead><tr><th>メソッドとパス</th><th>機能</th><th>説明</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge badge-success badge-sm">POST</span> <code class="k">/v1/estimates/label</code></td><td>F-012</td><td>成分表示の画像から食品の候補（列ごと）。保存しない</td></tr>
+        <tr><td><span class="badge badge-success badge-sm">POST</span> <code class="k">/v1/estimates/photo</code></td><td>F-013</td><td>料理の画像から品目ごとの候補。保存しない</td></tr>
+        <tr><td><span class="badge badge-info badge-sm">GET</span> <code class="k">/v1/products/{product_code}</code></td><td>F-011</td><td>Open Food Facts で照合し候補を返す</td></tr>
+        <tr><td><span class="badge badge-success badge-sm">POST</span> <code class="k">/v1/meals</code></td><td>F-030</td><td>食事を作って保存</td></tr>
+        <tr><td><span class="badge badge-info badge-sm">GET</span> <code class="k">/v1/days/{record_date}</code></td><td>F-031</td><td>1日分の食事と日次合計</td></tr>
+        <tr><td><span class="badge badge-info badge-sm">GET</span> <code class="k">/v1/days/{d}/meals/{meal_id}</code></td><td>F-020</td><td>食事1件</td></tr>
+        <tr><td><span class="badge badge-error badge-sm">DELETE</span> <code class="k">/v1/days/{d}/meals/{meal_id}</code></td><td>F-032</td><td>食事を削除</td></tr>
+        <tr><td><span class="badge badge-success badge-sm">POST</span> <code class="k">/v1/days/{d}/meals/{meal_id}/items</code></td><td>F-030</td><td>既存の食事に食品を足す</td></tr>
+        <tr><td><span class="badge badge-error badge-sm">DELETE</span> <code class="k">/v1/days/{d}/meals/{meal_id}/items/{item_id}</code></td><td>F-032</td><td>食品を消す（最後の1件なら食事ごと）</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="grid lg:grid-cols-2 gap-4">
+    <div class="card bg-base-100 border border-base-300"><div class="card-body p-5">
+      <h4 class="font-semibold">候補 → 入力の受け渡し</h4>
+      <div class="mermaid-box"><pre class="mermaid">
+flowchart LR
+    E[推定・照合 API] -->|FoodItemDraft<br>名前・出どころ・元の値・分量の既定| C[確認画面]
+    C -->|FoodItemInput<br>候補＋item_id＋選んだ分量| S[保存 API]
+    S -->|計算と検証| D[(DynamoDB)]
+</pre></div>
+      <p class="text-xs opacity-70">「読めない」「見つからない」は HTTP 200 の <code class="k">status</code> で返す（unreadable / not_food / not_found など）。</p>
+    </div></div>
+    <div class="card bg-base-100 border border-base-300"><div class="card-body p-5">
+      <h4 class="font-semibold">エラー体系 <code class="k">{"error": {"code", "message"}}</code></h4>
+      <div class="flex flex-wrap gap-1 text-xs">
+        <span class="badge badge-outline">400 validation_error</span>
+        <span class="badge badge-outline">401 unauthorized</span>
+        <span class="badge badge-outline">404 not_found</span>
+        <span class="badge badge-outline">409 meal_already_exists</span>
+        <span class="badge badge-outline">409 item_already_exists</span>
+        <span class="badge badge-outline">409 version_conflict</span>
+        <span class="badge badge-outline">413 payload_too_large</span>
+        <span class="badge badge-outline">422 estimation_failed</span>
+        <span class="badge badge-outline">429 rate_limited</span>
+        <span class="badge badge-outline">502 upstream_unavailable</span>
+        <span class="badge badge-outline">500 internal_error</span>
+      </div>
+      <p class="text-sm mt-2">画面の文言はアプリが <code class="k">code</code> から決める。409 の再送系は成功として扱い取得し直す。</p>
+    </div></div>
+  </div>
+
+  <h3 class="text-lg font-semibold">Claude API の利用設計</h3>
+  <div class="overflow-x-auto bg-base-100 rounded-box border border-base-300">
+    <table class="table table-sm">
+      <thead><tr><th>用途</th><th>モデル</th><th>出力スキーマ</th><th>prompt_version</th><th>結果の status</th></tr></thead>
+      <tbody>
+        <tr><td>nutrition-label-ocr</td><td>claude-haiku-5-5（low）</td><td>v0.3（列ごとの columns）</td><td>0.2.0</td><td>ok / unreadable / not_nutrition_label</td></tr>
+        <tr><td>food-photo-estimate</td><td>claude-sonnet-5-5（medium）</td><td>v0.1</td><td>0.2.0</td><td>ok / not_food / unrecognizable</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul class="list-disc pl-5 text-sm">
+    <li>入出力は <code class="k">contracts/llm/&lt;usecase&gt;/</code> の JSON Schema で定義し、<strong>Structured Outputs</strong> で出力を強制。API が未対応の制約はバックエンドで再検証</li>
+    <li>推定に使ったモデル ID・prompt_version・スキーマの <code class="k">$id</code> を食品ごとに保存（Claude の生出力と画像は保存しない）</li>
+    <li>モデル・effort は環境変数（<code class="k">ONAKA_LABEL_MODEL</code> など）で差し替え可能</li>
+    <li>refusal・max_tokens → 422、接続・タイムアウト・上流の 4xx/5xx → 502。画像内の指示に従わないルールをプロンプトに含める</li>
+  </ul>
+</section>
+
+<!-- ============ 5. 技術スタック ============ -->
+<section id="stack" class="space-y-6">
+  <h2 class="text-2xl font-bold border-l-4 border-primary pl-3">技術スタック</h2>
+  <div class="grid md:grid-cols-2 gap-4">
+    <div class="card bg-base-100 border border-base-300"><div class="card-body p-5">
+      <h3 class="card-title text-base">モバイル（apps/mobile）</h3>
+      <ul class="text-sm space-y-1">
+        <li><strong>React Native（Expo SDK 58）+ TypeScript</strong>（strict）— React 19.3 / RN 0.88</li>
+        <li>Expo Router（ファイルベースのルーティング）</li>
+        <li>TanStack Query（サーバー状態）、React の state / Context（状態管理ライブラリなし）</li>
+        <li>openapi-typescript で型生成 ＋ openapi-fetch</li>
+        <li>expo-auth-session（PKCE）＋ expo-secure-store</li>
+        <li>expo-camera（撮影・EAN-13/8）、expo-image-manipulator</li>
+        <li>@react-native-community/datetimepicker（日本時間に固定）</li>
+      </ul>
+    </div></div>
+    <div class="card bg-base-100 border border-base-300"><div class="card-body p-5">
+      <h3 class="card-title text-base">バックエンド（apps/api）</h3>
+      <ul class="text-sm space-y-1">
+        <li><strong>Python 3.12 / FastAPI</strong>、uv（ワークスペース・ロック）</li>
+        <li>AWS Lambda Web Adapter（uvicorn をそのまま Lambda で起動）</li>
+        <li>anthropic（Claude SDK）、httpx（Open Food Facts）、boto3</li>
+        <li>jsonschema ＋ pyyaml：<strong>契約のスキーマで直接リクエストを検証</strong>（Pydantic モデルは書かない）</li>
+      </ul>
+    </div></div>
+    <div class="card bg-base-100 border border-base-300"><div class="card-body p-5">
+      <h3 class="card-title text-base">インフラ</h3>
+      <ul class="text-sm space-y-1">
+        <li>AWS（東京 ap-northeast-1）：API Gateway HTTP API、Lambda（arm64）、DynamoDB、Cognito、SSM、Secrets Manager、CloudWatch Logs</li>
+        <li><strong>AWS SAM</strong>（IaC）、cfn-lint</li>
+        <li>認証は IAM Identity Center（長期アクセスキーは作らない）</li>
+      </ul>
+    </div></div>
+    <div class="card bg-base-100 border border-base-300"><div class="card-body p-5">
+      <h3 class="card-title text-base">テスト・品質・CI</h3>
+      <ul class="text-sm space-y-1">
+        <li>pytest、FastAPI TestClient ＋ DynamoDB Local、openapi-spec-validator</li>
+        <li>Jest（jest-expo）＋ React Native Testing Library、E2E は Maestro（予定）</li>
+        <li>Ruff、mypy（domain は strict）、ESLint ＋ Prettier</li>
+        <li>GitHub Actions（Action は SHA 固定・最小権限）</li>
+      </ul>
+    </div></div>
+  </div>
+  <div role="alert" class="alert alert-soft">
+    <span><strong>使わないもの:</strong> 端末 DB、グラフライブラリ（MVP 外）、フォームライブラリ、DI コンテナ、共有パッケージ。1人で保守しやすいよう Expo 標準に寄せて道具を絞っています（ADR-0017）。</span>
+  </div>
+</section>
+
+<!-- ============ 6. インフラ ============ -->
+<section id="infra" class="space-y-6">
+  <h2 class="text-2xl font-bold border-l-4 border-primary pl-3">インフラ</h2>
+
+  <h3 class="text-lg font-semibold">環境</h3>
+  <div class="overflow-x-auto bg-base-100 rounded-box border border-base-300">
+    <table class="table table-sm">
+      <thead><tr><th>環境</th><th>用途</th><th>中身</th><th>状態</th></tr></thead>
+      <tbody>
+        <tr><td>local</td><td>日常の開発・テスト</td><td>uvicorn で FastAPI。保存先はメモリか DynamoDB Local（Docker）。Claude はテストではモック</td><td><span class="badge badge-success badge-sm">稼働</span></td></tr>
+        <tr><td>dev</td><td>Lambda 固有の確認、アプリとの結合</td><td>スタック <code class="k">onaka-log-dev</code>（AWS 一式）</td><td><span class="badge badge-success badge-sm">デプロイ済み</span></td></tr>
+        <tr><td>prod</td><td>日常利用</td><td>スタック <code class="k">onaka-log-prod</code>。削除保護・Retain・PITR</td><td><span class="badge badge-ghost badge-sm">未作成</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="text-lg font-semibold">SAM テンプレートのリソース（infra/template.yaml）</h3>
+  <div class="overflow-x-auto bg-base-100 rounded-box border border-base-300">
+    <table class="table table-sm">
+      <thead><tr><th>リソース</th><th>設定の要点</th></tr></thead>
+      <tbody>
+        <tr><td>MealsTable（DynamoDB）</td><td><code class="k">onaka-log-&lt;env&gt;</code>。prod は削除保護・PITR</td></tr>
+        <tr><td>UserPool / Domain / AppClient（Cognito）</td><td>マネージドログイン。Google IdP 連携（Apple は後日）。dev のみテスト用にメール＋パスワードも残す</td></tr>
+        <tr><td>GoogleIdentityProvider</td><td>クライアントシークレットは Secrets Manager を <code class="k">{{resolve:secretsmanager:…}}</code> で参照</td></tr>
+        <tr><td>HttpApi（API Gateway）</td><td>JWT オーソライザー、スロットリング 5 req/s・バースト 10</td></tr>
+        <tr><td>ApiFunction（Lambda）</td><td>python3.12・arm64・512MB・タイムアウト 29 秒・Lambda Web Adapter。SSM は <code class="k">ssm:GetParameter</code> だけ許可</td></tr>
+        <tr><td>ApiFunctionLogGroup</td><td>保持 14 日（画像はログに出さない）</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid lg:grid-cols-2 gap-4">
+    <div class="card bg-base-100 border border-base-300"><div class="card-body p-5">
+      <h3 class="card-title text-base">デプロイ手順（手元から・WSL）</h3>
+      <pre class="code">export SAM_CLI_TELEMETRY=0
+# 検査（CI と同じ）
+(cd infra &amp;&amp; sam validate --lint &amp;&amp; cfn-lint template.yaml)
+# Lambda 用コードを uv.lock どおりに作る（sam build は使わない）
+UV=~/.local/bin/uv UV_LINK_MODE=copy bash infra/build.sh
+# デプロイ（変更セットを確認してから適用）
+aws sso login --profile onaka-admin
+(cd infra &amp;&amp; sam deploy --config-env dev --profile onaka-admin)</pre>
+      <p class="text-xs opacity-70">CI からのデプロイ（GitHub OIDC）はまだない（CIC-05・CIC-09）。</p>
+    </div></div>
+    <div class="card bg-base-100 border border-base-300"><div class="card-body p-5">
+      <h3 class="card-title text-base">シークレットとセキュリティ</h3>
+      <ul class="text-sm space-y-1 list-disc pl-5">
+        <li>Claude API キー：SSM Parameter Store <code class="k">/onaka-log/&lt;env&gt;/claude-api-key</code>（SecureString、手で投入）</li>
+        <li>Google OAuth シークレット：Secrets Manager <code class="k">onaka-log/&lt;env&gt;/google-client-secret</code>（SSM は Cognito IdP から参照できないため）</li>
+        <li>利用者 ID は JWT の sub のみ、DynamoDB は <code class="k">PK = USER#&lt;sub&gt;</code> でしか読まない</li>
+        <li>AWS Budgets：月 7 ドル、50%・80%・予測 100% で通知</li>
+      </ul>
+    </div></div>
+  </div>
+
+  <h3 class="text-lg font-semibold">費用の見込み（自分専用・月）</h3>
+  <div class="overflow-x-auto bg-base-100 rounded-box border border-base-300">
+    <table class="table table-sm">
+      <thead><tr><th>項目</th><th class="text-right">見込み</th></tr></thead>
+      <tbody>
+        <tr><td>Claude API（写真推定 月90回 ＋ OCR）</td><td class="text-right">約170円＋数円</td></tr>
+        <tr><td>Lambda・API Gateway・DynamoDB・Cognito</td><td class="text-right">ほぼ0円（無料枠）</td></tr>
+        <tr><td>Secrets Manager（Google シークレット）</td><td class="text-right">$0.40</td></tr>
+        <tr><td>CloudWatch Logs</td><td class="text-right">数円</td></tr>
+        <tr class="font-semibold"><td>合計</td><td class="text-right">約200〜250円（上限 1,000円）</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ 7. 実装 ============ -->
+<section id="impl" class="space-y-6">
+  <h2 class="text-2xl font-bold border-l-4 border-primary pl-3">実装</h2>
+
+  <h3 class="text-lg font-semibold">リポジトリ構成（モノレポ）</h3>
+  <pre class="code">onaka-log/
+├── apps/
+│   ├── api/          # バックエンド（FastAPI、uv ワークスペース）
+│   └── mobile/       # アプリ（Expo、npm）
+├── contracts/        # 契約（SSOT）
+│   ├── api/openapi.yaml
+│   ├── domain/meal.schema.json
+│   └── llm/{nutrition-label-ocr,food-photo-estimate}/  # 入出力スキーマ・prompt.md・例
+├── infra/            # AWS SAM（template.yaml・samconfig.toml・build.sh）
+├── tests/contract/   # 契約テスト（スキーマ・例・ルールの参照実装）
+├── poc/              # PoC のスクリプトとレポート
+├── tools/trace.py    # 仕様 ID とテストの対応検査
+├── docs/             # 要件・設計・ADR・ロードマップ
+└── .github/workflows/  # contract / api / mobile / infra</pre>
+
+  <div class="grid lg:grid-cols-2 gap-4">
+    <div class="card bg-base-100 border border-base-300"><div class="card-body p-5">
+      <h3 class="card-title text-base">バックエンド <span class="badge badge-success badge-sm">API まで完成</span></h3>
+      <div class="overflow-x-auto">
+      <table class="table table-xs">
+        <tbody>
+          <tr><td><code class="k">domain/</code></td><td>倍率・合計・記録日・検証（DM-01〜09）。外部依存なし、行カバレッジ 98%</td></tr>
+          <tr><td><code class="k">estimation/</code></td><td>Claude の出力・OFF の応答から候補（FoodItemDraft）を作り、スキーマで検証</td></tr>
+          <tr><td><code class="k">api/app.py</code></td><td>9つの API、利用者 ID、検証、エラー変換。依存は <code class="k">Deps</code> で注入</td></tr>
+          <tr><td><code class="k">clients/</code></td><td>Claude（claude.py）・Open Food Facts（off.py）</td></tr>
+          <tr><td><code class="k">repository/</code></td><td>DynamoDB 実装とメモリ実装（同じテストで両方を検証）</td></tr>
+          <tr><td><code class="k">settings.py</code></td><td>環境変数 <code class="k">ONAKA_*</code> から設定</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div></div>
+    <div class="card bg-base-100 border border-base-300"><div class="card-body p-5">
+      <h3 class="card-title text-base">アプリ <span class="badge badge-warning badge-sm">実装中</span></h3>
+      <div class="overflow-x-auto">
+      <table class="table table-xs">
+        <tbody>
+          <tr><td><code class="k">src/app/</code></td><td>Expo Router のルート（薄く保つ）</td></tr>
+          <tr><td><code class="k">src/features/home/</code></td><td>日次合計・一覧・日付移動・空・エラー</td></tr>
+          <tr><td><code class="k">src/features/record/</code></td><td>入力方式シート、手入力、食べた日時、保存（UUIDv7・再送・409）</td></tr>
+          <tr><td><code class="k">src/auth/</code></td><td>トークン取得・更新・保管、サインイン画面との切り替え</td></tr>
+          <tr><td><code class="k">src/api/</code></td><td>openapi-fetch クライアント（401 で1回だけ更新して再送）、生成された型</td></tr>
+          <tr><td><code class="k">src/lib/</code></td><td>記録日（DM-01）、日時、表示の整形、UUIDv7</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div></div>
+  </div>
+
+  <h3 class="text-lg font-semibold">MVP 実装の進み具合（IMP）</h3>
+  <div class="overflow-x-auto bg-base-100 rounded-box border border-base-300">
+    <table class="table table-sm">
+      <thead><tr><th>項目</th><th>バックエンド</th><th>アプリ</th><th class="w-40">進捗</th></tr></thead>
+      <tbody>
+        <tr><td>IMP-01 ウォーキングスケルトン</td><td>✔ dev で確認</td><td>iPhone → ローカルで保存まで確認</td><td><progress class="progress progress-primary w-32" value="80" max="100"></progress></td></tr>
+        <tr><td>IMP-02 ドメイン層</td><td>✔ テスト42件</td><td>—</td><td><progress class="progress progress-success w-32" value="100" max="100"></progress></td></tr>
+        <tr><td>IMP-03 手入力</td><td>✔</td><td>✔ 入力・日時変更・保存（追加モードは未）</td><td><progress class="progress progress-primary w-32" value="85" max="100"></progress></td></tr>
+        <tr><td>IMP-04 閲覧</td><td>✔</td><td>ホーム ✔／食事の詳細は未</td><td><progress class="progress progress-primary w-32" value="65" max="100"></progress></td></tr>
+        <tr><td>IMP-05 削除・食品の追加</td><td>✔ 版による同時更新検出</td><td>未（元に戻す）</td><td><progress class="progress progress-primary w-32" value="50" max="100"></progress></td></tr>
+        <tr><td>IMP-06 バーコード照合</td><td>✔</td><td>未</td><td><progress class="progress progress-primary w-32" value="50" max="100"></progress></td></tr>
+        <tr><td>IMP-07 成分表示 OCR</td><td>✔ 実 API で確認</td><td>未</td><td><progress class="progress progress-primary w-32" value="50" max="100"></progress></td></tr>
+        <tr><td>IMP-08 写真推定</td><td>✔ 実 API で確認</td><td>未</td><td><progress class="progress progress-primary w-32" value="50" max="100"></progress></td></tr>
+        <tr><td>IMP-09 認証</td><td>✔ JWT sub・Cognito</td><td>Google サインイン作成済み・dev 未デプロイ</td><td><progress class="progress progress-primary w-32" value="60" max="100"></progress></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="text-xs opacity-70">進捗バーは各項目の記述から読み取った目安です（正確な状態は roadmap.md を参照）。</p>
+
+  <h3 class="text-lg font-semibold">テストの層</h3>
+  <div class="overflow-x-auto bg-base-100 rounded-box border border-base-300">
+    <table class="table table-sm">
+      <thead><tr><th>層</th><th>確かめること</th><th>件数・実行</th></tr></thead>
+      <tbody>
+        <tr><td>① 契約テスト</td><td>スキーマ・OpenAPI の正しさ、例の適合／不適合、ルールの参照実装</td><td>88件・毎回 CI</td></tr>
+        <tr><td>② バックエンド単体</td><td>ドメイン計算、候補の作り方、外部呼び出し、保存先</td><td>121件・毎回 CI</td></tr>
+        <tr><td>③ API テスト</td><td>応答を openapi.yaml で検証、ルート一覧が契約と一致</td><td>31件・毎回 CI</td></tr>
+        <tr><td>④ モバイル</td><td>記録日・日時・入力検証・画面の振る舞い・認証セッション</td><td>88件・毎回 CI</td></tr>
+        <tr><td>⑤ インフラ検査</td><td>sam validate・cfn-lint・ビルド</td><td>毎回 CI</td></tr>
+        <tr><td>⑧ 実 API スモーク</td><td>dev の API 経由で本物の Claude・OFF を1回ずつ（数円）</td><td>手動（<code class="k">-m live</code>）</td></tr>
+        <tr><td>⑦ E2E／⑨ LLM 回帰評価</td><td>Maestro（Android）／PoC データでの精度比較</td><td>今後・手動</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="text-lg font-semibold">CI（GitHub Actions）</h3>
+  <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+    <div class="card bg-base-100 border border-base-300"><div class="card-body p-4"><h4 class="font-semibold">contract</h4><p class="text-xs">契約テスト・PoC の単体テスト・trace.py --check</p></div></div>
+    <div class="card bg-base-100 border border-base-300"><div class="card-body p-4"><h4 class="font-semibold">api</h4><p class="text-xs">Ruff・mypy・pytest（DynamoDB Local をサービスコンテナで）</p></div></div>
+    <div class="card bg-base-100 border border-base-300"><div class="card-body p-4"><h4 class="font-semibold">mobile</h4><p class="text-xs">API 型の生成差分なし・tsc・ESLint・Jest</p></div></div>
+    <div class="card bg-base-100 border border-base-300"><div class="card-body p-4"><h4 class="font-semibold">infra</h4><p class="text-xs">sam validate・cfn-lint・build.sh（認証情報なし）</p></div></div>
+  </div>
+</section>
+
+<!-- ============ 8. 開発環境と接続 ============ -->
+<section id="connect" class="space-y-6">
+  <h2 class="text-2xl font-bold border-l-4 border-primary pl-3">開発環境と接続（エミュレーター・実機 iPhone）</h2>
+
+  <h3 class="text-lg font-semibold">開発マシンの役割分担</h3>
+  <div class="overflow-x-auto bg-base-100 rounded-box border border-base-300">
+    <table class="table table-sm">
+      <thead><tr><th>場所</th><th>動かすもの</th><th>理由</th></tr></thead>
+      <tbody>
+        <tr><td>WSL（Ubuntu）</td><td>Python（uv・3.12）、バックエンド、Git、AWS CLI・SAM CLI、Docker</td><td>Lambda と同じ Linux 系で揃える</td></tr>
+        <tr><td>Windows の Node 22</td><td>アプリの npm・Expo（Metro 開発サーバー）、API 中継</td><td>WSL から <code class="k">/mnt/c</code> への npm install が極端に遅いため。エミュレーターと同じ OS で動き、iPhone からも直接届く</td></tr>
+        <tr><td>Android Studio（Windows）</td><td>Android エミュレーター（Pixel 8・API 35/36 推奨）＋ Expo Go</td><td>Android 実機がないため</td></tr>
+        <tr><td>iPhone 13 mini</td><td>App Store の Expo Go（SDK 58）</td><td>Apple Developer Program は未登録（最低優先）</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="text-lg font-semibold">接続経路</h3>
+  <div class="mermaid-box"><pre class="mermaid">
+flowchart LR
+    subgraph PC[開発 PC（Windows 11）]
+      direction TB
+      subgraph WSL[WSL・mirrored モード]
+        API[uvicorn<br>127.0.0.1:8000]
+      end
+      RELAY[api:relay<br>0.0.0.0:8010]
+      METRO[Metro<br>:8081]
+      EMU[Android エミュレーター<br>Expo Go]
+    end
+    IPH[iPhone<br>Expo Go]
+    AWS[dev on AWS<br>API Gateway + Cognito]
+    RELAY --> API
+    EMU -->|10.0.2.2:8000| API
+    EMU -.バンドル.-> METRO
+    IPH -->|LAN の IP:8010| RELAY
+    IPH -.QR でバンドル取得.-> METRO
+    IPH -->|EXPO_PUBLIC_API_BASE_URL| AWS
+    EMU -->|EXPO_PUBLIC_API_BASE_URL| AWS
+</pre></div>
+
+  <div class="tabs tabs-lift">
+    <input type="radio" name="conn_tabs" class="tab" aria-label="① ローカル（エミュレーター）" checked>
+    <div class="tab-content bg-base-100 border-base-300 p-5 space-y-3">
+      <p class="text-sm">バックエンドをメモリ保存で起動（WSL）。利用者 ID は <code class="k">local-dev</code> 固定、サインインは使わない。</p>
+      <pre class="code">wsl -e bash -lc "cd /mnt/c/project/onaka-log &amp;&amp; ONAKA_REPOSITORY=memory ONAKA_LOCAL_USER_ID=local-dev UV_LINK_MODE=copy ~/.local/bin/uv run --group dev uvicorn onaka_api.main:app --host 0.0.0.0 --port 8000"</pre>
+      <p class="text-sm">アプリ（PowerShell、<code class="k">apps/mobile</code>）。エミュレーターからホストは <code class="k">http://10.0.2.2:8000</code>（既定値）。</p>
+      <pre class="code">npm install
+npx expo start      # a キーでエミュレーターの Expo Go を開く</pre>
+      <div role="alert" class="alert alert-warning text-sm">
+        <span><strong>Android 17（API 37）の注意:</strong> Expo Go に「ローカルネットワークへのアクセス」の許可がないと 10.0.2.2 への通信が止まり、ホームが読み込み中のままになる。設定アプリで許可するか、API 35/36 のエミュレーターを使う。</span>
+      </div>
+      <p class="text-xs opacity-70">届くかの確認（adb のシェルは許可の制限を受けない）: <code class="k">adb shell "(printf 'GET /v1/days/2026-11-15 HTTP/1.0\r\n\r\n'; sleep 2) | toybox nc -w 5 10.0.2.2 8000"</code></p>
+    </div>
+
+    <input type="radio" name="conn_tabs" class="tab" aria-label="② ローカル（iPhone 実機）">
+    <div class="tab-content bg-base-100 border-base-300 p-5 space-y-3">
+      <p class="text-sm">WSL の mirrored モードでは LAN から WSL の :8000 に直接届かないため、<strong>Windows の Node で中継</strong>する（0.0.0.0:8010 → 127.0.0.1:8000）。</p>
+      <ol class="list-decimal pl-5 text-sm space-y-2">
+        <li>①と同じくバックエンドを起動</li>
+        <li>中継を起動（起動時に接続先の候補 URL を表示）<pre class="code mt-1">npm run api:relay</pre></li>
+        <li><code class="k">apps/mobile/.env.local</code> に接続先を書く<pre class="code mt-1">EXPO_PUBLIC_API_BASE_URL=http://&lt;PC の LAN の IP&gt;:8010</pre></li>
+        <li>キャッシュを消して開発サーバーを起動し直す<pre class="code mt-1">npx expo start -c</pre></li>
+        <li>iPhone のカメラで QR を読み、Expo Go で開く（同じ Wi-Fi、Windows ファイアウォールで 8081 を許可）</li>
+      </ol>
+      <p class="text-xs opacity-70">つながらなければ <code class="k">npx expo start --tunnel</code>。PC の IP が変わったら .env.local を書き直す。iPhone から「手入力 → 日時変更 → 保存 → ホームに出る」まで確認済み（2026-11-16）。</p>
+    </div>
+
+    <input type="radio" name="conn_tabs" class="tab" aria-label="③ dev（AWS）＋サインイン">
+    <div class="tab-content bg-base-100 border-base-300 p-5 space-y-3">
+      <p class="text-sm"><code class="k">.env.local</code> に dev の API とサインインの設定を書く（値はスタックの出力 <code class="k">ApiUrl</code>・<code class="k">CognitoDomain</code>・<code class="k">AppClientId</code>）。</p>
+      <pre class="code">EXPO_PUBLIC_API_BASE_URL=https://&lt;api-id&gt;.execute-api.ap-northeast-1.amazonaws.com   # /v1 は付けない
+EXPO_PUBLIC_COGNITO_DOMAIN=&lt;CognitoDomain&gt;
+EXPO_PUBLIC_COGNITO_CLIENT_ID=&lt;AppClientId&gt;</pre>
+      <pre class="code">aws cloudformation describe-stacks --profile onaka-admin --stack-name onaka-log-dev --query "Stacks[0].Outputs"</pre>
+      <p class="text-sm font-semibold">サインインの仕組み（F-001）</p>
+      <ul class="list-disc pl-5 text-sm space-y-1">
+        <li>expo-auth-session で Cognito の <code class="k">/oauth2/authorize</code> を開く（認可コード＋PKCE S256、<code class="k">identity_provider=Google</code>）</li>
+        <li>戻り先は Expo Go では <code class="k">exp://&lt;PC の IP&gt;:8081/--/auth/callback</code>（dev の CallbackUrls に登録。IP が変われば再デプロイ）</li>
+        <li>リフレッシュトークンだけ expo-secure-store、アクセストークンはメモリ。期限 60 秒前に更新、401 なら1回だけ更新して再送</li>
+        <li><code class="k">EXPO_PUBLIC_COGNITO_*</code> がなければサインインを省略（ローカル用）</li>
+      </ul>
+      <div role="alert" class="alert alert-info text-sm"><span>現状: Google サインインのコードはテスト緑だが dev には未デプロイ。Google Cloud の OAuth クライアント作成と Secrets Manager への登録待ち。</span></div>
+    </div>
+  </div>
+
+  <h3 class="text-lg font-semibold">よく使うコマンド</h3>
+  <div class="overflow-x-auto bg-base-100 rounded-box border border-base-300">
+    <table class="table table-sm">
+      <thead><tr><th>目的</th><th>コマンド</th></tr></thead>
+      <tbody>
+        <tr><td>契約テスト</td><td><code class="k">uv run --group dev pytest tests/contract -q</code></td></tr>
+        <tr><td>仕様とテストの対応検査</td><td><code class="k">uv run --group dev python tools/trace.py --check</code></td></tr>
+        <tr><td>バックエンドのテスト</td><td><code class="k">uv run --group dev pytest apps/api/tests -q</code></td></tr>
+        <tr><td>実 API スモーク（数円）</td><td><code class="k">ONAKA_LIVE_API_URL=&lt;ApiUrl&gt; uv run --group dev --group poc pytest apps/api/tests/live -m live -q</code></td></tr>
+        <tr><td>アプリのテスト・型・lint</td><td><code class="k">npm test</code> / <code class="k">npm run typecheck</code> / <code class="k">npm run lint</code></td></tr>
+        <tr><td>API の型を作り直す</td><td><code class="k">npm run gen:api</code>（openapi.yaml を変えたら）</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="text-xs opacity-70">Python 系はリポジトリのルートから WSL で（<code class="k">wsl -e bash -lc "cd /mnt/c/project/onaka-log &amp;&amp; UV_LINK_MODE=copy ~/.local/bin/uv run …"</code>）。C ドライブ上ではハードリンクが使えないため <code class="k">UV_LINK_MODE=copy</code> を付ける。</p>
+</section>
+
+<!-- ============ 9. 開発プロセス ============ -->
+<section id="process" class="space-y-6">
+  <h2 class="text-2xl font-bold border-l-4 border-primary pl-3">開発プロセス</h2>
+  <p>仕様駆動＋テスト駆動（ADR-0001）。「このテストが通るまで実装して」と頼める状態を目標にしています。</p>
+  <ul class="timeline timeline-vertical">
+    <li><div class="timeline-start timeline-box text-sm"><strong>1. 仕様</strong><br>docs/01_requirements（What）→ 02_design（How）。要件に F-xxx-yy の ID</div><div class="timeline-middle">●</div><hr class="bg-primary"></li>
+    <li><hr class="bg-primary"><div class="timeline-middle">●</div><div class="timeline-end timeline-box text-sm"><strong>2. 契約</strong><br>contracts/ に JSON Schema・OpenAPI（SSOT）</div><hr class="bg-primary"></li>
+    <li><hr class="bg-primary"><div class="timeline-start timeline-box text-sm"><strong>3. テスト（赤）</strong><br><code class="k">@pytest.mark.spec("DM-03")</code> などを付け、失敗を確認してコミット</div><div class="timeline-middle">●</div><hr class="bg-primary"></li>
+    <li><hr class="bg-primary"><div class="timeline-middle">●</div><div class="timeline-end timeline-box text-sm"><strong>4. 実装（緑）</strong><br>この段階ではテスト・契約を変えない</div><hr class="bg-primary"></li>
+    <li><hr class="bg-primary"><div class="timeline-start timeline-box text-sm"><strong>5. 確認</strong><br>tools/trace.py --check で仕様とテストの抜けを検査</div><div class="timeline-middle">●</div></li>
+  </ul>
+
+  <h3 class="text-lg font-semibold">主な決定（ADR）</h3>
+  <div class="join join-vertical w-full bg-base-100">
+    <div class="collapse collapse-arrow join-item border border-base-300">
+      <input type="checkbox" checked>
+      <div class="collapse-title font-semibold">方針・プロダクト（0001〜0006, 0012）</div>
+      <div class="collapse-content text-sm"><ul class="list-disc pl-5 space-y-1">
+        <li>0001 仕様駆動＋テスト駆動 / 0002 モノレポとフォルダ構成</li>
+        <li>0003 「自分専用 → 将来ストア公開」前提の設計 / 0004 撮影画像は保存しない</li>
+        <li>0005 モバイルは React Native（Expo）+ TypeScript / 0006 認証は最初から（Apple + Google）</li>
+        <li>0012 入力方式④は手入力（Claude は使わない）</li>
+      </ul></div>
+    </div>
+    <div class="collapse collapse-arrow join-item border border-base-300">
+      <input type="checkbox">
+      <div class="collapse-title font-semibold">PoC の結果（0009〜0011）</div>
+      <div class="collapse-content text-sm"><ul class="list-disc pl-5 space-y-1">
+        <li>0009 バーコードは条件付き採用、内容量が不明でも登録（5件中 4/5 がパッケージと一致）</li>
+        <li>0010 OCR は Haiku 5.5・low、画像は長辺 1024〜1568px（読める写真は全モデル正確）</li>
+        <li>0011 写真推定は Sonnet 5.5・medium（Haiku は品目の欠落とばらつき。Sonnet の CV 平均 5.9%）</li>
+        <li>PoC 総費用 約171円（上限 2,000円）</li>
+      </ul></div>
+    </div>
+    <div class="collapse collapse-arrow join-item border border-base-300">
+      <input type="checkbox">
+      <div class="collapse-title font-semibold">アーキテクチャ・技術（0007, 0008, 0013〜0017）</div>
+      <div class="collapse-content text-sm"><ul class="list-disc pl-5 space-y-1">
+        <li>0007 AWS サーバーレス（API Gateway + Lambda + FastAPI + Cognito） / 0008 DynamoDB</li>
+        <li>0013 食事のキー・ID・値の持ち方 / 0014 IaC は AWS SAM、環境は local / dev / prod</li>
+        <li>0015 サーバーファースト・同期推定・計算はバックエンド / 0016 REST + OpenAPI 3.1、/v1</li>
+        <li>0017 ライブラリ・道具と iOS 実機の扱い（Apple Developer Program は最低優先）</li>
+      </ul></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 10. ロードマップ ============ -->
+<section id="roadmap" class="space-y-6">
+  <h2 class="text-2xl font-bold border-l-4 border-primary pl-3">ロードマップと今後</h2>
+  <ul class="steps steps-vertical md:steps-horizontal w-full bg-base-100 rounded-box border border-base-300 p-4 text-xs">
+    <li class="step step-primary">M0 基盤</li>
+    <li class="step step-primary">M1 方針決定</li>
+    <li class="step step-primary">M2 PoC</li>
+    <li class="step step-primary">M3 基本設計</li>
+    <li class="step step-primary" data-content="◐">M4 テスト・CI</li>
+    <li class="step step-primary" data-content="◐">M5 MVP 実装</li>
+    <li class="step">M6 リリース・運用</li>
+    <li class="step">M7 拡張</li>
+  </ul>
+  <div class="grid md:grid-cols-2 gap-4">
+    <div class="card bg-base-100 border border-base-300"><div class="card-body p-5">
+      <h3 class="card-title text-base">次にやること</h3>
+      <ol class="list-decimal pl-5 text-sm space-y-1">
+        <li>Google サインインの準備 → dev にデプロイ → iPhone でサインインして dev に記録</li>
+        <li>食事の詳細と削除・元に戻す</li>
+        <li>設定画面とサインアウト</li>
+        <li>Dependabot（依存更新）</li>
+        <li>CI からのデプロイ（GitHub OIDC）</li>
+        <li>バーコード・OCR・写真の各画面（カメラ）</li>
+      </ol>
+    </div></div>
+    <div class="card bg-base-100 border border-base-300"><div class="card-body p-5">
+      <h3 class="card-title text-base">次期以降（MVP 外）</h3>
+      <div class="flex flex-wrap gap-2 text-sm">
+        <span class="badge badge-outline">推移グラフ（週・月）</span>
+        <span class="badge badge-outline">目標値と達成度</span>
+        <span class="badge badge-outline">履歴から再記録・お気に入り</span>
+        <span class="badge badge-outline">食塩・食物繊維など</span>
+        <span class="badge badge-outline">ヘルスケア連携</span>
+        <span class="badge badge-outline">日本食品標準成分表</span>
+        <span class="badge badge-outline">AI アドバイス</span>
+        <span class="badge badge-outline">通知・ウィジェット</span>
+      </div>
+      <p class="text-sm mt-3"><strong>公開前に必要:</strong> アカウント削除（F-002）、Sign in with Apple、プライバシーポリシー、外部送信の同意、Open Food Facts（ODbL）のライセンス表記、レート制限と不正利用対策。</p>
+    </div></div>
+  </div>
+
+  <div class="card bg-base-100 border border-base-300"><div class="card-body p-5">
+    <h3 class="card-title text-base">詳しい資料</h3>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-2 text-sm">
+      <a class="link link-primary" href="00_project/roadmap.md">00_project/roadmap.md（現在地）</a>
+      <a class="link link-primary" href="01_requirements/scope.md">01_requirements/scope.md</a>
+      <a class="link link-primary" href="01_requirements/features/README.md">01_requirements/features/</a>
+      <a class="link link-primary" href="02_design/architecture.md">02_design/architecture.md</a>
+      <a class="link link-primary" href="02_design/api.md">02_design/api.md</a>
+      <a class="link link-primary" href="02_design/domain-model.md">02_design/domain-model.md</a>
+      <a class="link link-primary" href="02_design/screens/README.md">02_design/screens/README.md</a>
+      <a class="link link-primary" href="03_testing/strategy.md">03_testing/strategy.md</a>
+      <a class="link link-primary" href="04_operations/ci-cd.md">04_operations/ci-cd.md</a>
+      <a class="link link-primary" href="adr/">adr/（ADR-0001〜0017）</a>
+      <a class="link link-primary" href="../infra/README.md">infra/README.md</a>
+      <a class="link link-primary" href="../apps/mobile/README.md">apps/mobile/README.md</a>
+    </div>
+  </div></div>
+</section>
+
+      <footer class="footer footer-center text-xs opacity-60 py-6">
+        <p>onaka-log プロジェクト全体像 — docs/ の内容を 2026-11-16 時点でまとめたもの。一次情報は各 Markdown と contracts/。</p>
+      </footer>
+    </main>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="drawer-side z-40">
+    <label for="nav-drawer" aria-label="目次を閉じる" class="drawer-overlay"></label>
+    <aside class="bg-base-100 border-r border-base-300 min-h-full w-64">
+      <div class="px-5 py-4 border-b border-base-300">
+        <div class="font-bold text-lg">onaka-log</div>
+        <div class="text-xs opacity-60">プロジェクト全体像</div>
+      </div>
+      <ul class="menu w-full p-3 gap-1" id="toc">
+        <li><a href="#overview">概要</a></li>
+        <li><a href="#features">機能</a></li>
+        <li><a href="#spec">仕様</a></li>
+        <li><a href="#design">設計</a></li>
+        <li><a href="#stack">技術スタック</a></li>
+        <li><a href="#infra">インフラ</a></li>
+        <li><a href="#impl">実装</a></li>
+        <li><a href="#connect">開発環境と接続</a></li>
+        <li><a href="#process">開発プロセス</a></li>
+        <li><a href="#roadmap">ロードマップ</a></li>
+      </ul>
+    </aside>
+  </div>
+</div>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  var toggle = document.getElementById('theme-toggle');
+  var stored = null;
+  try { stored = localStorage.getItem('onaka-theme'); } catch (e) {}
+  var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  var theme = stored || (prefersDark ? 'dark' : 'light');
+  root.setAttribute('data-theme', theme);
+  toggle.checked = theme === 'dark';
+
+  // Mermaid: 元のテキストを保存して、テーマ切り替え時に描き直す
+  var blocks = Array.prototype.slice.call(document.querySelectorAll('pre.mermaid'));
+  blocks.forEach(function (b) { b.dataset.src = b.textContent; });
+  function renderMermaid() {
+    if (!window.mermaid) return;
+    var dark = root.getAttribute('data-theme') === 'dark';
+    blocks.forEach(function (b) { b.removeAttribute('data-processed'); b.innerHTML = ''; b.textContent = b.dataset.src; });
+    window.mermaid.initialize({ startOnLoad: false, theme: dark ? 'dark' : 'neutral', securityLevel: 'strict', fontFamily: 'inherit' });
+    window.mermaid.run({ nodes: blocks }).catch(function (e) { console.error(e); });
+  }
+  renderMermaid();
+
+  toggle.addEventListener('change', function () {
+    var t = toggle.checked ? 'dark' : 'light';
+    root.setAttribute('data-theme', t);
+    try { localStorage.setItem('onaka-theme', t); } catch (e) {}
+    renderMermaid();
+  });
+
+  // 目次: 今見ているセクションを強調し、狭い画面ではクリックで閉じる
+  var links = Array.prototype.slice.call(document.querySelectorAll('#toc a'));
+  var drawer = document.getElementById('nav-drawer');
+  links.forEach(function (a) { a.addEventListener('click', function () { drawer.checked = false; }); });
+  if ('IntersectionObserver' in window) {
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          links.forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === '#' + en.target.id); });
+        }
+      });
+    }, { rootMargin: '-40% 0px -55% 0px' });
+    document.querySelectorAll('main section[id]').forEach(function (s) { obs.observe(s); });
+  }
+})();
+</script>
+</body>
+</html>
