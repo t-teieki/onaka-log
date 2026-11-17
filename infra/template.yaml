@@ -3,6 +3,7 @@ Transform: AWS::Serverless-2016-10-31
 Description: >-
   onaka-log のバックエンド（ADR-0007・ADR-0014、docs/02_design/architecture.md）。
   Cognito・API Gateway（HTTP API・JWT 認可）・Lambda（FastAPI＋Lambda Web Adapter）・DynamoDB。
+  Lambda の新しいバージョンへの切り替えは CodeDeploy（PreTraffic フック・アラームで自動で戻す、ADR-0019）。
   Lambda のコードは infra/build.sh で infra/build/api に作ってから sam deploy する。
 
 Parameters:
@@ -34,6 +35,17 @@ Parameters:
     Type: CommaDelimitedList
     Default: "onakalog://auth/signout"
     Description: サインアウト後の戻り先
+  DeploymentType:
+    Type: String
+    Default: AllAtOnce
+    AllowedValues:
+      - AllAtOnce
+      - Canary10Percent5Minutes
+      - Canary10Percent10Minutes
+      - Linear10PercentEvery1Minute
+    Description: >-
+      CodeDeploy で新しい Lambda のバージョンへ切り替える方法（ADR-0019）。
+      どれでも、切り替え前に PreTraffic フックで新しいバージョンを確かめ、切り替え中にアラームが鳴ったら戻す
 
 Conditions:
   IsProd: !Equals [!Ref Env, prod]
@@ -199,6 +211,16 @@ Resources:
       CodeUri: build/api
       Handler: run.sh
       MemorySize: 1024  # CPU もメモリに比例する。512 ではコールドスタートが 5〜6.5 秒だった（ADR-0007）
+      # デプロイのたびにバージョンを発行し、エイリアス live を CodeDeploy で切り替える（ADR-0019）。
+      # API Gateway はエイリアス live を呼ぶ
+      AutoPublishAlias: live
+      DeploymentPreference:
+        Type: !Ref DeploymentType
+        Alarms:
+          - !Ref ApiFunctionErrorsAlarm
+          - !Ref HttpApi5xxAlarm
+        Hooks:
+          PreTraffic: !Ref PreTrafficHookFunction
       Timeout: 29  # HTTP API の上限（30秒）より短く
       Layers:
         - !Sub arn:aws:lambda:${AWS::Region}:753240598075:layer:LambdaAdapterLayerArm64:30
@@ -228,6 +250,136 @@ Resources:
             ApiId: !Ref HttpApi
             Path: /v1/{proxy+}
             Method: ANY
+
+  # ---- デプロイ（CodeDeploy で段階的に切り替える、ADR-0019） ----
+  # 切り替え中にどちらかが ALARM になったら、CodeDeploy が前のバージョンに戻す。通知はしない（費用を抑える）
+  # 自分専用で要求が少ないので、鳴らないこともある。主な確認は PreTraffic フックが担う
+  ApiFunctionErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub onaka-log-api-${Env}-live-errors
+      AlarmDescription: Lambda（エイリアス live）の関数エラー（例外で落ちた・タイムアウト）。CodeDeploy の自動ロールバックに使う
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions:
+        - Name: FunctionName
+          Value: !Sub onaka-log-api-${Env}
+        - Name: Resource
+          Value: !Sub onaka-log-api-${Env}:live
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  HttpApi5xxAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub onaka-log-api-${Env}-5xx
+      AlarmDescription: >-
+        API の 5xx（FastAPI が返した 500・502 など。Lambda Web Adapter を通すと関数エラーにならないため別に見る）。
+        CodeDeploy の自動ロールバックに使う
+      Namespace: AWS/ApiGateway
+      MetricName: 5xx
+      Dimensions:
+        - Name: ApiId
+          Value: !Ref HttpApi
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  PreTrafficHookLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      LogGroupName: !Sub /aws/lambda/CodeDeployHook_onaka-log-pretraffic-${Env}
+      RetentionInDays: 14
+
+  # 切り替える前に、新しいバージョンを直接呼んで確かめる。
+  # 確かめる用の利用者 ID で 1 日分の取得（GET /v1/days/{今日}）を呼び、200 なら成功
+  # （起動・import・ルーティング・利用者 ID の取り出し・DynamoDB の読み取りまで通る。書き込み・Claude は呼ばない）。
+  # 名前は CodeDeployHook_ で始める（SAM が作る CodeDeploy のロールは、この名前の関数しか呼べない）
+  PreTrafficHookFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub CodeDeployHook_onaka-log-pretraffic-${Env}
+      Handler: index.handler
+      MemorySize: 128
+      Timeout: 60
+      LoggingConfig:
+        LogGroup: !Ref PreTrafficHookLogGroup
+      Environment:
+        Variables:
+          TARGET_VERSION_ARN: !Ref ApiFunction.Version
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: codedeploy:PutLifecycleEventHookExecutionStatus
+              Resource: !Sub arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:deploymentgroup:${ServerlessDeploymentApplication}/*
+            - Effect: Allow
+              Action: lambda:InvokeFunction
+              Resource: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:onaka-log-api-${Env}:*
+      InlineCode: |
+        import datetime
+        import json
+        import os
+        import time
+
+        import boto3
+
+        LAMBDA = boto3.client("lambda")
+        CODEDEPLOY = boto3.client("codedeploy")
+        JST = datetime.timezone(datetime.timedelta(hours=9))
+        CHECK_USER = "codedeploy-pretraffic"
+
+
+        def _event(path):
+            # API Gateway（HTTP API、ペイロード 2.0）が JWT を検証したあとに渡す形
+            ctx = {
+                "accountId": "anonymous",
+                "apiId": "codedeploy-hook",
+                "authorizer": {"jwt": {"claims": {"sub": CHECK_USER}, "scopes": None}},
+                "domainName": "codedeploy-hook.local",
+                "domainPrefix": "codedeploy-hook",
+                "http": {"method": "GET", "path": path, "protocol": "HTTP/1.1",
+                         "sourceIp": "127.0.0.1", "userAgent": "codedeploy-hook"},
+                "requestId": "codedeploy-pretraffic",
+                "routeKey": "ANY /v1/{proxy+}",
+                "stage": "$default",
+                "time": time.strftime("%d/%b/%Y:%H:%M:%S +0000", time.gmtime()),
+                "timeEpoch": int(time.time() * 1000),
+            }
+            return {"version": "2.0", "routeKey": "ANY /v1/{proxy+}", "rawPath": path,
+                    "rawQueryString": "", "headers": {"host": "codedeploy-hook.local"},
+                    "requestContext": ctx, "isBase64Encoded": False}
+
+
+        def handler(event, _context):
+            target = os.environ["TARGET_VERSION_ARN"]
+            status = "Failed"
+            try:
+                today = datetime.datetime.now(JST).date().isoformat()
+                res = LAMBDA.invoke(FunctionName=target,
+                                    Payload=json.dumps(_event(f"/v1/days/{today}")).encode())
+                body = json.loads(res["Payload"].read() or b"{}")
+                code = body.get("statusCode")
+                # 応答の本文は出さない（ADR-0004 の方針に合わせ、ログは結果だけ）
+                print(json.dumps({"target": target, "functionError": res.get("FunctionError"), "statusCode": code}))
+                if "FunctionError" not in res and code == 200:
+                    status = "Succeeded"
+            except Exception as e:  # noqa: BLE001  失敗はすべて Failed として CodeDeploy に返す
+                print(json.dumps({"target": target, "error": type(e).__name__}))
+            CODEDEPLOY.put_lifecycle_event_hook_execution_status(
+                deploymentId=event["DeploymentId"],
+                lifecycleEventHookExecutionId=event["LifecycleEventHookExecutionId"],
+                status=status,
+            )
+            return status
 
 Outputs:
   ApiUrl:

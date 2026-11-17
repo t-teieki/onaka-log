@@ -267,11 +267,11 @@ flowchart LR
 - [x] **CIC-02** PR 時のジョブ：`contract`（契約テスト・PoC・trace）・`api`（Ruff・mypy・単体テスト）・`infra`（sam validate・cfn-lint・ビルド）・`mobile`（型の生成差分・tsc・ESLint・Jest）。アプリのビルド（EAS）は CIC-06 — 成果物: [ci-cd.md](../04_operations/ci-cd.md)
 - [ ] **CIC-03** 契約変更時に全関係者（mobile / api / tests）のテストを走らせる仕組み：各ワークフローの paths に `contracts/` を入れ、`mobile` は生成した API の型に差分がないことを確かめる。PR での運用は未確認 (WIP)
 - [ ] **CIC-04** LLM 実API テスト・eval の実行タイミング（手動トリガー / 夜間）とコスト上限
-- [ ] **CIC-05** バックエンドの自動デプロイ（main → staging、タグ → prod）とDBマイグレーション
+- [ ] **CIC-05** バックエンドの自動デプロイ（main → staging、タグ → prod）とDBマイグレーション：GitHub Actions（OIDC）＋ SAM ＋ CodeDeploy（PreTraffic フック・アラームで自動ロールバック、dev は Canary）に決定し、`deploy-dev` とテンプレートを作成（2026-11-17）。AWS 側の IAM（`infra/github-deploy.yaml`）の作成・GitHub の変数と Environment の設定・初回の実行は未。prod は prod を作るとき — 成果物: [ADR-0019](../adr/0019-cd-github-oidc-sam-codedeploy.md), [ci-cd.md](../04_operations/ci-cd.md) (WIP)
 - [ ] **CIC-06** モバイルのビルドと配布（EAS / Codemagic / fastlane、TestFlight / Play 内部テスト）：当面は EAS Update を Expo Go で開いて外からも使う（[ADR-0018](../adr/0018-eas-update-with-expo-go.md)）。iOS に公開し、モバイル通信でサインイン・記録できることをユーザーが確認（2026-11-16）。手元から公開している。EAS Build・TestFlight は Apple Developer Program に登録してから (WIP)
 - [ ] **CIC-07** バージョニング・リリースノート自動化
 - [ ] **CIC-08** 依存更新（Dependabot / Renovate）・セキュリティスキャン
-- [ ] **CIC-09** シークレットの CI 受け渡し（OIDC 推奨）
+- [ ] **CIC-09** シークレットの CI 受け渡し（OIDC 推奨）：OIDC のデプロイ用ロール（GitHub の Environment ごと）と CloudFormation の実行ロールを `infra/github-deploy.yaml` に定義（2026-11-17、ADR-0019）。AWS への作成は未 (WIP)
 - [ ] **CIC-10** Claude による PR レビュー自動化（HNS-10）
 - 成果物: `04_operations/ci-cd.md`
 

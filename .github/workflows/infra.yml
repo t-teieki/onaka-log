@@ -46,7 +46,7 @@ jobs:
 
       - name: cfn-lint
         working-directory: infra
-        run: uvx "cfn-lint==${CFN_LINT_VERSION}" template.yaml
+        run: uvx "cfn-lint==${CFN_LINT_VERSION}" template.yaml github-deploy.yaml
 
       - name: Lambda のコードを作る（uv.lock どおり、arm64 の wheel）
         run: bash infra/build.sh

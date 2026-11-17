@@ -1,0 +1,73 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="onaka-deploy" name="デプロイの流れ">
+    <mxGraphModel adaptiveColors="auto" dx="1000" dy="620" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="640" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="onaka-log デプロイの流れ（GitHub Actions ＋ SAM ＋ CodeDeploy、ADR-0019）" style="text;html=1;align=left;verticalAlign=middle;fontSize=20;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="10" width="800" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="gh" value="GitHub Actions&lt;br&gt;&lt;small&gt;deploy-dev&lt;br&gt;（テスト → sam deploy）&lt;/small&gt;" style="dashed=0;outlineConnect=0;html=1;align=center;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;shape=mxgraph.webicons.github;fillColor=#24292F;gradientColor=none;fontSize=14;labelPerimeter=1;" vertex="1" parent="1">
+          <mxGeometry x="42" y="270" width="56" height="56" as="geometry"/>
+        </mxCell>
+        <mxCell id="aws" value="AWS 東京リージョン（ap-northeast-1）" style="swimlane;startSize=30;html=1;fontSize=14;fillColor=#F7F8FA;strokeColor=#D5DAE1;fontColor=#1B1F24;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="150" y="60" width="700" height="470" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3" value="S3&lt;br&gt;&lt;small&gt;SAM の成果物&lt;/small&gt;" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#7AA116;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=14;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.bucket;labelPerimeter=1;" vertex="1" parent="aws">
+          <mxGeometry x="62" y="60" width="54" height="56" as="geometry"/>
+        </mxCell>
+        <mxCell id="deployrole" value="デプロイ用ロール&lt;br&gt;&lt;small&gt;OIDC で引き受け&lt;br&gt;（Environment dev だけ）&lt;/small&gt;" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=14;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.role;labelPerimeter=1;" vertex="1" parent="aws">
+          <mxGeometry x="58" y="220" width="64" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="cfn" value="CloudFormation&lt;br&gt;&lt;small&gt;スタック onaka-log-dev&lt;/small&gt;" style="sketch=0;outlineConnect=0;fontColor=#232F3E;fillColor=#E7157B;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=14;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.cloudformation;labelPerimeter=1;" vertex="1" parent="aws">
+          <mxGeometry x="232" y="210" width="56" height="56" as="geometry"/>
+        </mxCell>
+        <mxCell id="execrole" value="CloudFormation の実行ロール&lt;br&gt;&lt;small&gt;onaka-log のリソースだけ&lt;/small&gt;" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=14;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.role;labelPerimeter=1;" vertex="1" parent="aws">
+          <mxGeometry x="228" y="370" width="64" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="codedeploy" value="CodeDeploy&lt;br&gt;&lt;small&gt;dev は Canary 10%・5分&lt;/small&gt;" style="sketch=0;outlineConnect=0;fontColor=#232F3E;fillColor=#C925D1;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=14;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.codedeploy;labelPerimeter=1;" vertex="1" parent="aws">
+          <mxGeometry x="402" y="210" width="56" height="56" as="geometry"/>
+        </mxCell>
+        <mxCell id="hook" value="① PreTraffic フック&lt;br&gt;&lt;small&gt;新バージョンで&lt;br&gt;1日分の取得 → 200 か&lt;/small&gt;" style="sketch=0;outlineConnect=0;fontColor=#232F3E;fillColor=#ED7100;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=14;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.lambda;labelPerimeter=1;" vertex="1" parent="aws">
+          <mxGeometry x="582" y="50" width="56" height="56" as="geometry"/>
+        </mxCell>
+        <mxCell id="lambda" value="② Lambda（エイリアス live）&lt;br&gt;&lt;small&gt;旧 → 新バージョンへ切り替え&lt;/small&gt;" style="sketch=0;outlineConnect=0;fontColor=#232F3E;fillColor=#ED7100;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=14;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.lambda;labelPerimeter=1;" vertex="1" parent="aws">
+          <mxGeometry x="582" y="210" width="56" height="56" as="geometry"/>
+        </mxCell>
+        <mxCell id="alarm" value="③ アラーム&lt;br&gt;&lt;small&gt;Lambda の Errors&lt;br&gt;API の 5xx&lt;/small&gt;" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#E7157B;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=14;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.alarm;labelPerimeter=1;" vertex="1" parent="aws">
+          <mxGeometry x="582" y="370" width="56" height="56" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" value="OIDC" style="html=1;strokeColor=#E8710A;strokeWidth=2;fontColor=#B45309;labelBackgroundColor=default;defaultLabelBackgroundColor=page;" edge="1" source="gh" target="deployrole" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="コードを置く" style="html=1;strokeColor=#E8710A;strokeWidth=2;fontColor=#B45309;labelBackgroundColor=default;defaultLabelBackgroundColor=page;" edge="1" source="deployrole" target="s3" parent="aws">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" value="変更セットを適用" style="html=1;strokeColor=#E8710A;strokeWidth=2;fontColor=#B45309;labelBackgroundColor=default;defaultLabelBackgroundColor=page;" edge="1" source="deployrole" target="cfn" parent="aws">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" value="このロールで作る" style="html=1;strokeColor=#E8710A;strokeWidth=2;fontColor=#B45309;dashed=1;labelBackgroundColor=default;defaultLabelBackgroundColor=page;" edge="1" source="cfn" target="execrole" parent="aws">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" value="live の更新" style="html=1;strokeColor=#E8710A;strokeWidth=2;fontColor=#B45309;labelBackgroundColor=default;defaultLabelBackgroundColor=page;" edge="1" source="cfn" target="codedeploy" parent="aws">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6" value="① 事前確認" style="html=1;strokeColor=#E8710A;strokeWidth=2;fontColor=#B45309;labelBackgroundColor=default;defaultLabelBackgroundColor=page;" edge="1" source="codedeploy" target="hook" parent="aws">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e7" value="② 切り替え" style="html=1;strokeColor=#E8710A;strokeWidth=2;fontColor=#B45309;labelBackgroundColor=default;defaultLabelBackgroundColor=page;" edge="1" source="codedeploy" target="lambda" parent="aws">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e8" value="③ 監視" style="html=1;strokeColor=#E8710A;strokeWidth=2;fontColor=#B45309;dashed=1;labelBackgroundColor=default;defaultLabelBackgroundColor=page;" edge="1" source="codedeploy" target="alarm" parent="aws">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e9" value="直接呼ぶ" style="html=1;strokeColor=#E8710A;strokeWidth=2;fontColor=#B45309;dashed=1;labelBackgroundColor=default;defaultLabelBackgroundColor=page;" edge="1" source="hook" target="lambda" parent="aws">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend" value="橙の線 ＝ デプロイの流れ　破線 ＝ 補助的な流れ　／　① が失敗すれば切り替えず、③ が鳴れば旧バージョンへ戻す（スタックごと更新前に戻る）" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontColor=#5A626E;" vertex="1" parent="1">
+          <mxGeometry x="150" y="540" width="700" height="24" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,23 +1,34 @@
 # 全体構成（ARC-01）
 
 > ステータス: Accepted（IaC は [ADR-0014](../adr/0014-iac-aws-sam.md)、データの置き場所・推定の同期・計算の場所は [ADR-0015](../adr/0015-server-first-and-sync-estimation.md)）
-> 最終更新: 2026-11-14
-> 関連: ARC-01, ARC-02, ARC-07, INF-02〜INF-05, ADR-0003〜0013, [data-model.md](data-model.md), [features](../01_requirements/features/README.md)
+> 最終更新: 2026-11-17（デプロイ（GitHub OIDC・CodeDeploy、ADR-0019）・Google 連携を図に反映）
+> 関連: ARC-01, ARC-02, ARC-07, INF-02〜INF-05, ADR-0003〜0013, ADR-0019, [data-model.md](data-model.md), [features](../01_requirements/features/README.md)
 
 ## 1. 構成図
 
-![onaka-log 全体構成（AWS）](diagrams/architecture.png)
+### 1-1. システム構成（利用の流れ）
 
-- 図は AWS の公式アイコンで描いている。元のコードは [diagrams/architecture.py](diagrams/architecture.py)（Python の `diagrams` ライブラリ）で、描き直し方はファイルの先頭に書いた。構成を変えたらコードを直して描き直す
-- 点線は認証・設定・ログなど主な処理の流れではないもの。デプロイ（GitHub Actions → OIDC のロール → CloudFormation）は、AWS 東京リージョンの中のリソース一式を作る
+![onaka-log システム構成（AWS）](diagrams/architecture.png)
+
+### 1-2. デプロイの流れ（ADR-0019）
+
+![onaka-log デプロイの流れ（AWS）](diagrams/architecture-deploy.png)
+
+- 図は AWS の公式アイコンで描いている。元は draw.io のファイル（[architecture.drawio](diagrams/architecture.drawio)・[architecture-deploy.drawio](diagrams/architecture-deploy.drawio)）で、draw.io で開いて直し、PNG に書き出して上の画像（`architecture.png`・`architecture-deploy.png`、同じフォルダ）を差し替える（書き出し: File → Export as → PNG、拡大 200%・背景を含める・「図の内容を含める」はオフ）。構成を変えたら `.drawio` を直して書き出し直す
+- 1枚にまとめると利用とデプロイの線が交差して読みにくいので、2枚に分けている
+- 以前の Python の `diagrams` 版（`diagrams/architecture.py`）は、draw.io 版に切り替えたので廃止した（2026-11-17。Git 履歴から参照できる）
+- 1-1 の点線は、認証・設定・ログなど主な処理の流れではないもの
+- 1-2: GitHub Actions → OIDC のデプロイ用ロール → CloudFormation（実行ロールでリソース一式を作る）→ CodeDeploy が ① PreTraffic フックで新しいバージョンを確かめ、② Lambda のエイリアス `live` を切り替え、③ 切り替え中にアラームが鳴ったら戻す。詳細は [ci-cd.md](../04_operations/ci-cd.md) §5
 - アプリの中の処理（カメラ・画像の縮小・トークンを Keychain / Keystore に保存）は下の表を参照
 
 | 要素 | 役割 | 決定 |
 |---|---|---|
 | Expo アプリ | 画面、カメラ・バーコード読み取り、画像の縮小・JPEG 化、トークンの安全な保存 | ADR-0005 |
-| Cognito | Apple・Google でのサインイン、JWT の発行 | ADR-0006, ADR-0007 |
-| API Gateway（HTTP API） | 入口。JWT を検証してから Lambda に渡す。レート制限 | ADR-0007 |
+| Cognito | Apple・Google でのサインイン、JWT の発行（今は Google だけ。Google のクライアントのシークレットは Secrets Manager） | ADR-0006, ADR-0007 |
+| API Gateway（HTTP API） | 入口。JWT を検証してから Lambda のエイリアス `live` に渡す。レート制限 | ADR-0007 |
 | Lambda（FastAPI） | API 全体を1つの関数で動かす。推定・照合・換算・検証・保存 | ADR-0007 |
+| CodeDeploy・PreTraffic フック・アラーム | 新しいバージョンを切り替える前にフックで確かめ、切り替え中にアラームが鳴ったら戻す | ADR-0019 |
+| GitHub Actions（OIDC） | `main` に入ったバックエンドを dev にデプロイ。デプロイ用ロールと実行ロールは `infra/github-deploy.yaml` | ADR-0019 |
 | DynamoDB | 食事の保存（1テーブル） | ADR-0008, ADR-0013 |
 | SSM Parameter Store | Claude API キー（SecureString）。アプリには置かない | ADR-0003, INF-04 |
 | Claude API | 栄養成分表示の読み取り、写真からの推定 | ADR-0010, ADR-0011 |
@@ -95,7 +106,9 @@ sequenceDiagram
 | Lambda・API Gateway・DynamoDB・Cognito | 自分専用の量ならほぼ0円（無料枠・従量課金の最小単位） |
 | SSM Parameter Store（標準） | 0円 |
 | CloudWatch Logs | 数円程度（保持期間を短くする） |
-| 合計 | 約200円前後（月1000円 NFR-001 に収まる） |
+| Secrets Manager（Google のシークレット） | 約60円（$0.40） |
+| CloudWatch アラーム 2つ（CodeDeploy 用） | 約30円（$0.20）。CodeDeploy（Lambda）は無料 |
+| 合計 | 約300円前後（月1000円 NFR-001 に収まる） |
 
 ## 7. 決定（2026-11-14）
 

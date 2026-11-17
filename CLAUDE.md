@@ -31,7 +31,7 @@
 
 - ディレクトリ名・ファイル名は英語（ASCII）。ドキュメント本文は日本語。コード識別子は英語。
 - ID体系: 機能 `F-xxx`、非機能 `NFR-xxx`、ADR `ADR-xxxx`、ロードマップ項目 `PRJ-01` 等、未決事項 `Q-xx`。採番済みIDは再利用しない。
-- 図は Mermaid。AWS の構成図だけは公式アイコンを使うため、Python の `diagrams` で PNG を作る（元のコード: [docs/02_design/diagrams/architecture.py](docs/02_design/diagrams/architecture.py)）。
+- 図は Mermaid。AWS の構成図だけは公式アイコンを使うため、draw.io（`docs/02_design/diagrams/*.drawio`）で描いて PNG に書き出す（手順: [architecture.md](docs/02_design/architecture.md) §1）。以前の Python の `diagrams` 版は廃止した（2026-11-17、Git 履歴から参照できる）。
 - フォルダ構成と置き場所のルール: [docs/00_project/folder-structure.md](docs/00_project/folder-structure.md)
 - ドキュメント索引: [docs/README.md](docs/README.md)
 - 旧資料（`old/`）は削除済み。必要ならコミット `dbe0211` 以前の Git 履歴から参照できる（前提にはしない）。
@@ -53,7 +53,7 @@
 
 ## 現時点で未決（決まったら更新）
 
-- アプリは EAS Update（チャンネル main）に手元から公開し、iPhone の Expo Go で開けば外からも使える（[ADR-0018](docs/adr/0018-eas-update-with-expo-go.md)、手順は [apps/mobile/README.md](apps/mobile/README.md)）。EAS Build・TestFlight（CIC-06）と、CI からのデプロイ（GitHub OIDC、CIC-05・CIC-09）はまだない。dev へのデプロイは手元から行う（[infra/README.md](infra/README.md)）
+- アプリは EAS Update（チャンネル main）に手元から公開し、iPhone の Expo Go で開けば外からも使える（[ADR-0018](docs/adr/0018-eas-update-with-expo-go.md)、手順は [apps/mobile/README.md](apps/mobile/README.md)）。EAS Build・TestFlight（CIC-06）はまだない。CI からの dev へのデプロイ（GitHub OIDC ＋ SAM ＋ CodeDeploy、[ADR-0019](docs/adr/0019-cd-github-oidc-sam-codedeploy.md)）は `deploy-dev` を作成済みだが、AWS 側の IAM（`infra/github-deploy.yaml`）と GitHub の変数が未設定で動いていない。それまで dev へのデプロイは手元から行う（[infra/README.md](infra/README.md)）
 - アプリのサインイン（F-001）は Google だけ dev で動く（Expo Go の戻り先は PC の LAN の IP 固定、`infra/samconfig.toml`）。サインアウト（失効を含む）は作成済み。Apple 連携は未
 
 ## コマンド

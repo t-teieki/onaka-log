@@ -23,7 +23,7 @@ ADR-0007 で、AWS のリソースは手作業ではなく IaC で管理する�
    - local: FastAPI を `uvicorn`、DB は DynamoDB Local。日常の開発・テスト
    - dev / prod: AWS 上に同じテンプレートから別のスタックで作る（`onaka-log-dev` / `onaka-log-prod`）。テーブル・Cognito も分ける
 3. Claude API キーは SSM Parameter Store の SecureString に手で入れる。テンプレートではパラメーター名と読み取り権限だけを扱い、値は Git にも CI にも置かない
-4. CI からのデプロイは GitHub Actions の OIDC で、長期の AWS キーを使わない（詳細は CIC-05・CIC-09）
+4. CI からのデプロイは GitHub Actions の OIDC で、長期の AWS キーを使わない（詳細は CIC-05・CIC-09、[ADR-0019](0019-cd-github-oidc-sam-codedeploy.md)）
 
 ## 理由と影響
 

@@ -1,0 +1,107 @@
+# main に入ったバックエンドを dev にデプロイする（ADR-0019、CIC-05・CIC-09、docs/04_operations/ci-cd.md）
+# AWS へは GitHub の OIDC で入り、長期のキーは使わない。Lambda の切り替えは CodeDeploy が行う（PreTraffic フック・アラームで戻す）
+# リポジトリ変数 AWS_DEPLOY_ROLE_ARN_DEV が空のあいだは何もしない（infra/github-deploy.yaml を作ってから設定する）
+name: deploy-dev
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "infra/template.yaml"
+      - "infra/samconfig.toml"
+      - "infra/build.sh"
+      - "infra/run.sh"
+      - "apps/api/**"
+      - "contracts/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".python-version"
+      - ".github/workflows/deploy-dev.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# デプロイは途中で止めない（CloudFormation の更新を中断させない）。後から来た実行は待たせる
+concurrency:
+  group: deploy-dev
+  cancel-in-progress: false
+
+env:
+  SAM_CLI_TELEMETRY: "0"
+  AWS_REGION: ap-northeast-1
+  SAM_CLI_VERSION: "1.172.1"
+
+jobs:
+  # デプロイの前に、api ワークフローと同じ検査をもう一度行う（壊れたコードを dev に出さない）
+  test:
+    if: vars.AWS_DEPLOY_ROLE_ARN_DEV != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      dynamodb:
+        image: amazon/dynamodb-local@sha256:6ada631ec7aa5fc83446855eb17233e3dad184fec47477e8140c6c569cfe0c86
+        ports:
+          - 8000:8000
+    env:
+      ONAKA_TEST_DYNAMODB_ENDPOINT: http://localhost:8000
+      ONAKA_REQUIRE_DYNAMODB: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+
+      - name: 依存を入れる（uv.lock どおり）
+        run: uv sync --locked --group dev
+
+      - name: 単体テスト・API テスト
+        run: uv run --locked --group dev pytest apps/api/tests -q
+
+      - name: sam validate（cfn-lint 込み）
+        working-directory: infra
+        run: uvx --from "aws-sam-cli==${SAM_CLI_VERSION}" sam validate --lint --region "${AWS_REGION}"
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    # Environment を付けると OIDC のトークンの sub が repo:<owner>/<repo>:environment:dev になり、
+    # デプロイ用ロールの信頼ポリシーと一致する。承認者を付けるなら GitHub の Environment の設定で行う
+    environment: dev
+    permissions:
+      contents: read
+      id-token: write # OIDC のトークンを受け取る
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+
+      - name: Lambda のコードを作る（uv.lock どおり、arm64 の wheel）
+        run: bash infra/build.sh
+
+      - name: AWS の一時的な認証情報を得る（OIDC）
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN_DEV }}
+          role-session-name: onaka-log-deploy-dev-${{ github.run_id }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # 手元の運用（変更セットを見てから適用）の代わりに、変更セットをログに残してから適用する。
+      # CloudFormation の実行ロールを渡し、リソースはそのロールの権限で作る
+      - name: sam deploy（変更セットを表示して適用。Lambda は CodeDeploy で切り替える）
+        working-directory: infra
+        env:
+          CFN_EXEC_ROLE_ARN: ${{ vars.AWS_CFN_EXEC_ROLE_ARN_DEV }}
+        run: >-
+          uvx --from "aws-sam-cli==${SAM_CLI_VERSION}" sam deploy
+          --config-env dev
+          --no-confirm-changeset
+          --no-fail-on-empty-changeset
+          --no-progressbar
+          --role-arn "${CFN_EXEC_ROLE_ARN}"
+        # CloudFormation はエイリアスの更新で CodeDeploy の切り替え（フック・待ち時間・アラーム監視）が終わるのを待つ。
+        # 失敗したらスタックごと前の状態に戻り、このステップも失敗する。経過は CodeDeploy のコンソールで見る

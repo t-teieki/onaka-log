@@ -8,6 +8,9 @@
 | `samconfig.toml` | 環境ごとの設定（`dev` / `prod`）。スタック名・SSM パラメーター名 |
 | `build.sh` | Lambda に載せるコードを `infra/build/api` に作る（uv.lock どおり、Python 3.12・arm64 の wheel）。`infra/build/` は Git 管理外 |
 | `run.sh` | Lambda の起動スクリプト（uvicorn） |
+| `github-deploy.yaml` | GitHub Actions からデプロイするための IAM（GitHub の OIDC プロバイダー・デプロイ用ロール・CloudFormation の実行ロール、ADR-0019）。アプリのスタックとは別に、管理者が手元から作る |
+
+- Lambda はエイリアス `live` を CodeDeploy で切り替える（`AutoPublishAlias`・`DeploymentPreference`、ADR-0019）。切り替え前に PreTraffic フック（`CodeDeployHook_onaka-log-pretraffic-<env>`）が新しいバージョンで1日分の取得を呼んで確かめ、切り替え中はアラーム（Lambda の Errors・API の 5xx）が鳴ったら戻す。切り替え方は `DeploymentType`（dev は `Canary10Percent5Minutes`）
 
 - 予算アラート（AWS Budgets）はテンプレートに入れず、コンソールで作った（INF-10）
 - Claude API キーはテンプレートに書かず、SSM Parameter Store に手で入れる（`/onaka-log/<env>/claude-api-key`、SecureString）。Lambda には `ssm:GetParameter` だけを与える
@@ -32,7 +35,23 @@ aws sso login --profile onaka-admin
 
 - 初回のデプロイの前に、SSM に Claude API キーを入れておく（入れないと推定の API が失敗する。その他の API は動く）
 - 手元（x86_64）で起動を試すときは `LAMBDA_PLATFORM=x86_64-manylinux2014 bash infra/build.sh` で作り、`infra/build/api` で `python -m uvicorn onaka_api.main:app` を動かす
-- CI からのデプロイ（GitHub OIDC）はまだない（CIC-05・CIC-09）
+- CI からのデプロイは `.github/workflows/deploy-dev.yml`（下の準備をしてから動く。CIC-05・CIC-09）
+
+## CI からのデプロイの準備（ユーザーの作業、env ごとに1回、ADR-0019）
+
+1. デプロイ用の IAM を作る（管理者の権限で、変更セットを見てから）:
+   ```bash
+   aws cloudformation deploy --profile onaka-admin --region ap-northeast-1 \
+     --template-file infra/github-deploy.yaml --stack-name onaka-log-github-deploy-dev \
+     --parameter-overrides Env=dev --capabilities CAPABILITY_NAMED_IAM --no-execute-changeset
+   ```
+   表示された変更セットを確かめてから `aws cloudformation execute-change-set` で適用する。GitHub の OIDC プロバイダーはアカウントに1つだけなので、prod では `CreateOidcProvider=false ExistingOidcProviderArn=<ARN>` を付ける
+2. 出力の `DeployRoleArn` と `ExecutionRoleArn` を、GitHub のリポジトリ変数（Settings → Secrets and variables → Actions → Variables）に `AWS_DEPLOY_ROLE_ARN_DEV`・`AWS_CFN_EXEC_ROLE_ARN_DEV` として入れる（秘密ではない）
+3. GitHub の Environment `dev` を作る（Settings → Environments）。デプロイ前に承認を挟みたければ Required reviewers に自分を入れる。Deployment branches は `main` だけにする
+4. Actions の `deploy-dev` を手動で動かし（Run workflow）、成功することを確かめる
+
+- 一度 `--role-arn` でデプロイすると、スタックは実行ロールを覚える。手元から `sam deploy` しても実行ロールの権限で作られるので、テンプレートに新しい種類のリソースを足すときは先に `github-deploy.yaml` の実行ロールに権限を足す
+- 実行ロールは `onaka-log-<env>-*` の IAM ロールを作れる。`main` に push できる人は強い権限のロールを作れるので、共同開発・公開の前に permissions boundary を付ける（ADR-0019）
 
 ## Google でサインインの準備（ユーザーの作業、env ごとに1回）
 
