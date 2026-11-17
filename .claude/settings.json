@@ -1,11 +1,38 @@
 {
-    "mcpServers": {
-        "drawio": {
-            "command": "npx",
-            "args": [
-                "-y",
-                "@drawio/mcp"
-            ]
-        }
-    }
+  "permissions": {
+    "allow": [
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git show*)",
+      "Bash(wsl -e bash -lc \"cd /mnt/c/project/onaka-log && UV_LINK_MODE=copy ~/.local/bin/uv run --group dev pytest *)",
+      "Bash(wsl -e bash -lc \"cd /mnt/c/project/onaka-log && UV_LINK_MODE=copy ~/.local/bin/uv run --group dev python tools/trace.py*)",
+      "Bash(wsl -e bash -lc \"cd /mnt/c/project/onaka-log && UV_LINK_MODE=copy ~/.local/bin/uv run --group dev ruff *)",
+      "Bash(wsl -e bash -lc \"cd /mnt/c/project/onaka-log && UV_LINK_MODE=copy ~/.local/bin/uv run --group dev mypy *)",
+      "PowerShell(npm test*)",
+      "PowerShell(npm run typecheck*)",
+      "PowerShell(npm run lint*)",
+      "PowerShell(npm run gen:api*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git reset --hard*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-spec-files.mjs\""
+          }
+        ]
+      }
+    ]
+  }
 }

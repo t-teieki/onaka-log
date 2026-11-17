@@ -68,15 +68,15 @@ flowchart LR
 
 - [x] **HNS-01** CLAUDE.md 初版（セッション開始/終了手順・開発ルール） — 成果物: [/CLAUDE.md](../../CLAUDE.md)
 - [x] **HNS-02** 引継ぎ用 skill（`/handoff`） — 成果物: `.claude/skills/handoff/SKILL.md`
-- [ ] **HNS-03** TDD 運用ルールの明文化：「テストが仕様」。実装フェーズではテスト・契約を変更しない。変更が必要なら仕様→契約→テストの順に戻る
-- [ ] **HNS-04** テスト改変の機械的ガード（例: 実装タスク中に `tests/`・`contracts/` の編集を hook で警告/ブロック）
-- [ ] **HNS-05** `.claude/settings.json`：permissions allowlist（テスト・lint 実行など）、PostToolUse hook（format / lint）
-- [ ] **HNS-06** サブディレクトリ CLAUDE.md（`apps/mobile/`, `apps/api/`, `contracts/`, `poc/` ごとの規約）
-- [ ] **HNS-07** カスタム skill 群の検討：`/spec`（機能仕様の起票）、`/spec-to-test`（仕様→テスト生成）、`/implement`（指定テストが緑になるまで実装）、`/adr`（ADR起票）
-- [ ] **HNS-08** サブエージェント検討：仕様レビュー役、テスト作成役、契約整合性チェック役
-- [ ] **HNS-09** MCP 連携の要否（GitHub、DB、デザインツールなど）
-- [ ] **HNS-10** Claude Code GitHub Actions（PRレビュー自動化）の要否 → CIC と連携
-- [ ] **HNS-11** 仕様⇔テストのトレーサビリティ確認スクリプト（全 F-xxx に対応テストがあるか）
+- [x] **HNS-03** TDD 運用ルールの明文化：「テストが仕様」。実装フェーズではテスト・契約を変更しない。変更が必要なら仕様→契約→テストの順に戻る — 成果物: [strategy.md §5](../03_testing/strategy.md)、[harness.md](harness.md) §2、各 CLAUDE.md
+- [x] **HNS-04** テスト改変の機械的ガード：既存の `tests/`・`contracts/`・アプリのテストの編集で確認を出す PreToolUse hook（新規作成は許可）。動作確認済み — 成果物: `.claude/hooks/guard-spec-files.mjs`
+- [ ] **HNS-05** `.claude/settings.json`：permissions（allow・deny）は作成済み。PostToolUse の format / lint は Prettier の導入を決めてから (WIP) — 成果物: `.claude/settings.json`
+- [x] **HNS-06** サブディレクトリ CLAUDE.md（`apps/mobile/`（AGENTS.md を取り込む）, `apps/api/`, `contracts/`, `poc/`）
+- [x] **HNS-07** カスタム skill：`/spec-to-test`（赤まで）・`/implement`（緑まで）・`/adr`。`/spec` は仕様の書き方が固まってから — 成果物: `.claude/skills/`：`/spec`（機能仕様の起票）、`/spec-to-test`（仕様→テスト生成）、`/implement`（指定テストが緑になるまで実装）、`/adr`（ADR起票）
+- [x] **HNS-08** サブエージェント：契約整合性チェック役のみ（読み取り専用）。仕様レビュー役・テスト作成役は skill で足りるので見送り — 成果物: `.claude/agents/contract-consistency-checker.md`
+- [ ] **HNS-09** MCP 連携の要否 (SKIP: GitHub は `gh` で足りる。drawio は導入済み。AWS・DynamoDB は IAM を絞れないので入れない)
+- [ ] **HNS-10** Claude Code GitHub Actions（PRレビュー自動化）の要否 (SKIP: API キーを GitHub に置く必要があり月1000円の枠にも関わる。手元の `/code-review` で代用。CIC-10 も同様)
+- [x] **HNS-11** 仕様⇔テストのトレーサビリティ確認スクリプト — 成果物: `tools/trace.py`（CI の contract で `--check`。DM は必須、MVP の F は警告）
 
 ## REQ: 要件定義（M1）
 
