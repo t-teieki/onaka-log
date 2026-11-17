@@ -3,7 +3,7 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { launchImageLibraryAsync } from 'expo-image-picker';
 import { useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useApi } from '@/api/api-context';
@@ -95,6 +95,8 @@ export function EstimateCaptureScreen({
   const [state, setState] = useState<State>({ kind: 'camera' });
   // 縮小した画像は、この画面にいる間だけメモリに持つ（「もう一度」で送り直す、F-012-20）。端末には保存しない
   const image = useRef<PreparedImage | null>(null);
+  // 読み取り・推定中とダイアログの背景に出す、送った画像（data URI。F-012-17・F-013-17）
+  const [preview, setPreview] = useState<string | null>(null);
   const request = useRef<AbortController | null>(null);
   // 撮影・選択を始めてから読み取りに入るまでの二度押しを防ぐ
   const busy = useRef(false);
@@ -122,8 +124,10 @@ export function EstimateCaptureScreen({
       if (!picture) return;
       setState({ kind: 'reading' });
       image.current = await prepare(picture);
+      setPreview(`data:${image.current.media_type};base64,${image.current.data_base64}`);
     } catch {
       image.current = null;
+      setPreview(null);
       setState({ kind: 'dialog', failure: 'error' });
       return;
     } finally {
@@ -150,11 +154,14 @@ export function EstimateCaptureScreen({
   const cancel = () => {
     request.current?.abort();
     request.current = null;
+    image.current = null;
+    setPreview(null);
     setState({ kind: 'camera' });
   };
 
   const retake = () => {
     image.current = null;
+    setPreview(null);
     setState({ kind: 'camera' });
   };
 
@@ -214,6 +221,10 @@ export function EstimateCaptureScreen({
         </>
       )}
 
+      {preview && state.kind !== 'camera' && (
+        // カメラの映像の代わりに、送った画像を出す
+        <Image testID="sent-image" source={{ uri: preview }} resizeMode="contain" style={styles.preview} />
+      )}
       {state.kind === 'reading' && (
         <View style={styles.overlay}>
           <ActivityIndicator color="#fff" size="large" />
@@ -358,6 +369,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   shutterInner: { width: 56, height: 56, borderRadius: 28, backgroundColor: '#fff' },
+  preview: { ...StyleSheet.absoluteFill, backgroundColor: '#000' },
   overlay: {
     ...StyleSheet.absoluteFill,
     alignItems: 'center',

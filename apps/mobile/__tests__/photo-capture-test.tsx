@@ -214,3 +214,27 @@ describe('画像を選ぶ（F-013-22）', () => {
     expect(onCandidates).toHaveBeenCalledWith(photoOk.items);
   });
 });
+
+describe('推定中の背景（F-013-17）', () => {
+  const preview = () => screen.queryByTestId('sent-image');
+  const PREVIEW_URI = `data:image/jpeg;base64,${IMAGE.data_base64}`;
+
+  it('[F-013-17] 推定中は撮影した画像（縮小したもの）を背景に出し、キャンセルしたらカメラに戻る', async () => {
+    await setup([new Promise<Reply>(() => {})]);
+    expect(preview()).toBeNull();
+    await shoot();
+    expect(screen.getByText('推定中…')).toBeOnTheScreen();
+    expect(preview()).toHaveProp('source', { uri: PREVIEW_URI });
+    await fireEvent.press(screen.getByRole('button', { name: 'キャンセル' }));
+    expect(preview()).toBeNull();
+  });
+
+  it('[F-013-17] 選んだ画像も背景に出す。推定できなかったときのダイアログの背景も同じで、撮り直すと消える', async () => {
+    await setup([{ status: 200, body: notFood }]);
+    await fireEvent.press(screen.getByRole('button', { name: '画像を選ぶ' }));
+    expect(screen.getByText('食べ物が見つかりません')).toBeOnTheScreen();
+    expect(preview()).toHaveProp('source', { uri: PREVIEW_URI });
+    await fireEvent.press(screen.getByRole('button', { name: '撮り直す' }));
+    expect(preview()).toBeNull();
+  });
+});

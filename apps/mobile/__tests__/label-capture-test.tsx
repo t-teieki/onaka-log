@@ -118,6 +118,15 @@ describe('栄養成分表示の撮影（F-012-15〜18）', () => {
   });
 });
 
+describe('読み取り中の背景（F-012-17）', () => {
+  it('[F-012-17] 読み取り中は撮影した画像（縮小したもの）を背景に出す', async () => {
+    await setup([new Promise<Reply>(() => {})]);
+    expect(screen.queryByTestId('sent-image')).toBeNull();
+    await shoot();
+    expect(screen.getByTestId('sent-image')).toHaveProp('source', { uri: 'data:image/jpeg;base64,QkFTRTY0' });
+  });
+});
+
 describe('読み取れなかったとき（F-012-19・20）', () => {
   it('[F-012-19] 読み取れなければ、撮り直す・手入力する・入力方法の選択に戻るを出す', async () => {
     const { onManual, onBack } = await setup([{ status: 200, body: unreadable }]);
